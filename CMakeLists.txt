@@ -19,6 +19,9 @@ set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/STM32F303K8Tx_FLASH.l
 set(C_STM_SRC_PATH "STM32Cube_FW_F3_V1.11.0/Drivers/STM32F3xx_HAL_Driver/Src/")
 
 set(C_SRC	"src/main.c"
+			"src/config.c"
+			"src/usart1.c"
+			"src/console.c"
 			"src/stm32f3xx_it.c"
 			"src/system_stm32f3xx.c"
 			"${C_STM_SRC_PATH}/stm32f3xx_ll_utils.c"

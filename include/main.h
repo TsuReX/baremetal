@@ -17,11 +17,9 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/* Includes ------------------------------------------------------------------*/
 /* LL drivers common to all LL examples */
 #include "stm32f3xx_ll_bus.h"
 #include "stm32f3xx_ll_rcc.h"
@@ -51,10 +49,12 @@
 #include "stm32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
+/** Превышен допустимый временной лимит. */
+#define ERR_TIMEOUT		2
 
-/* ==============   BOARD SPECIFIC CONFIGURATION CODE BEGIN    ============== */
+/** Delay 500 milliseconds. */
+#define DELAY_500_MS	500
+
 /**
   * @brief LED3
   */
@@ -77,7 +77,6 @@
                                                   LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTA, LL_SYSCFG_EXTI_LINE12);  \
                                                 } while(0)
 #define USER_BUTTON_IRQHANDLER                  EXTI15_10_IRQHandler
-/* ==============   BOARD SPECIFIC CONFIGURATION CODE END      ============== */
 
 /**
   * @brief Toggle periods for various blinking modes
@@ -86,9 +85,5 @@
 #define LED_BLINK_SLOW  500
 #define LED_BLINK_ERROR 1000
 
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-
 #endif /* __MAIN_H */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
