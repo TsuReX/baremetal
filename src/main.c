@@ -8,11 +8,29 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "main.h"
 
+/** Превышен допустимый временной лимит. */
+#define ERR_TIMEOUT		2
+
 /** Delay 500 milliseconds. */
 #define DELAY_500_MS	500
+
+/**
+ * @brief	Передает по каналу UART1 данные.
+ *
+ * @param[in]	data	передаваемые данные
+ *
+ * @param[in]	size	количество байтов данных
+ *
+ * @param[in]	ms_timeout	количество миллисекунд за которое должна произойти передача
+ *
+ * @retval		>= 0	количество переданных байтов данных
+ * 				< 0		код ошибки
+ */
+static int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout);
 
 /**
  * @brief	Выводит в текстовую консоль данные на основе строки формата.
@@ -85,6 +103,7 @@ static void usart1_init(void)
 
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	/* Peripheral clock enable */
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
@@ -97,7 +116,7 @@ static void usart1_init(void)
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_10;
@@ -105,7 +124,7 @@ static void usart1_init(void)
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 	/* USART1 interrupt Init */
@@ -189,6 +208,20 @@ void sysclk_config(void)
 	LL_SetSystemCoreClock(72000000);
 }
 
+int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout)
+{
+	uint32_t stop_time = SysTick->VAL + ms_timeout;
+	size_t i;
+	for (i = 0; i < size; ++i) {
+		LL_USART_TransmitData8(USART1, data[i]);
+		do {
+			if (stop_time < SysTick->VAL)
+				return -ERR_TIMEOUT;
+		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+	}
+	return i;
+}
+
 void print(const char *format, ...)
 {
 	va_list argptr;
@@ -198,8 +231,8 @@ void print(const char *format, ...)
 
 	va_start(argptr, format);
 	sz = vsnprintf(str, 512, format, argptr);
-	if (sz > 0)
-		for (i = 0; i < sz; ++i)
-			LL_USART_TransmitData8(USART1, str[i]);
+	if (sz > 0) {
+		uart1_transmit(str, sz, DELAY_500_MS);
+	}
 	va_end(argptr);
 }
