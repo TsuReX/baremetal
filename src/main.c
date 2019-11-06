@@ -3,7 +3,7 @@
  *
  * @brief	Объявление точки вхождения в C-код.
  *
- * @author	Vasily Yurchenko <vasily.yurchenko@yandex.ru>
+ * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
 #include "usart1.h"

@@ -3,7 +3,7 @@
  *
  * @brief	Объявление функции вывода данных в текстовую консоль.
  *
- * @author	Vasily Yurchenko <vasily.yurchenko@yandex.ru>
+ * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
 #ifndef _CONSOLE_H_

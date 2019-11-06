@@ -3,7 +3,7 @@
  *
  * @brief	Определены функции вывода данных в текстовую консоль.
  *
- * @author	Vasily Yurchenko <vasily.yurchenko@yandex.ru>
+ * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
 #include <stdarg.h>

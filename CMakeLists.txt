@@ -27,6 +27,7 @@ set(C_SRC	"src/main.c"
 			"${C_STM_SRC_PATH}/stm32f3xx_ll_utils.c"
 			"${C_STM_SRC_PATH}/stm32f3xx_ll_gpio.c"
 			"${C_STM_SRC_PATH}/stm32f3xx_ll_rcc.c"
+			"${C_STM_SRC_PATH}/stm32f3xx_ll_i2c.c"
 			"${C_STM_SRC_PATH}/stm32f3xx_ll_usart.c")
 
 set(ASM_SRC	"src/startup_stm32f303x8.s" )

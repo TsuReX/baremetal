@@ -3,7 +3,7 @@
  *
  * @brief	Объявления функций для работы с устройством USART1.
  *
- * @author	Vasily Yurchenko <vasily.yurchenko@yandex.ru>
+ * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
 #ifndef _USART1_H_
