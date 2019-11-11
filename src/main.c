@@ -24,6 +24,8 @@ int main(void)
 	/** Configure board's peripherals. */
 	board_config();
 
+	usart1_config();
+
 	/** Add your application code here */
 
 	/** Infinite loop */
