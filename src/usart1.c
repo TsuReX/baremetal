@@ -9,121 +9,112 @@
 #include "usart1.h"
 #include "main.h"
 
+/** Размер передаваемого буфера в байтах.*/
+#define USART1_TX_BUF_SIZE	0x1
+/** Размер приемного буфера в байтах.*/
+#define USART1_RX_BUF_SIZE	0x1
+
+/** Приемный буфер.*/
+static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
+/** Передаваемый буфер.*/
+static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
+
 void usart1_config(void)
 {
 
-	LL_USART_InitTypeDef USART_InitStruct;
-
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+	/* Настройка GPIO */
 
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-	/* Peripheral clock enable */
+
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_9, LL_GPIO_AF_7);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
+
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_10, LL_GPIO_AF_7);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_10, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+
+	/* Настройка USART1 */
+
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
-
-	/**USART1 GPIO Configuration
-	 PA9   ------> USART1_TX
-	 PA10   ------> USART1_RX
-	 */
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_9;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
-	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_10;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
-	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	/* USART1 interrupt Init */
-/*	NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_EnableIRQ(USART1_IRQn);
-*/
-	USART_InitStruct.BaudRate = 115200;
-	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
-	USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
-	USART_InitStruct.Parity = LL_USART_PARITY_NONE;
-	USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-	USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
-	USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
-	LL_USART_Init(USART1, &USART_InitStruct);
+	LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
+	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
+	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
+	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
+	LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
+	LL_USART_SetBaudRate(USART1, LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE), LL_USART_OVERSAMPLING_16, 115200);
 
 	LL_USART_DisableIT_CTS(USART1);
 
-/*	LL_USART_EnableOverrunDetect(USART1);*/
+	LL_USART_EnableOverrunDetect(USART1);
 
-/*	LL_USART_EnableDMADeactOnRxErr(USART1);*/
+	LL_USART_EnableDMADeactOnRxErr(USART1);
 
 	LL_USART_ConfigAsyncMode(USART1);
 
+	while((!(LL_USART_IsActiveFlag_TEACK(USART2))) || (!(LL_USART_IsActiveFlag_REACK(USART2)))) {}
+
+	/* Настройка NVIC */
+
+	NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
+	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+
+	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
+	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+
+	NVIC_SetPriority(USART1_IRQn, 0);
+	NVIC_EnableIRQ(USART1_IRQn);
+
+	/* Настройка DMA */
+
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_4,
+						LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+						LL_DMA_PRIORITY_HIGH              |
+						LL_DMA_MODE_NORMAL                |
+						LL_DMA_PERIPH_NOINCREMENT         |
+						LL_DMA_MEMORY_INCREMENT           |
+						LL_DMA_PDATAALIGN_BYTE            |
+						LL_DMA_MDATAALIGN_BYTE);
+
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_4,
+						 (uint32_t)&usart1_tx_buf,
+						 LL_USART_DMA_GetRegAddr(USART2, LL_USART_DMA_REG_DATA_TRANSMIT),
+						 LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_4));
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, USART1_TX_BUF_SIZE);
+
+
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_5,
+						LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+						LL_DMA_PRIORITY_HIGH              |
+						LL_DMA_MODE_NORMAL                |
+						LL_DMA_PERIPH_NOINCREMENT         |
+						LL_DMA_MEMORY_INCREMENT           |
+						LL_DMA_PDATAALIGN_BYTE            |
+						LL_DMA_MDATAALIGN_BYTE);
+
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
+						 LL_USART_DMA_GetRegAddr(USART2, LL_USART_DMA_REG_DATA_RECEIVE),
+						 (uint32_t)&usart1_rx_buf,
+						 LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, USART1_RX_BUF_SIZE);
+
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);
+	LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_4);
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
+	LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);
+
+	LL_DMA_EnableChannel(DMA1, 4);
+	LL_DMA_EnableChannel(DMA1, 5);
+
 	LL_USART_Enable(USART1);
-
-
-	/* (1) Enable GPIO clock and configures the USART pins **********************/
-
-	/* Enable the peripheral clock of GPIO Port */
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-
-	/* Configure Tx Pin as : Alternate function, High Speed, Push pull, Pull up */
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_2, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_2, LL_GPIO_AF_7);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_2, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_2, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_2, LL_GPIO_PULL_UP);
-
-	/* Configure Rx Pin as : Alternate function, High Speed, Push pull, Pull up */
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_3, LL_GPIO_AF_7);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_3, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_3, LL_GPIO_PULL_UP);
-
-	/* (2) Enable USART2 peripheral clock and clock source ****************/
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
-
-	/* No Clk source selection for USART2 on this device : PCLK1 by default */
-
-	/* (3) Configure USART2 functional parameters ********************************/
-
-	/* Disable USART prior modifying configuration registers */
-	/* Note: Commented as corresponding to Reset value */
-	// LL_USART_Disable(USART2);
-
-	/* TX/RX direction */
-	LL_USART_SetTransferDirection(USART2, LL_USART_DIRECTION_TX_RX);
-
-	/* 8 data bit, 1 start bit, 1 stop bit, no parity */
-	LL_USART_ConfigCharacter(USART2, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
-
-	/* No Hardware Flow control */
-	/* Reset value is LL_USART_HWCONTROL_NONE */
-	// LL_USART_SetHWFlowCtrl(USART2, LL_USART_HWCONTROL_NONE);
-
-	/* Oversampling by 16 */
-	/* Reset value is LL_USART_OVERSAMPLING_16 */
-	// LL_USART_SetOverSampling(USART2, LL_USART_OVERSAMPLING_16);
-
-	/* Set Baudrate to 115200 using APB frequency set to 32000000 Hz */
-	/* Frequency available for USART peripheral can also be calculated through LL RCC macro */
-	/* Ex :
-	  Periphclk = LL_RCC_GetUSARTClockFreq(Instance); or LL_RCC_GetUARTClockFreq(Instance); depending on USART/UART instance
-
-	  In this example, Peripheral Clock is expected to be equal to 32000000 Hz => equal to SystemCoreClock/2
-	*/
-	LL_USART_SetBaudRate(USART2, SystemCoreClock/2, LL_USART_OVERSAMPLING_16, 115200);
-
-	/* (4) Enable USART2 **********************************************************/
-	LL_USART_Enable(USART2);
-
-	/* Polling USART initialisation */
-	while((!(LL_USART_IsActiveFlag_TEACK(USART2))) || (!(LL_USART_IsActiveFlag_REACK(USART2))))
-	{
-	}
 
 }
 
