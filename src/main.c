@@ -30,7 +30,7 @@ int main(void)
 
 	/** Infinite loop */
 	while (1) {
-		LL_mDelay(DELAY_500_MS);
+		LL_mDelay(DELAY_500_MS * 2);
 		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_3);
 		print("Test output\r\n");
 	}
