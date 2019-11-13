@@ -169,12 +169,13 @@ void usart1_config(void)
 
 int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout)
 {
-	uint32_t stop_time = SysTick->VAL + ms_timeout;
 	size_t i;
 	for (i = 0; i < size; ++i) {
 		LL_USART_TransmitData8(USART1, data[i]);
 		do {
-			if (stop_time < SysTick->VAL)
+			LL_mDelay(1);
+			--ms_timeout;
+			if (ms_timeout == 0)
 				return -ERR_TIMEOUT;
 		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
