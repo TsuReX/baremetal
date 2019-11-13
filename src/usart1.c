@@ -94,6 +94,7 @@ void usart1_config(void)
 	LL_USART_EnableOverrunDetect(USART1);
 	LL_USART_EnableDMADeactOnRxErr(USART1);
 	LL_USART_EnableDMAReq_RX(USART1);
+	LL_USART_EnableIT_RXNE(USART1);
 	/*LL_USART_EnableDMAReq_TX(USART1);*/
 
 //	while((!(LL_USART_IsActiveFlag_TEACK(USART1))) || (!(LL_USART_IsActiveFlag_REACK(USART1)))) {}
