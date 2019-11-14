@@ -1,0 +1,3 @@
+[submodule "ringbuf"]
+	path = ringbuf
+	url = git@github.com:TsuReX/ringbuf.git
