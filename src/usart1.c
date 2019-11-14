@@ -32,6 +32,7 @@ void DMA1_Channel4_IRQHandler(void)
 	uint32_t dma1ch4_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF4 | DMA_ISR_TCIF4 | DMA_ISR_HTIF4 | DMA_ISR_TEIF4));
 
 	print("%s()\r\n", __func__);
+	print("DMA1.ISR 0x%08X\r\n", dma1ch4_if);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF4 | DMA_IFCR_CTCIF4 | DMA_IFCR_CHTIF4 | DMA_IFCR_CTEIF4));
 }
@@ -46,6 +47,7 @@ void DMA1_Channel5_IRQHandler(void)
 	uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
 
 	print("%s()\r\n", __func__);
+	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }
@@ -56,6 +58,7 @@ void USART1_IRQHandler(void)
 	uint32_t usart1_if = READ_BIT(USART1->ISR, (0XFFFFFFFF));
 
 	print("%s()\r\n", __func__);
+	print("USART1.ISR 0x%08X\r\n", usart1_if);
 
 	WRITE_REG(USART1->ICR, (0XFFFFFFFF));
 }
@@ -96,8 +99,6 @@ void usart1_config(void)
 	LL_USART_EnableDMAReq_RX(USART1);
 	LL_USART_EnableIT_RXNE(USART1);
 	/*LL_USART_EnableDMAReq_TX(USART1);*/
-
-//	while((!(LL_USART_IsActiveFlag_TEACK(USART1))) || (!(LL_USART_IsActiveFlag_REACK(USART1)))) {}
 
 	/* Настройка NVIC */
 

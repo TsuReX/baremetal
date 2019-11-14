@@ -7,6 +7,7 @@
  */
 
 #include "usart1.h"
+#include "i2c.h"
 #include "console.h"
 #include "config.h"
 #include "main.h"
@@ -25,6 +26,8 @@ int main(void)
 	board_config();
 
 	usart1_config();
+
+	i2c1_config();
 
 	/** Add your application code here */
 

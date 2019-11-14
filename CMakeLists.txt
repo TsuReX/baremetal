@@ -20,6 +20,7 @@ set(C_STM_SRC_PATH "STM32Cube_FW_F3_V1.11.0/Drivers/STM32F3xx_HAL_Driver/Src/")
 
 set(C_SRC	"src/main.c"
 			"src/config.c"
+			"src/i2c.c"
 			"src/usart1.c"
 			"src/console.c"
 			"src/stm32f3xx_it.c"
