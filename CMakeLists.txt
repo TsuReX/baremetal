@@ -45,6 +45,8 @@ add_definitions("-DSTM32F303x8")
 
 add_definitions("-DUSE_FULL_LL_DRIVER")
 
+add_subdirectory("ringbuf")
+
 add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC})
 
-target_link_libraries(${PROJ_NAME} -lc -lm -lnosys)
+target_link_libraries(${PROJ_NAME} -lc -lm -lnosys ringbuf)
