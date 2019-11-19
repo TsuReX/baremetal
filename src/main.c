@@ -27,7 +27,7 @@ int main(void)
 
 	usart1_config();
 
-	i2c1_config();
+//	i2c1_config();
 
 	/** Add your application code here */
 

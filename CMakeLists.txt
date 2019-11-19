@@ -16,37 +16,42 @@ set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/STM32F303K8Tx_FLASH.l
 							-mcpu=cortex-m4 -specs=nano.specs \
 							-flto -Wl,--gc-sections")
 
-set(C_STM_SRC_PATH "STM32Cube_FW_F3_V1.11.0/Drivers/STM32F3xx_HAL_Driver/Src/")
-
 set(C_SRC	"src/main.c"
 			"src/config.c"
-			"src/i2c.c"
+			#"src/i2c.c"
 			"src/usart1.c"
 			"src/console.c"
 			"src/stm32f3xx_it.c"
 			"src/system_stm32f3xx.c"
-			"${C_STM_SRC_PATH}/stm32f3xx_ll_utils.c"
-			"${C_STM_SRC_PATH}/stm32f3xx_ll_gpio.c"
-			"${C_STM_SRC_PATH}/stm32f3xx_ll_rcc.c"
-			"${C_STM_SRC_PATH}/stm32f3xx_ll_i2c.c"
-			"${C_STM_SRC_PATH}/stm32f3xx_ll_usart.c")
+			)
 
 set(ASM_SRC	"src/startup_stm32f303x8.s" )
 
 include_directories("include")
 
-include_directories("STM32Cube_FW_F3_V1.11.0/Drivers/STM32F3xx_HAL_Driver/Inc")
-
-include_directories("STM32Cube_FW_F3_V1.11.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include")
-
-include_directories("STM32Cube_FW_F3_V1.11.0/Drivers/CMSIS/Core/Include")
-
 add_definitions("-DSTM32F303x8")
-
 add_definitions("-DUSE_FULL_LL_DRIVER")
+
+set(MCU_MODEL "STM32F3xx")
+set(DRIVER_PATH "STM32Cube_FW_F3_V1.11.0/Drivers")
+set(DRIVER_SRC_PATH "${DRIVER_PATH}/${MCU_MODEL}_HAL_Driver/Src/")
+
+string(TOLOWER ${MCU_MODEL} LC_MCU_MODEL)
+
+set(DRIVER_C_SRC
+					"${DRIVER_SRC_PATH}/${LC_MCU_MODEL}_ll_utils.c"
+					"${DRIVER_SRC_PATH}/${LC_MCU_MODEL}_ll_rcc.c"
+					#"${DRIVER_SRC_PATH}/${LC_MCU_MODEL}_ll_gpio.c"
+					#"${DRIVER_SRC_PATH}/${LC_MCU_MODEL}_ll_i2c.c"
+					#"${DRIVER_SRC_PATH}/${LC_MCU_MODEL}_ll_usart.c"
+					)
+
+include_directories("${DRIVER_PATH}/${MCU_MODEL}_HAL_Driver/Inc")
+include_directories("${DRIVER_PATH}/CMSIS/Device/ST/${MCU_MODEL}/Include")
+include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
 
 add_subdirectory("ringbuf")
 
-add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC})
+add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC} ${DRIVER_C_SRC})
 
 target_link_libraries(${PROJ_NAME} -lc -lm -lnosys ringbuf)
