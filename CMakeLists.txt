@@ -61,6 +61,12 @@ endif ()
 
 message(STATUS "MCU_MINOR_MODEL: ${MCU_MINOR_MODEL}")
 
+add_definitions("-D${MCU_MINOR_MODEL}")
+
+if (DEFINED USE_FULL_LL_DRIVER)
+	add_definitions("-DUSE_FULL_LL_DRIVER")
+endif ()
+
 # Подключение исходных кодов драйверов STM32
 
 set(DRIVER_PATH_SRC "${DRIVER_PATH}/${MCU_MAJOR_MODEL}_HAL_Driver/Src/")
@@ -78,9 +84,6 @@ set(DRIVER_C_SRC
 include_directories("${DRIVER_PATH}/${MCU_MAJOR_MODEL}_HAL_Driver/Inc")
 include_directories("${DRIVER_PATH}/CMSIS/Device/ST/${MCU_MAJOR_MODEL}/Include")
 include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
-
-add_definitions("-DSTM32F303x8")
-add_definitions("-DUSE_FULL_LL_DRIVER")
 
 # Подключение дополнительных библиотек (git-модулей)
 
