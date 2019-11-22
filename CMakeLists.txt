@@ -35,11 +35,34 @@ set(ASM_SRC	"src/startup_stm32f303x8.s" )
 
 include_directories("include")
 
+# Проверка параметров сборки
+
+message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
+
+if (NOT DEFINED DRIVER_PATH)
+	message(FATAL_ERROR " DRIVER_PATH must be defined.\n"
+	" Ex -DDRIVER_PATH=/home/user/STM32Cube_FW_F3_V1.11.0/Drivers\n")
+endif ()
+
+message("DRIVER_PATH: ${DRIVER_PATH}")
+
+if (NOT DEFINED MCU_MAJOR_MODEL)
+	message(FATAL_ERROR " MCU_MAJOR_MODEL must be defined.\n"
+	" Ex. -DMCU_MAJOR_MODEL=STM32F3xx")
+
+endif ()
+
+message("MCU_MAJOR_MODEL: ${MCU_MAJOR_MODEL}")
+
+if (NOT DEFINED MCU_MINOR_MODEL)
+	message(FATAL_ERROR " MCU_MINOR_MODEL must be defined.\n"
+	"Ex. -DMCU_MINOR_MODEL=STM32F303x8")
+endif ()
+
+message(STATUS "MCU_MINOR_MODEL: ${MCU_MINOR_MODEL}")
+
 # Подключение исходных кодов драйверов STM32
 
-set(MCU_MAJOR_MODEL "STM32F3xx")
-set(MCU_MINOR_MODEL "STM32F303x8")
-set(DRIVER_PATH "STM32Cube_FW_F3_V1.11.0/Drivers")
 set(DRIVER_PATH_SRC "${DRIVER_PATH}/${MCU_MAJOR_MODEL}_HAL_Driver/Src/")
 
 string(TOLOWER ${MCU_MAJOR_MODEL} LC_MCU_MAJOR_MODEL)
