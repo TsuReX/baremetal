@@ -41,7 +41,7 @@ message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 if (NOT DEFINED DRIVER_PATH)
 	message(FATAL_ERROR " DRIVER_PATH must be defined.\n"
-	" Ex -DDRIVER_PATH=/home/user/STM32Cube_FW_F3_V1.11.0/Drivers\n")
+	" Ex. -DDRIVER_PATH=/home/user/STM32Cube_FW_F3_V1.11.0/Drivers\n")
 endif ()
 
 message("DRIVER_PATH: ${DRIVER_PATH}")
@@ -56,7 +56,7 @@ message("MCU_MAJOR_MODEL: ${MCU_MAJOR_MODEL}")
 
 if (NOT DEFINED MCU_MINOR_MODEL)
 	message(FATAL_ERROR " MCU_MINOR_MODEL must be defined.\n"
-	"Ex. -DMCU_MINOR_MODEL=STM32F303x8")
+	" Ex. -DMCU_MINOR_MODEL=STM32F303x8")
 endif ()
 
 message(STATUS "MCU_MINOR_MODEL: ${MCU_MINOR_MODEL}")
