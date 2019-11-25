@@ -44,7 +44,7 @@ if (NOT DEFINED DRIVER_PATH)
 	" Ex. -DDRIVER_PATH=/home/user/STM32Cube_FW_F3_V1.11.0/Drivers\n")
 endif ()
 
-message("DRIVER_PATH: ${DRIVER_PATH}")
+message(STATUS "DRIVER_PATH: ${DRIVER_PATH}")
 
 if (NOT DEFINED MCU_MAJOR_MODEL)
 	message(FATAL_ERROR " MCU_MAJOR_MODEL must be defined.\n"
@@ -52,7 +52,7 @@ if (NOT DEFINED MCU_MAJOR_MODEL)
 
 endif ()
 
-message("MCU_MAJOR_MODEL: ${MCU_MAJOR_MODEL}")
+message(STATUS "MCU_MAJOR_MODEL: ${MCU_MAJOR_MODEL}")
 
 if (NOT DEFINED MCU_MINOR_MODEL)
 	message(FATAL_ERROR " MCU_MINOR_MODEL must be defined.\n"
@@ -63,8 +63,9 @@ message(STATUS "MCU_MINOR_MODEL: ${MCU_MINOR_MODEL}")
 
 add_definitions("-D${MCU_MINOR_MODEL}")
 
-if (DEFINED USE_FULL_LL_DRIVER)
+if (DEFINED USE_FULL_LL_DRIVER AND USE_FULL_LL_DRIVER STREQUAL "y")
 	add_definitions("-DUSE_FULL_LL_DRIVER")
+	message(STATUS "Full driver is used")
 endif ()
 
 # Подключение исходных кодов драйверов STM32
@@ -88,6 +89,7 @@ include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
 # Подключение дополнительных библиотек (git-модулей)
 
 add_subdirectory("ringbuf")
+include_directories("ringbuf/include")
 
 # Сборка и компоновка
 
