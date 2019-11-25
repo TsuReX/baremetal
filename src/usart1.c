@@ -9,8 +9,15 @@
 #include "usart1.h"
 #include "main.h"
 #include "console.h"
+#include "ringbuf.h"
 
 #include <stdint.h>
+
+/* TODO: Временная версия файла. В дальнейшем подразумевается,
+ * что USART1 будет являться транспортным уровнем для текстовой консоли и для spi-manager.
+ * Таким образом, содержащаяся в данном файле настройка и вариант использования USART1 будут специфичны для текстовой консоли.
+ * Настройки и вариант использования USART1 для spi-manager будут иными и будут располагаться в другом файле.
+ * USART1 может быть использован только либо для текстовой консоли, либо для spi-manager.*/
 
 /** Размер передаваемого буфера в байтах.*/
 #define USART1_TX_BUF_SIZE	0x1
@@ -21,7 +28,17 @@
 static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
 /** Передаваемый буфер.*/
 static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
-
+/** Кольцевой буфер приема данных через USART 1. */
+static volatile struct ring_buf rx_rb;
+/** Кольцевой буфер передачи данных через USART 1. */
+static volatile struct ring_buf tx_rb;
+/*
+ *	Обработчик прерывания, которое генерируется контроллером DMA 1 канала 4 в следующих случаях:
+ *		передана половина объема буфера данных;
+ *		передан весь буфер;
+ *		возникла ошибка передачи.
+ *	Данный канал DMA связан с каналом передачи (TX) USART 1.
+ */
 void DMA1_Channel4_IRQHandler(void)
 {
 	/*LL_DMA_IsActiveFlag_GI4(DMA1);
@@ -37,6 +54,13 @@ void DMA1_Channel4_IRQHandler(void)
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF4 | DMA_IFCR_CTCIF4 | DMA_IFCR_CHTIF4 | DMA_IFCR_CTEIF4));
 }
 
+/*
+ *	Обработчик прерывания, которое генерируется контроллером DMA 1 канала 5 в следующих случаях:
+ *		принята половина указанного объема данных;
+ *		принят весь объем данных;
+ *		возникла ошибка приема.
+ *	Данный канал DMA связан с каналом приема (RX) USART 1.
+ */
 void DMA1_Channel5_IRQHandler(void)
 {
 	/*LL_DMA_IsActiveFlag_GI5(DMA1);
@@ -49,9 +73,16 @@ void DMA1_Channel5_IRQHandler(void)
 	print("%s()\r\n", __func__);
 	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);
 
+	rb_store_data(&rx_rb, usart1_rx_buf, USART1_RX_BUF_SIZE);
+
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }
 
+/*
+ *	Обработчик прерывания, которое генерируется контроллером USART 1 в следующих случаях:
+ *		принят байт данных;
+ *		принят байт данных при полном буфере.
+ */
 void USART1_IRQHandler(void)
 {
 	/* Выбрать все (пока) прерывания.*/
@@ -63,6 +94,10 @@ void USART1_IRQHandler(void)
 	WRITE_REG(USART1->ICR, (0XFFFFFFFF));
 }
 
+/*
+ *	Настройка USART 1.
+ *	Для работы USART 1 настраиваются AHB1, GPIO9/10, USART1, DMA4/5, NVIC.
+ */
 void usart1_config(void)
 {
 
@@ -163,6 +198,8 @@ void usart1_config(void)
 
 	LL_DMA_EnableChannel(DMA1, 4);
 	LL_DMA_EnableChannel(DMA1, 5);
+
+	rb_init_ring_buffer(&rx_rb);
 
 	LL_USART_Enable(USART1);
 
