@@ -29,9 +29,9 @@ static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
 /** Передаваемый буфер.*/
 static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
 /** Кольцевой буфер приема данных через USART 1. */
-static volatile struct ring_buf rx_rb;
+static struct ring_buf rx_rb;
 /** Кольцевой буфер передачи данных через USART 1. */
-static volatile struct ring_buf tx_rb;
+static struct ring_buf tx_rb;
 /*
  *	Обработчик прерывания, которое генерируется контроллером DMA 1 канала 4 в следующих случаях:
  *		передана половина объема буфера данных;
