@@ -12,6 +12,6 @@
 /*
  *	Инициализирует подсистему диспетчирования на основе таймера TIM6.
  */
-void sched_init(void);
+void sched_config(void);
 
 #endif /* __SCHEDULER_H_ */
