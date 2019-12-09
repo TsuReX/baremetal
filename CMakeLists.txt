@@ -25,7 +25,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/flash.ld \
 set(C_SRC	"src/main.c"
 			"src/config.c"
 			#"src/i2c.c"
-			"src/usart1.c"
 			"src/console.c"
 			"src/scheduler.c"
 			"src/stm32f3xx_it.c"

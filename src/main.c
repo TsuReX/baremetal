@@ -6,7 +6,6 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "usart1.h"
 #include "i2c.h"
 #include "console.h"
 #include "config.h"
@@ -26,7 +25,7 @@ int main(void)
 	/** Configure board's peripherals. */
 	board_config();
 
-	usart1_config();
+	console_init();
 
 //	i2c1_config();
 
