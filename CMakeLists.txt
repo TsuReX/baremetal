@@ -24,7 +24,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/flash.ld \
 
 set(C_SRC	"src/main.c"
 			"src/config.c"
-			#"src/i2c.c"
 			"src/console.c"
 			"src/scheduler.c"
 			"src/stm32f3xx_it.c"
@@ -36,6 +35,26 @@ set(ASM_SRC	"src/startup_stm32f303x8.s" )
 include_directories("include")
 
 # Проверка параметров сборки
+
+set(BOARD_TYPE_STATUS "NOT_SET")
+
+if (DEFINED BOARD_TYPE)
+	file(GLOB BOARD_SCRIPTS "boards/*.cmake")
+endif()
+
+if (DEFINED BOARD_SCRIPTS)
+	foreach(SCRIPT ${BOARD_SCRIPTS})
+		include(${SCRIPT})
+		if(${BOARD_TYPE_STATUS} STREQUAL "SET")
+			break()
+		endif()
+	endforeach()
+endif()
+
+if (DEFINED BOARD_TYPE AND ${BOARD_TYPE_STATUS} STREQUAL "NOT_SET")
+	message(FATAL_ERROR " Unknown BOARD_TYPE was specified.\n"
+	" Specifiy correct BOARD_TYPE or specify parameters manualy.")
+endif()
 
 message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
