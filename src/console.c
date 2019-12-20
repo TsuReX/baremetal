@@ -29,20 +29,17 @@ static int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout);
 static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
 /** Передаваемый буфер.*/
 static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
+
 /** Кольцевой буфер приема данных через USART 1. */
 static struct ring_buf rx_rb;
 /** Кольцевой буфер передачи данных через USART 1. */
 static struct ring_buf tx_rb;
 
 /*
- *	Настройка USART 1.
- *	Для работы USART 1 настраиваются AHB1, GPIO9/10, USART1, DMA4/5, NVIC.
+ * @brief	Настройка портов GPIO 9/10 для реализации каналов приема и передачи USART1.
  */
-void console_init(void)
+static void console_gpio_init(void)
 {
-
-	/* Настройка GPIO */
-
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
@@ -56,12 +53,23 @@ void console_init(void)
 	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_10, LL_GPIO_OUTPUT_PUSHPULL);
 	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+}
 
-	/* Настройка USART1 */
-
+/*
+ * @brief Настройка USART1 для работы на скорости 115200, включение прерываний.
+ */
+static void console_usart1_init(void)
+{
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
-	LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
+	/*
+	 * Данная функция эквивалентна следующим функциям
+	 * LL_USART_EnableDirectionRx(USART1);
+	 * LL_USART_EnableDirectionTx(USART1);
+	 */
+	/* Активация приемника и передатчика должна происходить после полной настройки.
+	 * LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);*/
+
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
 	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
@@ -69,25 +77,100 @@ void console_init(void)
 	LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
 	LL_USART_SetBaudRate(USART1, LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE), LL_USART_OVERSAMPLING_16, 115200);
 
-	LL_USART_EnableOverrunDetect(USART1);
-	LL_USART_EnableDMADeactOnRxErr(USART1);
+	/*LL_USART_EnableOverrunDetect(USART1);*/
+	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
 	LL_USART_EnableDMAReq_RX(USART1);
-	LL_USART_EnableIT_RXNE(USART1);
-	/*LL_USART_EnableDMAReq_TX(USART1);*/
+	LL_USART_EnableDMAReq_TX(USART1);
+	/*LL_USART_EnableIT_RXNE(USART1);*/
 
-	/* Настройка NVIC */
+	/*NVIC_SetPriority(USART1_IRQn, 0);
+	NVIC_EnableIRQ(USART1_IRQn);*/
 
-	NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
-	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+	LL_USART_Enable(USART1);
+}
 
-	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
-	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+/*
+ * @brief	Включает канал 4 DMA1 и передатчик USART1 для начала передачи данных.
+ * 			Данные копируются из памяти с помощью канала 4 DMA 1 в буфер передатчика USART1.
+ * 			Выполнение передачи происходит асинхронно относительно основной программы и
+ * 			на данный момент никак не контролируется успешность выполнения этой операции.
+ * 			После завершения
+ */
+static void console_start_transmission()
+{
+	/* Включить передатчик USART1. */
+	LL_USART_EnableDirectionTx(USART1);
+	/* Включить передающий канал 4 DMA1. */
+	LL_DMA_EnableChannel(DMA1, 4);
+}
 
-	NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_EnableIRQ(USART1_IRQn);
+/*
+ * @brief	Выключает канал 4 DMA1 и передатчик USART1.
+ * 			Выключение может происходить идним из нескольких способов:
+ * 			синхронным и асинхронным.
+ * 			В данный момент происходит синхронное принудительное отключение.
+ */
+static void console_stop_transmission()
+{
+	/* TODO: Изучить вопрос выключения канала DMA,
+	 * интересует момент выключения в момент передачи.
+	 * Вероятно, необходимо дождаться завершения.
+	 * Реализаций может быть несколько:
+	 * - синхронная - ожидать в цикле (может привести к бесконечному ожиданию),
+	 * либо же отключить принудительно, что может породить ошибки.
+	 * - асинхронная - установить флаг необходимости завершения,
+	 * а в обработчике окончания передачи (он должен быть включен) выключить канал.
+	 * Реализовать. */
 
-	/* Настройка DMA. */
+	/* Выключить передающий канал 4 DMA1. */
+	LL_DMA_DisableChannel(DMA1, 4);
 
+	/* TODO: Изучить вопрос выключения канала TX USART,
+	 * интересует момент выключения в момент передачи.
+	 * Вероятно, необходимо дождаться завершения.
+	 * Реализаций может быть две:
+	 * - синхронная - ожидать в цикле (может привести к бесконечному ожиданию),
+	 * либо же отключить принудительно, что может породить ошибки.
+	 * - асинхронная - установить флаг необходимости завершения,
+	 * а в обработчике окончания передачи (он должен быть включен) выключить канал.
+	 * Реализовать. */
+
+	/* Выключить передатчик USART1. */
+	LL_USART_DisableDirectionTx(USART1);
+}
+
+/*
+ * @brief	Включает канал 5 DMA1 и приемник USART 1 для приема данных по готовности.
+ */
+static void console_start_reception()
+{
+	/* Включить приемный канал 5 DMA1. */
+	LL_DMA_EnableChannel(DMA1, 5);
+	/* Включить приемник USART1. */
+	LL_USART_EnableDirectionRx(USART1);
+}
+
+/*
+ * @brief	TODO.
+ */
+static void console_stop_reception()
+{
+	/* TODO: Реализовать аналогично console_stop_transmission(). */
+}
+
+/*
+ * @brief	Настройка канала 4 DMA1 на передачу, включение прерываний.
+ * 			Генерация прерывайни осуществляется по событиям:
+ * 				передана половина объема буфера данных; (Пока не реализовано)
+ *				передан весь буфер; (Пока не реализовано)
+ *				возникла ошибка передачи. (Пока не реализовано)
+ *
+ * @param[in]	tx_buf			буфер содержащий данные для передачи;
+ *
+ * @param[in]	tx_buf_size		объем передаваемых данных в байтах.
+ */
+static void console_dma1_ch4_init(void *tx_buf, size_t tx_buf_size)
+{
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
 	/* Настройка канала передачи. */
@@ -102,16 +185,34 @@ void console_init(void)
 							LL_DMA_MDATAALIGN_BYTE);
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_4,
-							(uint32_t)&usart1_tx_buf,
+							(uint32_t)tx_buf,
 							LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_TRANSMIT),
 							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_4));
 
-	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, USART1_TX_BUF_SIZE);
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, tx_buf_size);
 
+	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_4);*/
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);
+	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_4);*/
+
+	NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
+	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+}
+
+/*
+ * @brief	Настройка канала 5 DMA1 на прием, включение прерываний
+ * 			Генерация прерывайни осуществляется по событиям:
+ * 				передана половина объема буфера данных; (Пока не реализовано)
+ *				передан весь буфер;
+ *				возникла ошибка передачи. (Пока не реализовано)
+ *
+ * @param[in]	rx_buf			буфер, в который будут помещены принятые данные;
+ *
+ * @param[in]	rx_buf_size		ожидаемый объем принимаемых данных.
+ */
+static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
+{
 	/* Настройка канала приема. */
-
-	/* Настраивается циклический режим приема.
-	 * После завершения приема канал будет вновь настроен. */
 	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_5,
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
 							LL_DMA_PRIORITY_HIGH              |
@@ -123,26 +224,40 @@ void console_init(void)
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
 							LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_RECEIVE),
-							(uint32_t)&usart1_rx_buf,
+							(uint32_t)rx_buf,
 							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
 
-	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, USART1_RX_BUF_SIZE);
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, rx_buf_size);
 
-	LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_4);
-	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);
-	LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_4);
-
-	LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);
+	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);*/
 	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
-	LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);
+	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);*/
 
-	LL_DMA_EnableChannel(DMA1, 4);
-	LL_DMA_EnableChannel(DMA1, 5);
+	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
+	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+}
 
+/*
+ *	Настройка USART 1.
+ *	Для работы USART 1 настраиваются AHB1, GPIO9/10, USART1, DMA4/5, NVIC.
+ */
+void console_init(void)
+{
+
+	/* Настройка GPIO9/10. */
+	console_gpio_init();
+
+	/* Настройка USART1. */
+	console_usart1_init();
+
+	/* Настройка и включение приемного канала 5 DMA1. */
+	console_dma1_ch5_init(usart1_rx_buf, 1);
+
+	/* Настройка кольцевых буферов */
 	rb_init_ring_buffer(&rx_rb);
+	rb_init_ring_buffer(&tx_rb);
 
-	LL_USART_Enable(USART1);
-
+	console_start_reception();
 }
 
 void console_close(void)
@@ -235,7 +350,7 @@ void DMA1_Channel5_IRQHandler(void)
 	print("%s()\r\n", __func__);
 	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);
 
-	rb_store_data(&rx_rb, usart1_rx_buf, USART1_RX_BUF_SIZE);
+	rb_store_data(&rx_rb, usart1_rx_buf, 1);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }
