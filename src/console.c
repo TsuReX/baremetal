@@ -94,6 +94,24 @@ static void console_usart1_init(void)
 }
 
 /*
+ * @brief Отключение USART1.
+ */
+static void console_usart1_close(void)
+{
+
+	/*LL_USART_DisableOverrunDetect(USART1);*/
+	/*LL_USART_DisableDMADeactOnRxErr(USART1);*/
+	LL_USART_DisableDMAReq_RX(USART1);
+	LL_USART_DisableDMAReq_TX(USART1);
+	/*LL_USART_DisableIT_RXNE(USART1);*/
+
+	/*NVIC_SetPriority(USART1_IRQn, 0);
+	NVIC_DisableIRQ(USART1_IRQn);*/
+
+	LL_USART_Disable(USART1);
+}
+
+/*
  * @brief	Включает канал 4 DMA1 и передатчик USART1 для начала передачи данных.
  * 			Данные копируются из памяти с помощью канала 4 DMA 1 в буфер передатчика USART1.
  * 			Выполнение передачи происходит асинхронно относительно основной программы и
@@ -292,43 +310,31 @@ void console_init(void)
 	console_start_reception();
 }
 
+/*
+ * @brief	Завершение работы консоли, выключение устройств и освобождение ресурсов.
+ */
 void console_close(void)
 {
-	/* TODO: Реализовать. */
+	console_stop_reception();
+
+	console_start_transmission();
+
+	console_usart1_close();
+
 }
 
 void print(const char *format, ...)
 {
-	/* TODO: Реализовать накопление передаваемого буфера в кольцевом буфере tx_rb. */
-
-	/*va_list argptr;
+	va_list argptr;
 	char	str[512];
 	int		sz;
-	size_t	i;
 
 	va_start(argptr, format);
 	sz = vsnprintf(str, 512, format, argptr);
 	if (sz > 0) {
-		uart1_transmit(str, sz, DELAY_500_MS);
+		rb_store_data(&tx_rb, str, sz);
 	}
-	va_end(argptr);*/
-}
-
-/**
- * @brief	Передает по каналу UART1 данные.
- *
- * @param[in]	data	передаваемые данные
- *
- * @param[in]	size	количество байтов данных
- *
- * @param[in]	ms_timeout	количество миллисекунд за которое должна произойти передача
- *
- * @retval		>= 0	количество переданных байтов данных
- * 				< 0		код ошибки
- */
-static int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout)
-{
-
+	va_end(argptr);
 }
 
 /*
