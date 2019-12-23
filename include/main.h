@@ -49,9 +49,6 @@
 #include "stm32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-/** Превышен допустимый временной лимит. */
-#define ERR_TIMEOUT		2
-
 /** Delay 500 milliseconds. */
 #define DELAY_500_MS	500
 

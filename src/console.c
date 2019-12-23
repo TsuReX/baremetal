@@ -14,11 +14,15 @@
 #include "console.h"
 #include "main.h"
 
-static int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout);
-
 /* Содержащаяся в данном файле настройка и вариант использования USART1 будут специфичны для текстовой консоли.
  * Настройки и вариант использования USART1 для spi-manager будут иными и будут располагаться в другом файле.
  * USART1 может быть использован только либо для текстовой консоли, либо для spi-manager.*/
+
+/** Количество байтов передаваемых через USART1. */
+#define SIZE_TO_TRANSMIT	32
+/** Количество миллисекунд,
+ * за которое должна завершиться передача байта даных через USART1. */
+#define TRANSMIT_TIMEOUT	20
 
 /** Размер передаваемого буфера в байтах.*/
 #define USART1_TX_BUF_SIZE	0x1
@@ -98,10 +102,35 @@ static void console_usart1_init(void)
  */
 static void console_start_transmission()
 {
-	/* Включить передатчик USART1. */
-	LL_USART_EnableDirectionTx(USART1);
-	/* Включить передающий канал 4 DMA1. */
-	LL_DMA_EnableChannel(DMA1, 4);
+	/* TODO: Испытать синхронную передачу данных через USART1
+	 * самим процессором без использования DMA!!!
+	 * При необходимости реализовать асинхронную передачу. */
+
+
+	uint8_t		data_buf[SIZE_TO_TRANSMIT];
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
+
+	/** Пердавать данные, пока кольцевой буфер не пуст. */
+	while (rb_get_data_size(&tx_rb) != 0) {
+
+		/** Передавать блоками по SIZE_TO_TRANSMIT либо оставшемуся количеству байтов. */
+		size_t data_size = rb_get_data(&tx_rb, data_buf, SIZE_TO_TRANSMIT);
+
+		size_t i;
+		/** Передавать синхронно по байту с таймаутом. */
+		for (i = 0; i < data_size; ++i) {
+			LL_USART_TransmitData8(USART1, data_buf[i]);
+
+			/** Ожидать окончания передачи ms_timeout миллисекунд.*/
+			do {
+				LL_mDelay(1);
+				--ms_timeout;
+				if (ms_timeout == 0)
+					/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
+					break;
+			} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+		}
+	}
 }
 
 /*
@@ -112,18 +141,13 @@ static void console_start_transmission()
  */
 static void console_stop_transmission()
 {
-	/* TODO: Изучить вопрос выключения канала DMA,
-	 * интересует момент выключения в момент передачи.
-	 * Вероятно, необходимо дождаться завершения.
-	 * Реализаций может быть несколько:
-	 * - синхронная - ожидать в цикле (может привести к бесконечному ожиданию),
-	 * либо же отключить принудительно, что может породить ошибки.
-	 * - асинхронная - установить флаг необходимости завершения,
-	 * а в обработчике окончания передачи (он должен быть включен) выключить канал.
-	 * Реализовать. */
+	/* TODO: Реализовать функцию после того, как будет решено,
+	 * какой вариант функции console_start_transmission (синхронный или асинхронный)
+	 * будет использоваться.
+	 * В случае синхронной передачи в данной функции не будет необходимости. */
 
 	/* Выключить передающий канал 4 DMA1. */
-	LL_DMA_DisableChannel(DMA1, 4);
+	/* LL_DMA_DisableChannel(DMA1, 4); */
 
 	/* TODO: Изучить вопрос выключения канала TX USART,
 	 * интересует момент выключения в момент передачи.
@@ -136,7 +160,7 @@ static void console_stop_transmission()
 	 * Реализовать. */
 
 	/* Выключить передатчик USART1. */
-	LL_USART_DisableDirectionTx(USART1);
+	/* LL_USART_DisableDirectionTx(USART1); */
 }
 
 /*
@@ -296,17 +320,7 @@ void print(const char *format, ...)
  */
 static int uart1_transmit(uint8_t *data, size_t size, size_t ms_timeout)
 {
-	size_t i;
-	for (i = 0; i < size; ++i) {
-		LL_USART_TransmitData8(USART1, data[i]);
-		do {
-			LL_mDelay(1);
-			--ms_timeout;
-			if (ms_timeout == 0)
-				return -ERR_TIMEOUT;
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
-	}
-	return i;
+
 }
 
 /*
