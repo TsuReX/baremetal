@@ -124,7 +124,6 @@ static void console_start_transmission()
 	 * самим процессором без использования DMA!!!
 	 * При необходимости реализовать асинхронную передачу. */
 
-
 	uint8_t		data_buf[SIZE_TO_TRANSMIT];
 	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
 
@@ -241,12 +240,20 @@ static void console_dma1_ch4_init(void *tx_buf, size_t tx_buf_size)
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, tx_buf_size);
 
+	/* На данный момент нет необходимости в генерации прерываний по передаче данных. */
+
+	/** Генерация прерывания по передаче половины буфера. */
 	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_4);*/
-	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);
+
+	/** Генерация прерывания по передаче всего буфера. */
+	/*LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_4);*/
+
+	/* Генерация прерывания по ошибке во время передачи. */
 	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_4);*/
 
-	NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
+	/*NVIC_SetPriority(DMA1_Channel4_IRQn, 0);
 	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+	*/
 }
 
 /*
@@ -279,8 +286,13 @@ static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, rx_buf_size);
 
+	/** Генерация прерывания по приему половины буфера. */
 	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);*/
+
+	/** Генерация прерывания по приему всего буфера. */
 	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
+
+	/* Генерация прерывания по ошибке во время приема. */
 	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);*/
 
 	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
@@ -321,6 +333,32 @@ void console_close(void)
 
 	console_usart1_close();
 
+	/* TODO: Рассмотреть необходимость отключения DMA. */
+
+	/* TODO: Рассмотреть необходимость отключения GPIO. */
+}
+
+int32_t console_process(void)
+{
+	console_start_transmission();
+
+	/* TODO: Обработать находящиеся в rx_rb принятые данные. */
+	/* На данный момент обработка данных заключается в их выдаче - программная закольцовка.
+	 * Данные перекладываются из кольцевого буфера приемника в кольцевой буфер передатчика.
+	 * После чего следует вывод сообщения о том, что была вызвана функция console_process(). */
+
+	uint8_t	data_buf[64];
+
+	while (rb_get_data_size(&tx_rb) != 0) {
+		size_t data_size = rb_get_data(&rx_rb, data_buf, SIZE_TO_TRANSMIT);
+		rb_store_data(&tx_rb, data_buf, data_size);
+	}
+	printf("%s()\n", __func__);
+
+	console_start_transmission();
+
+	/* Возвращаемое значение может отражать факт переполнения кольцевого буфера приема. */
+	return 0;
 }
 
 void print(const char *format, ...)
@@ -351,6 +389,8 @@ void DMA1_Channel4_IRQHandler(void)
 	LL_DMA_IsActiveFlag_HT4(DMA1);
 	LL_DMA_IsActiveFlag_TE4(DMA1);*/
 
+	/* На данный момент прерывания по передаче не используются. */
+
 	uint32_t dma1ch4_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF4 | DMA_ISR_TCIF4 | DMA_ISR_HTIF4 | DMA_ISR_TEIF4));
 
 	print("%s()\r\n", __func__);
@@ -373,14 +413,17 @@ void DMA1_Channel5_IRQHandler(void)
 	LL_DMA_IsActiveFlag_HT5(DMA1);
 	LL_DMA_IsActiveFlag_TE5(DMA1);*/
 
-	uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
+	/*uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
 
 	print("%s()\r\n", __func__);
-	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);
+	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);*/
+
+	/** Проверять тип прерывания нет необходимости, так как разрешены только прерывания по приему всего буфера. */
 
 	rb_store_data(&rx_rb, usart1_rx_buf, 1);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
+
 }
 
 /*
@@ -392,6 +435,8 @@ void USART1_IRQHandler(void)
 {
 	/* Выбрать все (пока) прерывания.*/
 	uint32_t usart1_if = READ_BIT(USART1->ISR, (0XFFFFFFFF));
+
+	/* На данный момент прерывание не используются. */
 
 	print("%s()\r\n", __func__);
 	print("USART1.ISR 0x%08X\r\n", usart1_if);
