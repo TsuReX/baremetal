@@ -175,11 +175,19 @@ static void console_start_reception()
 }
 
 /*
- * @brief	TODO.
+ * @brief	Отключает канал 5 DMA1 и приемник USART 1.
  */
 static void console_stop_reception()
 {
-	/* TODO: Реализовать аналогично console_stop_transmission(). */
+	/* TODO: Проанализировать работу функции и
+	 * при необходимости реализовать отключение
+	 * передачи с ожиднием флагов завершеня
+	 * для избежания взникновения ошибок. */
+
+	/* Включить приемный канал 5 DMA1. */
+	LL_DMA_DisableChannel(DMA1, 5);
+	/* Включить приемник USART1. */
+	LL_USART_DisableDirectionRx(USART1);
 }
 
 /*
