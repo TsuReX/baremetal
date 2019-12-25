@@ -110,6 +110,11 @@ include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
 add_subdirectory("ringbuf")
 include_directories("ringbuf/include")
 
+# Определение дополнительной цели для выполнения операции прошивки
+
+add_custom_target("flash")
+add_custom_command(TARGET "flash" POST_BUILD COMMAND date)
+
 # Сборка и компоновка
 
 add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC} ${DRIVER_C_SRC})
