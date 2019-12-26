@@ -111,9 +111,18 @@ add_subdirectory("ringbuf")
 include_directories("ringbuf/include")
 
 # Определение дополнительной цели для выполнения операции прошивки
+#set(ARG "-c \\\"init; reset halt;  flash write_image erase ./debug-dev.elf; reset; exit\\\"")
+#message("message ${ARG}")
+add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
-add_custom_target("flash")
-add_custom_command(TARGET "flash" POST_BUILD COMMAND date)
+#add_custom_command(TARGET "flash" POST_BUILD COMMAND echo ${ARG})
+
+add_custom_command(	TARGET "flash"
+					POST_BUILD
+					#COMMAND "echo -f ../openocd.cfg -c \"init; reset halt;  flash write_image erase ./debug-dev.elf; reset; exit\""
+					COMMAND sh
+					ARGS ../program-flash.sh
+					)
 
 # Сборка и компоновка
 
