@@ -111,18 +111,29 @@ add_subdirectory("ringbuf")
 include_directories("ringbuf/include")
 
 # Определение дополнительной цели для выполнения операции прошивки
-#set(ARG "-c \\\"init; reset halt;  flash write_image erase ./debug-dev.elf; reset; exit\\\"")
-#message("message ${ARG}")
-add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
-#add_custom_command(TARGET "flash" POST_BUILD COMMAND echo ${ARG})
+add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 add_custom_command(	TARGET "flash"
 					POST_BUILD
-					#COMMAND "echo -f ../openocd.cfg -c \"init; reset halt;  flash write_image erase ./debug-dev.elf; reset; exit\""
 					COMMAND sh
 					ARGS ../program-flash.sh
 					)
+					
+add_custom_target("flash2" DEPENDS ${PROJ_NAME})
+
+# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
+# и должна определяться во вспомогательных скриптах из директории boards, файл конфигурации должен располагаться там же 
+set(OOCD_CONFIG "../openocd.cfg")
+
+add_custom_command(	TARGET "flash2" 
+					POST_BUILD
+					COMMAND openocd  
+					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON> 
+							reset halt$<SEMICOLON>
+							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
+							reset$<SEMICOLON>
+							exit\")
 
 # Сборка и компоновка
 
