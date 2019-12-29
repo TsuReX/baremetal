@@ -9,7 +9,7 @@
 #include "main.h"
 #include "scheduler.h"
 
-void sched_config(void)
+void scheduler_init(void)
 {
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
@@ -36,11 +36,27 @@ void sched_config(void)
 	LL_TIM_GenerateEvent_UPDATE(TIM6);
 }
 
+void scheduler_close(void)
+{
+	LL_TIM_DisableCounter(TIM6);
+	LL_TIM_DisableIT_UPDATE(TIM6);
+	NVIC_DisableIRQ(TIM6_DAC1_IRQn);
+}
+
+/*
+ *	@brief Функция-заглушка. Для выполнения необходимых
+ *	операций по таймеру необходимо переобпределить функцию
+ *	и размесить в ней вызовы соответствуюших команд.
+ */
+void __attribute__((weak)) scheduler_process(void)
+{
+}
+
 /*
  *	Обработчик прерывания событий таймера TIM6.
  */
 void TIM6_DAC1_IRQHandler(void)
 {
-	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_3);
+	scheduler_process();
 	LL_TIM_ClearFlag_UPDATE(TIM6);
 }

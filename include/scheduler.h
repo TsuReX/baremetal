@@ -10,8 +10,18 @@
 #define __SCHEDULER_H_
 
 /*
- *	Инициализирует подсистему диспетчирования на основе таймера TIM6.
+ *	@brief Инициализирует подсистему диспетчирования на основе таймера TIM6.
  */
-void sched_config(void);
+void scheduler_init(void);
+
+/*
+ *	@brief Отключает таймер TIM6.
+ */
+void scheduler_close(void);
+
+/*
+ *	@brief Выполняет необходимые операции через определенные нтервалы времени.
+ */
+void scheduler_process(void);
 
 #endif /* __SCHEDULER_H_ */
