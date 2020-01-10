@@ -110,31 +110,6 @@ include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
 add_subdirectory("ringbuf")
 include_directories("ringbuf/include")
 
-# Определение дополнительной цели для выполнения операции прошивки
-
-add_custom_target("flash" DEPENDS ${PROJ_NAME})
-
-add_custom_command(	TARGET "flash"
-					POST_BUILD
-					COMMAND sh
-					ARGS ../program-flash.sh
-					)
-					
-add_custom_target("flash2" DEPENDS ${PROJ_NAME})
-
-# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
-# и должна определяться во вспомогательных скриптах из директории boards, файл конфигурации должен располагаться там же 
-set(OOCD_CONFIG "../openocd.cfg")
-
-add_custom_command(	TARGET "flash2" 
-					POST_BUILD
-					COMMAND openocd  
-					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON> 
-							reset halt$<SEMICOLON>
-							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-							reset$<SEMICOLON>
-							exit\")
-
 # Сборка и компоновка
 
 add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC} ${DRIVER_C_SRC})

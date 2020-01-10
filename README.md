@@ -2,6 +2,7 @@ clear ; rm -rf ./* ; cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DDRIVER_PATH
 
 clear ; rm -rf ./* ; cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DDRIVER_PATH=../STM32Cube_FW_F3_V1.11.0/Drivers -DBOARD_TYPE=nucleo_board_f303k8t6; make
 
-clear ; rm -rf ../build/* ; cmake -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DDRIVER_PATH=../STM32Cube_FW_F3_V1.11.0/Drivers -DBOARD_TYPE=nucleo_board_f303k8t6
+clear ; rm -rf ../build/* 	;\
+cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DDRIVER_PATH=../STM32Cube_FW_F3_V1.11.0/Drivers -DBOARD_TYPE=nucleo_board_f303k8t6 ;\
 cmake --build . --clean-first --target flash
 
