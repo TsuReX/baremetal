@@ -43,11 +43,7 @@ void scheduler_close(void)
 	NVIC_DisableIRQ(TIM6_DAC1_IRQn);
 }
 
-/*
- *	@brief Функция-заглушка. Для выполнения необходимых
- *	операций по таймеру необходимо переобпределить функцию
- *	и размесить в ней вызовы соответствуюших команд.
- */
+
 void __attribute__((weak)) scheduler_process(void)
 {
 }

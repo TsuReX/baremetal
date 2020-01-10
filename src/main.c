@@ -29,7 +29,7 @@ int main(void)
 
 //	i2c1_config();
 
-	sched_config();
+	scheduler_init();
 
 	/** Add your application code here */
 
