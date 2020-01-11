@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CURRENT_BOARD_TYPE "nucleo_board_f303k8t6")
+set(CURRENT_BOARD_TYPE "china_board_f103c8t6")
 
 if (NOT DEFINED BOARD_TYPE)
 	return()
