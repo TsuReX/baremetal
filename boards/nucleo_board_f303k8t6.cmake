@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CURRENT_BOARD_TYPE "nucleo_board_f303k8t6")
 
+# Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
 	return()
 endif ()
 
+# Если заданый тип платформы не соответствует типу платформы,
+# для которого используется текущий скрипт,
+# то завершаем выполнение текущего скрипта
 if (NOT ${BOARD_TYPE} STREQUAL ${CURRENT_BOARD_TYPE})
 	return()	
 endif ()
@@ -24,6 +28,7 @@ set(USE_FULL_LL_DRIVER "y")
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
+# Смотреть FLASHER_TYPE в README.md
 set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_board_f303k8t6_stlinkv2-1.cfg")
 
 # Определение команд для цели flash

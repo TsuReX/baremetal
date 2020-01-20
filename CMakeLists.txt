@@ -1,17 +1,21 @@
+## Указание минимальной необходимой версии cmake для сборки проекта
+
 cmake_minimum_required(VERSION 3.10)
+
+## Установки имени проекта
 
 set(PROJ_NAME debug-dev)
 
-# Предотвращение проверки работоспособности компилятора
-# (необходимо для избежания проблемы при кросс-сборке)
+## Предотвращение проверки работоспособности компилятора
+## (необходимо для избежания проблемы при кросс-сборке)
 
 set(CMAKE_C_COMPILER_WORKS 1)
 
-# Указание используемых в  проекте языков
+## Указание используемых в проекте языков
 
 project(${PROJ_NAME} C ASM)
 
-# Настройка параметров сбоки и компоновки
+## Настройка параметров сбоки и компоновки
 
 set(CMAKE_C_FLAGS	"-mcpu=cortex-m4 -ggdb -g -flto -Werror")
 set(CMAKE_ASM_FLAGS	"-mcpu=cortex-m4 -ggdb -g -flto -Werror")
@@ -20,7 +24,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/flash.ld \
 							-mcpu=cortex-m4 -specs=nano.specs \
 							-flto -Wl,--gc-sections")
 
-# Подключение основных исходных кодов
+## Подключение файло исходных кодов и заголовков
 
 set(C_SRC	"src/main.c"
 			"src/config.c"
@@ -34,23 +38,39 @@ set(ASM_SRC	"src/startup_stm32f303x8.s" )
 
 include_directories("include")
 
-# Проверка параметров сборки
+## Поиск в поддиректории boards вспомогательных .cmake скриптов
 
+# Установить тип платформы как неустановленный
 set(BOARD_TYPE_STATUS "NOT_SET")
 
+# Найти все .cmake скрипты в поддиректории boards
 if (DEFINED BOARD_TYPE)
 	file(GLOB BOARD_SCRIPTS "boards/*.cmake")
 endif()
 
 if (DEFINED BOARD_SCRIPTS)
 	foreach(SCRIPT ${BOARD_SCRIPTS})
+		# Подключить вспомогательный скрипт
 		include(${SCRIPT})
+		# Если вспомогательный скрипт соответствует платформе BOARD_TYPE,
+		# то далее нет неободимости подключать оставшиеся скрипты,
+		# так как необходимые действия уже выполнены
 		if(${BOARD_TYPE_STATUS} STREQUAL "SET")
 			break()
 		endif()
 	endforeach()
 endif()
 
+## Проверка установки параметров: 
+## BOARD_TYPE_STATUS, CMAKE_C_COMPILER, DRIVER_PATH, 
+## MCU_MAJOR_MODEL, MCU_MINOR_MODEL, USE_FULL_LL_DRIVER
+
+# ЗАМЕЧАНИЕ. Если проект будет собираться для процессоров от разных производителей,
+# то набор передаваемых параметров может меняться. Для решения этой задачи можно использовать
+# явное указание типа процессора: CPU_TYPE=STM32/STM8/LPC/TI - или что-то подобное
+
+# Если указан тип платформы, а вспомогательный скрипт не найден,
+# то выдать сообщение и завершить работу
 if (DEFINED BOARD_TYPE AND ${BOARD_TYPE_STATUS} STREQUAL "NOT_SET")
 	message(FATAL_ERROR " Unknown BOARD_TYPE was specified.\n"
 	" Specifiy correct BOARD_TYPE or specify parameters manualy.")
@@ -68,7 +88,6 @@ message(STATUS "DRIVER_PATH: ${DRIVER_PATH}")
 if (NOT DEFINED MCU_MAJOR_MODEL)
 	message(FATAL_ERROR " MCU_MAJOR_MODEL must be defined.\n"
 	" Ex. -DMCU_MAJOR_MODEL=STM32F3xx")
-
 endif ()
 
 message(STATUS "MCU_MAJOR_MODEL: ${MCU_MAJOR_MODEL}")
@@ -87,12 +106,14 @@ if (DEFINED USE_FULL_LL_DRIVER AND USE_FULL_LL_DRIVER STREQUAL "y")
 	message(STATUS "Full driver is used")
 endif ()
 
-# Подключение исходных кодов драйверов STM32
+## Подключение исходных кодов драйверов STM32
 
 set(DRIVER_PATH_SRC "${DRIVER_PATH}/${MCU_MAJOR_MODEL}_HAL_Driver/Src/")
 
 string(TOLOWER ${MCU_MAJOR_MODEL} LC_MCU_MAJOR_MODEL)
 
+# TODO: Реализовать подключение исходников по шаблону или по раширению,
+# чтобы исключить ручное добавление в переменную
 set(DRIVER_C_SRC
 					"${DRIVER_PATH_SRC}/${LC_MCU_MAJOR_MODEL}_ll_utils.c"
 					"${DRIVER_PATH_SRC}/${LC_MCU_MAJOR_MODEL}_ll_rcc.c"
@@ -105,12 +126,14 @@ include_directories("${DRIVER_PATH}/${MCU_MAJOR_MODEL}_HAL_Driver/Inc")
 include_directories("${DRIVER_PATH}/CMSIS/Device/ST/${MCU_MAJOR_MODEL}/Include")
 include_directories("${DRIVER_PATH}/CMSIS/Core/Include")
 
-# Подключение дополнительных библиотек (git-модулей)
+## Подключение дополнительных библиотек (git-модулей)
 
+# TODO: Реализовать добавление подмодулей git и включение заголовочников через список,
+# чтобы исключить здесь ручное добавление кода для каждого подмодуля 
 add_subdirectory("ringbuf")
 include_directories("ringbuf/include")
 
-# Сборка и компоновка
+## Сборка и компоновка
 
 add_executable(${PROJ_NAME} ${ASM_SRC} ${C_SRC} ${DRIVER_C_SRC})
 target_link_libraries(${PROJ_NAME} -lc -lm -lnosys ringbuf)
