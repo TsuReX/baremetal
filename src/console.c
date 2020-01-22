@@ -71,8 +71,6 @@ static void console_usart1_init(void)
 	 * LL_USART_EnableDirectionRx(USART1);
 	 * LL_USART_EnableDirectionTx(USART1);
 	 */
-	/* Активация приемника и передатчика должна происходить после полной настройки.
-	 * LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);*/
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
@@ -84,11 +82,14 @@ static void console_usart1_init(void)
 	/*LL_USART_EnableOverrunDetect(USART1);*/
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
 	LL_USART_EnableDMAReq_RX(USART1);
-	LL_USART_EnableDMAReq_TX(USART1);
-	/*LL_USART_EnableIT_RXNE(USART1);*/
+	/*LL_USART_EnableDMAReq_TX(USART1);*/
+	LL_USART_EnableIT_RXNE(USART1);
 
 	/*NVIC_SetPriority(USART1_IRQn, 0);
 	NVIC_EnableIRQ(USART1_IRQn);*/
+
+	/* Активация приемника и передатчика должна происходить после полной настройки. */
+	LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
 
 	LL_USART_Enable(USART1);
 }
@@ -311,7 +312,6 @@ void console_init(void)
 
 	/* Настройка USART1. */
 	console_usart1_init();
-
 	/* Настройка и включение приемного канала 5 DMA1. */
 	console_dma1_ch5_init(usart1_rx_buf, 1);
 
@@ -320,6 +320,8 @@ void console_init(void)
 	rb_init_ring_buffer(&tx_rb);
 
 	console_start_reception();
+
+	d_print("DEBUG: Console initialized\n\r");
 }
 
 /*
@@ -373,6 +375,41 @@ void print(const char *format, ...)
 		rb_store_data(&tx_rb, str, sz);
 	}
 	va_end(argptr);
+}
+
+void d_print(const char *format, ...)
+{
+	va_list 	argptr;
+	char		str[512];
+	int			sz;
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
+
+	va_start(argptr, format);
+	sz = vsnprintf(str, 512, format, argptr);
+	va_end(argptr);
+
+	if (sz <= 0) {
+		return;
+	}
+
+	/*
+	 * TODO: необходимо на момент работы данной функции дождаться завершения текущей передачи,
+	 * сохранить состояние контроллера USART1, запретить все прерывания, произвести передачу,
+	 * а после этого восстановить состояние контроллера USART1.
+	 */
+	size_t i;
+	for (i = 0; i < sz; ++i) {
+		LL_USART_TransmitData8(USART1, str[i]);
+
+		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
+		do {
+			LL_mDelay(1);
+			--ms_timeout;
+			if (ms_timeout == 0)
+				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
+				break;
+		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+	}
 }
 
 /*

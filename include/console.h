@@ -64,4 +64,16 @@ int32_t console_add_cmd(const struct console_command *csl_cmd);
  */
 void print(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
+/*
+ * @brief	Выводит в текстовую консоль данные на основе строки формата.
+ * 			В отличие от функции print, данная функция производит вывод напрямую без использования DMA.
+ *
+ * @param[in]	format	строка формата выводимых данных
+ *
+ * @param[in]	...	список аргументов, значения которых необходимо вывести в текстовую консоль
+ *
+ * @retval	void
+ */
+void d_print(const char *format, ...) __attribute__((format(printf, 1, 2)));
+
 #endif /* _CONSOLE_H_ */
