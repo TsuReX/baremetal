@@ -108,7 +108,7 @@ static void systick_config(uint32_t hclk_freq)
 void board_config(void)
 {
 	/** Fire LD3 (green) led. */
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
 }
 
 /**
@@ -128,8 +128,6 @@ void soc_config(void)
 	/** Configuring GPIO. */
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_OUTPUT);
-
-
 
 }
 
