@@ -66,12 +66,6 @@ static void console_usart1_init(void)
 {
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
-	/*
-	 * Данная функция эквивалентна следующим функциям
-	 * LL_USART_EnableDirectionRx(USART1);
-	 * LL_USART_EnableDirectionTx(USART1);
-	 */
-
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
 	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
@@ -83,13 +77,12 @@ static void console_usart1_init(void)
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
 	LL_USART_EnableDMAReq_RX(USART1);
 	/*LL_USART_EnableDMAReq_TX(USART1);*/
-	LL_USART_EnableIT_RXNE(USART1);
+	/*LL_USART_EnableIT_RXNE(USART1);*/
 
-	/*NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_EnableIRQ(USART1_IRQn);*/
+	NVIC_SetPriority(USART1_IRQn, 0);
+	NVIC_EnableIRQ(USART1_IRQn);
 
-	/* Активация приемника и передатчика должна происходить после полной настройки. */
-	LL_USART_SetTransferDirection(USART1, LL_USART_DIRECTION_TX_RX);
+	LL_USART_EnableDirectionTx(USART1);
 
 	LL_USART_Enable(USART1);
 }
@@ -99,6 +92,8 @@ static void console_usart1_init(void)
  */
 static void console_usart1_close(void)
 {
+	LL_USART_DisableDirectionRx(USART1);
+	LL_USART_DisableDirectionTx(USART1);
 
 	/*LL_USART_DisableOverrunDetect(USART1);*/
 	/*LL_USART_DisableDMADeactOnRxErr(USART1);*/
@@ -165,7 +160,7 @@ static void console_stop_transmission()
 	 * В случае синхронной передачи в данной функции не будет необходимости. */
 
 	/* Выключить передающий канал 4 DMA1. */
-	/* LL_DMA_DisableChannel(DMA1, 4); */
+	/* LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_4); */
 
 	/* TODO: Изучить вопрос выключения канала TX USART,
 	 * интересует момент выключения в момент передачи.
@@ -187,7 +182,8 @@ static void console_stop_transmission()
 static void console_start_reception()
 {
 	/* Включить приемный канал 5 DMA1. */
-	LL_DMA_EnableChannel(DMA1, 5);
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
+
 	/* Включить приемник USART1. */
 	LL_USART_EnableDirectionRx(USART1);
 }
@@ -202,10 +198,11 @@ static void console_stop_reception()
 	 * передачи с ожиднием флагов завершеня
 	 * для избежания взникновения ошибок. */
 
-	/* Включить приемный канал 5 DMA1. */
-	LL_DMA_DisableChannel(DMA1, 5);
 	/* Включить приемник USART1. */
 	LL_USART_DisableDirectionRx(USART1);
+
+	/* Включить приемный канал 5 DMA1. */
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
 }
 
 /*
@@ -230,7 +227,7 @@ static void console_dma1_ch4_init(void *tx_buf, size_t tx_buf_size)
 							LL_DMA_PRIORITY_HIGH              |
 							LL_DMA_MODE_NORMAL                |
 							LL_DMA_PERIPH_NOINCREMENT         |
-							LL_DMA_MEMORY_INCREMENT           |
+							LL_DMA_MEMORY_NOINCREMENT           |
 							LL_DMA_PDATAALIGN_BYTE            |
 							LL_DMA_MDATAALIGN_BYTE);
 
@@ -270,13 +267,15 @@ static void console_dma1_ch4_init(void *tx_buf, size_t tx_buf_size)
  */
 static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
 {
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
 	/* Настройка канала приема. */
 	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_5,
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
 							LL_DMA_PRIORITY_HIGH              |
 							LL_DMA_MODE_CIRCULAR              |
 							LL_DMA_PERIPH_NOINCREMENT         |
-							LL_DMA_MEMORY_INCREMENT           |
+							LL_DMA_MEMORY_NOINCREMENT           |
 							LL_DMA_PDATAALIGN_BYTE            |
 							LL_DMA_MDATAALIGN_BYTE);
 
@@ -306,12 +305,12 @@ static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
  */
 void console_init(void)
 {
-
 	/* Настройка GPIO9/10. */
 	console_gpio_init();
 
 	/* Настройка USART1. */
 	console_usart1_init();
+
 	/* Настройка и включение приемного канала 5 DMA1. */
 	console_dma1_ch5_init(usart1_rx_buf, 1);
 
@@ -351,11 +350,11 @@ int32_t console_process(void)
 
 	uint8_t	data_buf[64];
 
-	while (rb_get_data_size(&tx_rb) != 0) {
+	/** Перложить данные из приемного буфера в выходной. */
+	while (rb_get_data_size(&rx_rb) != 0) {
 		size_t data_size = rb_get_data(&rx_rb, data_buf, SIZE_TO_TRANSMIT);
 		rb_store_data(&tx_rb, data_buf, data_size);
 	}
-	printf("%s()\n", __func__);
 
 	console_start_transmission();
 
@@ -414,9 +413,9 @@ void d_print(const char *format, ...)
 
 /*
  *	Обработчик прерывания, которое генерируется контроллером DMA 1 канала 4 в следующих случаях:
- *		передана половина объема буфера данных;
- *		передан весь буфер;
- *		возникла ошибка передачи.
+ *		передана половина объема буфера данных (пока не реализовано);
+ *		передан весь буфер (пока не реализовано);
+ *		возникла ошибка передачи (пока не реализовано).
  *	Данный канал DMA связан с каналом передачи (TX) USART 1.
  */
 void DMA1_Channel4_IRQHandler(void)
@@ -426,21 +425,19 @@ void DMA1_Channel4_IRQHandler(void)
 	LL_DMA_IsActiveFlag_HT4(DMA1);
 	LL_DMA_IsActiveFlag_TE4(DMA1);*/
 
+	/*uint32_t dma1ch4_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF4 | DMA_ISR_TCIF4 | DMA_ISR_HTIF4 | DMA_ISR_TEIF4));
+	print("%s(): DMA1->ISR 0x%08X\r\n",__func__, dma1ch4_if);*/
+
 	/* На данный момент прерывания по передаче не используются. */
-
-	uint32_t dma1ch4_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF4 | DMA_ISR_TCIF4 | DMA_ISR_HTIF4 | DMA_ISR_TEIF4));
-
-	print("%s()\r\n", __func__);
-	print("DMA1.ISR 0x%08X\r\n", dma1ch4_if);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF4 | DMA_IFCR_CTCIF4 | DMA_IFCR_CHTIF4 | DMA_IFCR_CTEIF4));
 }
 
 /*
  *	Обработчик прерывания, которое генерируется контроллером DMA 1 канала 5 в следующих случаях:
- *		принята половина указанного объема данных;
+ *		принята половина указанного объема данных (пока не реализовано);
  *		принят весь объем данных;
- *		возникла ошибка приема.
+ *		возникла ошибка приема (пока не реализовано).
  *	Данный канал DMA связан с каналом приема (RX) USART 1.
  */
 void DMA1_Channel5_IRQHandler(void)
@@ -451,16 +448,13 @@ void DMA1_Channel5_IRQHandler(void)
 	LL_DMA_IsActiveFlag_TE5(DMA1);*/
 
 	/*uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
-
-	print("%s()\r\n", __func__);
-	print("DMA1.ISR 0x%08X\r\n", dma1ch5_if);*/
+	print("%s(): DMA1->ISR 0x%08X\r\n",__func__, dma1ch5_if);*/
 
 	/** Проверять тип прерывания нет необходимости, так как разрешены только прерывания по приему всего буфера. */
 
 	rb_store_data(&rx_rb, usart1_rx_buf, 1);
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
-
 }
 
 /*
@@ -471,12 +465,10 @@ void DMA1_Channel5_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
 	/* Выбрать все (пока) прерывания.*/
-	uint32_t usart1_if = READ_BIT(USART1->ISR, (0XFFFFFFFF));
+	/*uint32_t usart1_if = READ_BIT(USART1->ISR, 0xFFFFFFFF);
+	print("%s(): USART1->ISR 0x%08X\r\n", __func__, usart1_if);*/
 
 	/* На данный момент прерывание не используются. */
 
-	print("%s()\r\n", __func__);
-	print("USART1.ISR 0x%08X\r\n", usart1_if);
-
-	WRITE_REG(USART1->ICR, (0XFFFFFFFF));
+	WRITE_REG(USART1->ISR, 0);
 }
