@@ -33,15 +33,11 @@ int main(void)
 
 	console_init();
 
-//	i2c1_config();
-
 	scheduler_init();
 
-	/** Add your application code here */
-
-	/** Infinite loop */
+	uint32_t i = 0;
 	while (1) {
 		LL_mDelay(DELAY_500_MS * 2);
-		print("Test output from main thread\r\n");
+		print("Main thread iteration %d\r", i++);
 	}
 }
