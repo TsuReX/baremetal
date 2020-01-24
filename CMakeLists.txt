@@ -1,6 +1,6 @@
 ## Указание минимальной необходимой версии cmake для сборки проекта
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 
 ## Установки имени проекта
 
