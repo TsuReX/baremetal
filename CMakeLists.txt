@@ -17,12 +17,12 @@ project(${PROJ_NAME} C ASM)
 
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS	"-mcpu=cortex-m4 -ggdb -g -flto -Werror")
-set(CMAKE_ASM_FLAGS	"-mcpu=cortex-m4 -ggdb -g -flto -Werror")
+set(CMAKE_C_FLAGS	"-mcpu=cortex-m4 -ggdb -g -Werror")
+set(CMAKE_ASM_FLAGS	"-mcpu=cortex-m4 -ggdb -g -Werror")
 set(CMAKE_EXECUTABLE_SUFFIX .elf )
 set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/flash.ld \
 							-mcpu=cortex-m4 -specs=nano.specs \
-							-flto -Wl,--gc-sections")
+							-Wl,--gc-sections")
 
 ## Подключение файло исходных кодов и заголовков
 
