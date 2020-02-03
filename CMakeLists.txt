@@ -16,36 +16,12 @@ set(CMAKE_C_COMPILER_WORKS 1)
 project(${PROJ_NAME} C ASM)
 
 #######################################################################
-## Поиск в поддиректории boards вспомогательных .cmake скриптов
-
-# Установить тип платформы как неустановленный
-set(BOARD_TYPE_STATUS "NOT_SET")
-
-# Найти все .cmake скрипты в поддиректории boards
-if (DEFINED BOARD_TYPE)
-	file(GLOB BOARD_SCRIPTS "boards/*.cmake")
-endif()
-
-if (DEFINED BOARD_SCRIPTS)
-	foreach(SCRIPT ${BOARD_SCRIPTS})
-		# Подключить вспомогательный скрипт
-		include(${SCRIPT})
-		# Если вспомогательный скрипт соответствует платформе BOARD_TYPE,
-		# то далее нет неободимости подключать оставшиеся скрипты,
-		# так как необходимые действия уже выполнены
-		if(${BOARD_TYPE_STATUS} STREQUAL "SET")
-			break()
-		endif()
-	endforeach()
-endif()
-
-#######################################################################
 ## Проверка установки параметров: 
 ## BOARD_TYPE_STATUS, CMAKE_C_COMPILER, SOC_TYPE
 
 # Если указан тип платформы, а вспомогательный скрипт не найден,
 # то выдать сообщение и завершить работу
-if (DEFINED BOARD_TYPE AND ${BOARD_TYPE_STATUS} STREQUAL "NOT_SET")
+if (NOT DEFINED BOARD_TYPE)
 	message(FATAL_ERROR " Unknown BOARD_TYPE was specified.\n"
 	" Specifiy correct BOARD_TYPE or specify parameters manualy.")
 endif()
@@ -72,6 +48,23 @@ set(MAIN_SOURCES	"source/main.c"
 
 set(CORE_INCLUDE "base/Core/Include")
 
+if(${BOARD_TYPE} STREQUAL "NUCLEO_F303K8T6")
+
+	set(SUBSCRIPT "boards/nuclef303k8t6.cmake")
+
+	if (NOT EXISTS ${SUBSCRIPT})
+		message(FATAL_ERROR " Auxilary cmake script ${SUBSCRIPT} couldn't be found.\n")
+	endif()
+
+	include(${SUBSCRIPT})
+
+elseif(${BOARD_TYPE} STREQUAL "CHINA_BIG_F407VET6")
+
+	##	TODO Сделать аналогично NUCLEO_F303K8T6
+
+endif()
+
+## TODO Перенести в boards/nuclef303k8t6.cmake
 if (NOT ${SOC_TYPE} STREQUAL "STM32F303K8T6")
 	
 	set(MAIN_ASM_SOURCES	"src/startup_stm32f303x8.s" )
