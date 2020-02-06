@@ -28,19 +28,26 @@ set(MAIN_SOURCES	"source/main.c"
 
 set(CORE_INCLUDE "base/Core/Include")
 
-include_directories(${MAIN_INCLUDE})
-include_directories(${CORE_INCLUDE})
-include_directories(${DEVICE_INCLUDE})
-include_directories(${DRIVER_INCLUDE})
 
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
+
+#######################################################################
+## Настройка параметров сбоки и компоновки
+
+set(CMAKE_C_FLAGS	"-ggdb -g -Werror")
+	
+set(CMAKE_ASM_FLAGS	"-ggdb -g -Werror")
+
+set(CMAKE_EXECUTABLE_SUFFIX .elf )
+
+set(CMAKE_EXE_LINKER_FLAGS "")
 
 ## Переменная служит индикатором полной настройки
 set(BOARD_TYPE_STATUS "NOT_SET")
 
 if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 
-	set(BOARD_SCRIPT_CMAKE "boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
 	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
 		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
@@ -54,16 +61,11 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
 
 endif()
 
-#######################################################################
-## Настройка параметров сбоки и компоновки
+include_directories(${MAIN_INCLUDE})
+include_directories(${CORE_INCLUDE})
+include_directories(${DEVICE_INCLUDE})
+include_directories(${DRIVER_INCLUDE})
 
-set(CMAKE_C_FLAGS	"-ggdb -g -Werror")
-	
-set(CMAKE_ASM_FLAGS	"-ggdb -g -Werror")
-
-set(CMAKE_EXECUTABLE_SUFFIX .elf )
-
-set(CMAKE_EXE_LINKER_FLAGS "")
 								
 #######################################################################
 ## Подключение дополнительных библиотек (git-модулей)
