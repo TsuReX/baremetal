@@ -16,26 +16,6 @@ set(CMAKE_C_COMPILER_WORKS 1)
 project(${PROJ_NAME} C ASM)
 
 #######################################################################
-## Проверка установки параметров: 
-## BOARD_TYPE_STATUS, CMAKE_C_COMPILER, SOC_TYPE
-
-# Если указан тип платформы, а вспомогательный скрипт не найден,
-# то выдать сообщение и завершить работу
-if (NOT DEFINED BOARD_TYPE)
-	message(FATAL_ERROR " Unknown BOARD_TYPE was specified.\n"
-	" Specifiy correct BOARD_TYPE or specify parameters manualy.")
-endif()
-
-message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
-
-if (NOT DEFINED SOC_TYPE)
-	message(FATAL_ERROR " SOC_TYPE must be defined.\n"
-	" Ex. -DSOC_TYPE=STM32F303K8T6")
-endif ()
-
-
-
-#######################################################################
 ## Подключение файло исходных кодов и заголовков
 
 set(MAIN_INCLUDE	"include")
@@ -48,68 +28,43 @@ set(MAIN_SOURCES	"source/main.c"
 
 set(CORE_INCLUDE "base/Core/Include")
 
-if(${BOARD_TYPE} STREQUAL "NUCLEO_F303K8T6")
-
-	set(SUBSCRIPT "boards/nuclef303k8t6.cmake")
-
-	if (NOT EXISTS ${SUBSCRIPT})
-		message(FATAL_ERROR " Auxilary cmake script ${SUBSCRIPT} couldn't be found.\n")
-	endif()
-
-	include(${SUBSCRIPT})
-
-elseif(${BOARD_TYPE} STREQUAL "CHINA_BIG_F407VET6")
-
-	##	TODO Сделать аналогично NUCLEO_F303K8T6
-
-endif()
-
-## TODO Перенести в boards/nuclef303k8t6.cmake
-if (NOT ${SOC_TYPE} STREQUAL "STM32F303K8T6")
-	
-	set(MAIN_ASM_SOURCES	"src/startup_stm32f303x8.s" )
-	
-	set(MAIN_SOURCES	"${MAIN_SOURCES}"
-						"source/stm32f3xx_it.c"
-						"source/system_stm32f3xx.c"
-					
-	set(DEVICE_INCLUDE "base/Device/ST/STM32F3xx/Include")
-	
-	set(DRIVER_INCLUDE "base/Driver/ST/stm32f3xx/include")
-	
-##if (DEFINED USE_FULL_LL_DRIVER AND USE_FULL_LL_DRIVER STREQUAL "y")
-##	add_definitions("-DUSE_FULL_LL_DRIVER")
-##	message(STATUS "Full driver is used")
-##endif ()
-	AUX_SOURCE_DIRECTORY(DRIVER_SOURCES "base/Driver/ST/stm32f3xx/sources")
-
-endif ()
-
-
 include_directories(${MAIN_INCLUDE})
 include_directories(${CORE_INCLUDE})
 include_directories(${DEVICE_INCLUDE})
 include_directories(${DRIVER_INCLUDE})
 
+string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
+
+## Переменная служит индикатором полной настройки
+set(BOARD_TYPE_STATUS "NOT_SET")
+
+if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
+
+	set(BOARD_SCRIPT_CMAKE "boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
+		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
+	endif()
+
+	include(${BOARD_SCRIPT_CMAKE})
+
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
+
+	##	TODO Сделать аналогично china_stm32f407vet6
+
+endif()
+
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-if (NOT ${SOC_TYPE} STREQUAL "STM32F303K8T6")
+set(CMAKE_C_FLAGS	"-ggdb -g -Werror")
+	
+set(CMAKE_ASM_FLAGS	"-ggdb -g -Werror")
 
-	set(CMAKE_C_FLAGS	"-mcpu=cortex-m4 -ggdb -g -Werror")
-	
-	set(CMAKE_ASM_FLAGS	"-mcpu=cortex-m4 -ggdb -g -Werror")
-	
-	set(CMAKE_EXECUTABLE_SUFFIX .elf )
-	
-	set(CMAKE_EXE_LINKER_FLAGS "-T ${CMAKE_CURRENT_SOURCE_DIR}/flash.ld \
-								-mcpu=cortex-m4 -specs=nano.specs \
-								-Wl,--gc-sections")
+set(CMAKE_EXECUTABLE_SUFFIX .elf )
+
+set(CMAKE_EXE_LINKER_FLAGS "")
 								
-	add_definitions("-DSTM32F303x8")
-	
-endif ()
-
 #######################################################################
 ## Подключение дополнительных библиотек (git-модулей)
 
@@ -119,6 +74,19 @@ endif ()
 add_subdirectory("ringbuf")
 
 include_directories("ringbuf/include")
+
+#######################################################################
+## Проверка установки параметров: 
+## BOARD_TYPE_STATUS, CMAKE_C_COMPILER
+
+# Если указан тип платформы, а вспомогательный скрипт не найден,
+# то выдать сообщение и завершить работу
+if (${BOARD_TYPE_STATUS} STREQUAL "NOT_SET")
+	message(FATAL_ERROR " Unknown BOARD_TYPE was specified.\n"
+	" Specifiy correct BOARD_TYPE or specify parameters manualy.")
+endif()
+
+message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 #######################################################################
 ## Сборка и компоновка
