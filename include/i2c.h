@@ -10,6 +10,7 @@
 #define _I2C_H_
 
 #include "drivers.h"
+#include <stddef.h>
 
 /**
  * @brief  I2C1 Configuration
