@@ -75,14 +75,14 @@ void i2c_init(void)
 
 	LL_I2C_SetTiming(I2C1, PRESC << 28 | SCLDEL << 20 | SDADEL << 16 | SCLH << 8 | SCLL);
 
-	LL_I2C_EnableIT_TX(I2C1);
-	LL_I2C_EnableIT_RX(I2C1);
 	LL_I2C_EnableIT_ADDR(I2C1);
 
 	/* Прерывания не генерировать,
 	 * это может нарушить ход синхронного приема.передачи
 	LL_I2C_EnableIT_NACK(I2C1);
 	LL_I2C_EnableIT_TC(I2C1);
+	LL_I2C_EnableIT_RX(I2C1);
+	LL_I2C_EnableIT_TX(I2C1);
 	 */
 
 	LL_I2C_EnableIT_STOP(I2C1);
@@ -112,13 +112,13 @@ int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t bu
 			break;
 
 		if (guard_counter-- == 0)
-			return -4;
+			return -3;
 	}
 
 	LL_I2C_HandleTransfer(I2C1, chip_addr, LL_I2C_ADDRSLAVE_7BIT, buffer_size & 0xFF, LL_I2C_MODE_AUTOEND, LL_I2C_GENERATE_RESTART_7BIT_READ);
 
 	if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
-		return -3;
+		return -4;
 
 	size_t pos = 0;
 	guard_counter = GUARD_COUNTER_INIT;
@@ -133,7 +133,7 @@ int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t bu
 			break;
 
 		if (guard_counter-- == 0)
-			return -4;
+			return -5;
 	}
 	return pos;
 }
