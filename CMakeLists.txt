@@ -18,8 +18,15 @@ project(${PROJ_NAME} C ASM)
 
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
 
-#######################################################################
 ## Настройка параметров сбоки и компоновки
+set(C_SRC	"src/main.c"
+			"src/config.c"
+			"src/console.c"
+			"src/i2c.c"
+			"src/scheduler.c"
+			"src/stm32f3xx_it.c"
+			"src/system_stm32f3xx.c"
+			)
 
 set(CMAKE_C_FLAGS	"-ggdb -g -Werror")
 	
