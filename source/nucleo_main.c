@@ -12,29 +12,66 @@
 #include "scheduler.h"
 #include "drivers.h"
 
+static inline uint16_t swap_bytes_in_word(uint16_t word)
+{
+	uint8_t tmp = ((uint8_t *)&word)[0];
+	((uint8_t *)&word)[0] = ((uint8_t *)&word)[1];
+	((uint8_t *)&word)[1] = tmp;
+	return word;
+}
+
 void scheduler_process(void)
 {
 	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_3);
 	console_process();
 }
 
-void i2c_test(void) {
-
-	print("%s()", __func__);
-
-	/* INA3221 */
-	uint8_t chip_addr = 0x80;
-	uint8_t reg_addr = 0xFF; /*0xFE*/
+void ds3231m_read_regs(void)
+{
+	print("%s()\r\n", __func__);
 
 	/* DS3231M */
 	//uint8_t chip_addr = 0xD0;
 	//uint8_t reg_addr = 0x00;
 
-	uint8_t buffer[1] = {0xFF};
+}
 
-	int32_t ret_val = i2c_read(chip_addr, reg_addr, buffer, sizeof(buffer));
+void ina3221_read_regs(void)
+{
 
-	print("i2c_read(chip_addr=0x%02X, reg_addr=0x%02X, buffer_size=0x%02X)=%d\r\n", chip_addr, reg_addr, sizeof(buffer), ret_val);
+	print("%s()\r\n", __func__);
+
+	/* INA3221 */
+	uint8_t		ina3221_addr = 0x80;
+	uint8_t		reg_addr = 0x00; /* 0x00 - 0x11, 0xFE, 0xFF */
+	uint16_t	reg_val = 0xFFFF;
+
+	int32_t ret_val = 0;
+	for (;reg_addr <= 0x11; ++reg_addr) {
+		ret_val = i2c_read(ina3221_addr, reg_addr, (uint8_t *)&reg_val, sizeof(reg_val));
+
+		if (ret_val != 2)
+			print("i2c_read(chip_addr=0x%02X, reg_addr=0x%02X, buffer_size=0x%02X)=%d\r\n", ina3221_addr, reg_addr, sizeof(reg_val), ret_val);
+		else
+			print("reg_addr=0x%02X, reg_val=0x%04X\r\n", reg_addr, swap_bytes_in_word(reg_val));
+		LL_mDelay(DELAY_50_MS);
+	}
+	reg_addr = 0xFE;
+	ret_val = i2c_read(ina3221_addr, reg_addr, (uint8_t *)&reg_val, sizeof(reg_val));
+
+	if (ret_val != 2)
+		print("i2c_read(chip_addr=0x%02X, reg_addr=0x%02X, buffer_size=0x%02X)=%d\r\n", ina3221_addr, reg_addr, sizeof(reg_val), ret_val);
+	else
+		print("reg_addr=0x%02X, reg_val=0x%04X\r\n", reg_addr, swap_bytes_in_word(reg_val));
+
+	reg_addr = 0xFF;
+	ret_val = i2c_read(ina3221_addr, reg_addr, (uint8_t *)&reg_val, sizeof(reg_val));
+
+	if (ret_val != 2)
+		print("i2c_read(chip_addr=0x%02X, reg_addr=0x%02X, buffer_size=0x%02X)=%d\r\n", ina3221_addr, reg_addr, sizeof(reg_val), ret_val);
+	else
+		print("reg_addr=0x%02X, reg_val=0x%04X\r\n", reg_addr, swap_bytes_in_word(reg_val));
+
 }
 
 /**
@@ -56,7 +93,7 @@ int main(void)
 
 	i2c_init();
 
-	i2c_test();
+	ina3221_read_regs();
 
 	uint32_t i = 0;
 	while (1) {

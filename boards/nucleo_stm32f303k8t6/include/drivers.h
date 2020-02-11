@@ -51,36 +51,8 @@
 
 /** Delay 500 milliseconds. */
 #define DELAY_500_MS	500
-
-/**
-  * @brief LED3
-  */
-#define LED3_PIN                           LL_GPIO_PIN_3
-#define LED3_GPIO_PORT                     GPIOB
-#define LED3_GPIO_CLK_ENABLE()             LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB)
-
-/**
-  * @brief Virtual Key push-button (Arduino D2 connected to GND)
-  */
-#define USER_BUTTON_PIN                         LL_GPIO_PIN_12
-#define USER_BUTTON_GPIO_PORT                   GPIOA
-#define USER_BUTTON_GPIO_CLK_ENABLE()           LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA)
-#define USER_BUTTON_EXTI_LINE                   LL_EXTI_LINE_12
-#define USER_BUTTON_EXTI_IRQn                   EXTI15_10_IRQn
-#define USER_BUTTON_EXTI_LINE_ENABLE()          LL_EXTI_EnableIT_0_31(USER_BUTTON_EXTI_LINE)   
-#define USER_BUTTON_EXTI_FALLING_TRIG_ENABLE()  LL_EXTI_EnableFallingTrig_0_31(USER_BUTTON_EXTI_LINE)  
-#define USER_BUTTON_SYSCFG_SET_EXTI()           do {                                                                     \
-                                                  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);                  \
-                                                  LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTA, LL_SYSCFG_EXTI_LINE12);  \
-                                                } while(0)
-#define USER_BUTTON_IRQHANDLER                  EXTI15_10_IRQHandler
-
-/**
-  * @brief Toggle periods for various blinking modes
-  */
-#define LED_BLINK_FAST  200
-#define LED_BLINK_SLOW  500
-#define LED_BLINK_ERROR 1000
+/** Delay 50 milliseconds. */
+#define DELAY_50_MS	50
 
 #endif /* __MAIN_H */
 
