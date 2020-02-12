@@ -9,7 +9,7 @@
 #ifndef _I2C_H_
 #define _I2C_H_
 
-#include "main.h"
+#include "drivers.h"
 
 /**
  * @brief  I2C1 Configuration

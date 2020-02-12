@@ -6,7 +6,7 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "main.h"
+#include "drivers.h"
 #include "scheduler.h"
 
 void scheduler_init(void)

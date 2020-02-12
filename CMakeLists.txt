@@ -15,19 +15,6 @@ set(CMAKE_C_COMPILER_WORKS 1)
 
 project(${PROJ_NAME} C ASM)
 
-#######################################################################
-## Подключение файло исходных кодов и заголовков
-
-set(MAIN_INCLUDE	"include")
-
-set(MAIN_SOURCES	"source/main.c"
-					"source/config.c"
-					"source/console.c"
-					"source/scheduler.c"
-)
-
-set(CORE_INCLUDE "base/Core/Include")
-
 
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
 
@@ -45,7 +32,38 @@ set(CMAKE_EXE_LINKER_FLAGS "")
 ## Переменная служит индикатором полной настройки
 set(BOARD_TYPE_STATUS "NOT_SET")
 
+#######################################################################
+## Загрузка вспомогательных скриптов для настройки параметров сборки
 if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
+	
+	## Подключение файлов исходных кодов и заголовков
+	set(MAIN_INCLUDE	"include")
+	
+	set(MAIN_SOURCES	"source/nucleo_main.c"
+						"source/config.c"
+						"source/console.c"
+						"source/scheduler.c"
+	)
+	
+	set(CORE_INCLUDE	"base/Core/Include")
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
+		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
+	endif()
+
+	include(${BOARD_SCRIPT_CMAKE})
+
+
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
+
+	## Подключение файлов исходных кодов и заголовков
+	set(MAIN_INCLUDE	"include")
+	
+	set(MAIN_SOURCES	"source/stellaris_main.c")
+	
+	set(CORE_INCLUDE	"base/Core/Include")
 
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
@@ -65,8 +83,7 @@ include_directories(${MAIN_INCLUDE})
 include_directories(${CORE_INCLUDE})
 include_directories(${DEVICE_INCLUDE})
 include_directories(${DRIVER_INCLUDE})
-
-								
+						
 #######################################################################
 ## Подключение дополнительных библиотек (git-модулей)
 

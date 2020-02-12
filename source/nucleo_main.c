@@ -10,7 +10,7 @@
 #include "console.h"
 #include "config.h"
 #include "scheduler.h"
-#include "main.h"
+#include "drivers.h"
 
 void scheduler_process(void)
 {

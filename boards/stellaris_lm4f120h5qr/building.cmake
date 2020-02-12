@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "nucleo_stm32f303k8t6")
+set(CURRENT_BOARD_TYPE "stellaris_lm4f120h5qr")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,19 +18,18 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/startup_stm32f303x8.s" )
-
-set(MAIN_INCLUDE	${MAIN_INCLUDE}	"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/include")
+#set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/startup.s" )
 
 set(MAIN_SOURCES	"${MAIN_SOURCES}"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/stm32f3xx_it.c"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/system_stm32f3xx.c")
+					## TODO Реализовать механизмы инициализации в файле и подключить его к сборке
+					##"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/system_tm4c1233h6pm.c"
+					)
 					
-set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/ST/STM32F3xx/Include")
+set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/TI/TM4C/Include")
 
-set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/include")
+#set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/include")
 
-file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/source/*_ll_*.c")
+#file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/source/*_ll_*.c")
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
@@ -39,12 +38,11 @@ set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
 	
 set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
 	
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/flash.ld \
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/flash_tm4c1233h6pm.ld \
 														-mcpu=cortex-m4 -specs=nano.specs \
 														-Wl,--gc-sections")
 								
-add_definitions("-DSTM32F303x8")
-add_definitions("-DUSE_FULL_LL_DRIVER")
+add_definitions("-DTM4C1233H6PM")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки

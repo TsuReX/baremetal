@@ -6,7 +6,7 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "main.h"
+#include "drivers.h"
 #include "config.h"
 
 /** Частота шины HCLK (работы ядра процессора). */

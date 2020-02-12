@@ -6,7 +6,6 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "main.h"
 #include "i2c.h"
 
 /** Timing register value is computed with the STM32CubeMX Tool */
