@@ -46,3 +46,7 @@
 
 5. Выполнение прошивки
 	cmake --build . --target flash
+
+6. Выполнение отладки
+	cd build_stellaris
+	openocd -f ../boards/stellaris_lm4f120h5qr/oocd_ti-icdi.cfg -c "init; reset halt;" > /dev/null &  arm-none-eabi-gdb ; echo shutdown | nc 127.0.0.1 4444
