@@ -23,6 +23,8 @@ set(BOARD_TYPE_STATUS "SET")
 set(MAIN_SOURCES	"${MAIN_SOURCES}"
 					## TODO Реализовать механизмы инициализации в файле и подключить его к сборке
 					##"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/system_tm4c1233h6pm.c"
+					"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/startup_tm4c1233h6pm.c"
+					"${CMAKE_CURRENT_SOURCE_DIR}/source/stellaris_main.c"
 					)
 					
 set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/TI/TM4C/Include")
@@ -50,7 +52,7 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/oocd_stlinkv2-1.cfg")
+set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/oocd_ti-icdi.cfg")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
