@@ -472,3 +472,9 @@ void USART1_IRQHandler(void)
 
 	WRITE_REG(USART1->ISR, 0);
 }
+
+void scheduler_process(void)
+{
+	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_3);
+	console_process();
+}

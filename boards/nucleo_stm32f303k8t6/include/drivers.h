@@ -54,5 +54,13 @@
 /** Delay 50 milliseconds. */
 #define DELAY_50_MS	50
 
+static inline uint16_t swap_bytes_in_word(uint16_t word)
+{
+	uint8_t tmp = ((uint8_t *)&word)[0];
+	((uint8_t *)&word)[0] = ((uint8_t *)&word)[1];
+	((uint8_t *)&word)[1] = tmp;
+	return word;
+}
+
 #endif /* __MAIN_H */
 
