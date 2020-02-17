@@ -6,7 +6,7 @@
  */
 
 #include "stddef.h"
-#include "main.h"
+#include "drivers.h"
 #include "gpio.h"
 #include "console.h"
 
