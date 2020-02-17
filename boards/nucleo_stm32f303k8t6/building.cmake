@@ -22,9 +22,17 @@ set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6
 
 set(MAIN_INCLUDE	${MAIN_INCLUDE}	"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/include")
 
+set(BOARD_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/")
+
 set(MAIN_SOURCES	"${MAIN_SOURCES}"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/stm32f3xx_it.c"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/source/system_stm32f3xx.c")
+					"${BOARD_SRC_PATH}/stm32f3xx_it.c"
+					"${BOARD_SRC_PATH}/system_stm32f3xx.c"
+					"${BOARD_SRC_PATH}/config.c"
+					"${BOARD_SRC_PATH}/console.c"
+					"${BOARD_SRC_PATH}/scheduler.c"
+					"${BOARD_SRC_PATH}/i2c.c"
+					"${BOARD_SRC_PATH}/gpio.c"
+					)
 					
 set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/ST/STM32F3xx/Include")
 

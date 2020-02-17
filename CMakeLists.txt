@@ -19,17 +19,6 @@ project(${PROJ_NAME} C ASM)
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
 
 ## Настройка параметров сбоки и компоновки
-set(C_SRC	"src/main.c"
-			"src/config.c"
-			"src/console.c"
-			"src/i2c.c"
-			"src/ds3231m.c"
-			"src/ina3221.c"
-			"src/gpio.c"
-			"src/scheduler.c"
-			"src/stm32f3xx_it.c"
-			"src/system_stm32f3xx.c"
-			)
 
 set(CMAKE_C_FLAGS	"-ggdb -g -Werror")
 	
@@ -50,9 +39,8 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 	set(MAIN_INCLUDE	"include")
 	
 	set(MAIN_SOURCES	"source/nucleo_main.c"
-						"source/config.c"
-						"source/console.c"
-						"source/scheduler.c"
+						"source/ds3231m.c"
+						"source/ina3221.c"
 	)
 	
 	set(CORE_INCLUDE	"base/Core/Include")

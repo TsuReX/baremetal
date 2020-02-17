@@ -6,7 +6,7 @@
  */
 
 #include "stddef.h"
-#include "main.h"
+#include "drivers.h"
 #include "ina3221.h"
 #include "console.h"
 #include "i2c.h"
