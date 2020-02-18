@@ -8,8 +8,8 @@
 
 #include "drivers.h"
 #include "config.h"
-/*#include "i2c.h"
 #include "console.h"
+/*#include "i2c.h"
 #include "scheduler.h"
 #include "ds3231m.h"
 #include "ina3221.h"
@@ -29,7 +29,7 @@ int main(void)
 	/** Configure board's peripherals. */
 	board_config();
 
-	/*console_init();*/
+	console_init();
 
 	/*scheduler_init();*/
 

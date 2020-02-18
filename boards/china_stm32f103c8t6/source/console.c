@@ -44,19 +44,19 @@ static struct ring_buf tx_rb;
  */
 static void console_gpio_init(void)
 {
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
 
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_9, LL_GPIO_AF_7);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_7, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
 
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_10, LL_GPIO_AF_7);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_10, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
+
+	LL_GPIO_AF_EnableRemap_USART1();
 }
 
 /*
@@ -67,11 +67,8 @@ static void console_usart1_init(void)
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
-	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
-	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
 
-	LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
-	LL_USART_SetBaudRate(USART1, LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE), LL_USART_OVERSAMPLING_16, 115200);
+	LL_USART_SetBaudRate(USART1, 64000000, 115200);
 
 	/*LL_USART_EnableOverrunDetect(USART1);*/
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
@@ -233,7 +230,7 @@ static void console_dma1_ch4_init(void *tx_buf, size_t tx_buf_size)
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_4,
 							(uint32_t)tx_buf,
-							LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_TRANSMIT),
+							LL_USART_DMA_GetRegAddr(USART1),
 							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_4));
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_4, tx_buf_size);
@@ -280,7 +277,7 @@ static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
 							LL_DMA_MDATAALIGN_BYTE);
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
-							LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_RECEIVE),
+							LL_USART_DMA_GetRegAddr(USART1),
 							(uint32_t)rx_buf,
 							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
 
@@ -470,7 +467,7 @@ void USART1_IRQHandler(void)
 
 	/* На данный момент прерывание не используются. */
 
-	WRITE_REG(USART1->ISR, 0);
+	WRITE_REG(USART1->SR, 0);
 }
 
 void scheduler_process(void)
