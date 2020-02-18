@@ -53,6 +53,25 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 
 	include(${BOARD_SCRIPT_CMAKE})
 
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
+	
+	## Подключение файлов исходных кодов и заголовков
+	set(MAIN_INCLUDE	"include")
+	
+	set(MAIN_SOURCES	"source/small_china_main.c"
+						#"source/ds3231m.c"
+						#"source/ina3221.c"
+	)
+	
+	set(CORE_INCLUDE	"base/Core/Include")
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
+		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
+	endif()
+
+	include(${BOARD_SCRIPT_CMAKE})
 
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 
