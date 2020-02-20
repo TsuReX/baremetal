@@ -12,12 +12,12 @@
 /**
  * @brief	Инициализирует устройства и подсистемы внутри SoC.
  */
-void soc_config(void);
+void soc_init(void);
 
 /**
  * @brief	Инициализирует устройства платформы.
  */
-void board_config(void);
+void board_init(void);
 
 
 #endif /* _CONFIG_H_ */

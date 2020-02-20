@@ -10,13 +10,13 @@
 #include "config.h"
 
 /** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	48000000
+#define HCLK_FREQ	64000000
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
  * 			работающем на частоте 48 МГц.
  */
-static void flash_config(void)
+static void flash_init(void)
 {
 	/* Настройка времени задержки доступа к флешке.
 	 * Это необходимо для корректной работы флешки при различных частотах HCLK.
@@ -25,48 +25,19 @@ static void flash_config(void)
 }
 
 /**
- * @brief	Производит настройку источников тактирования:
- * 				SYSCLK, PLLCLK;
- * 				HCLK, PCLK1, PCLK2;
- *
- *			The system Clock is configured as follow :
- *				System Clock source            = PLL (HSI)
- *				SYSCLK(Hz)                     = 48000000
- *				HCLK(Hz)                       = 48000000
- *				AHB Prescaler                  = 1
- *				APB1 Prescaler                 = 1
- *				APB2 Prescaler                 = 1
- *				PLLMUL                         = RCC_PLL_MUL12 (12)
+ * @brief TODO
  */
-static void rcc_config(void)
+static void sysclk_init_64mhz()
 {
-
-	/* Настройка системного тактового сигнала SYSCLK.
-	 * HSI ------------------------> or
-	 * HSI -> /2 -----> |			 |
-	 * 					|--->PLL---> or--> SYSCLK
-	 * HSE -> PREDIV -> |			 |
-	 * HSE ------------------------> or
-	 * До того, как будет настроена новая цепь тактирования,
-	 * SYSCLK будет тактироваться напрямую от внутреннего источника HSI.
-	 */
-
 	/* Включение внутреннего источника тактирования HSI.
 	 * HSI активен по умолчанию. */
 	LL_RCC_HSI_Enable();
 	/* Ожидание активации источника HSI. */
 	while (LL_RCC_HSI_IsReady() != 1);
 
-	/* В случае наличия внешнего источника тактирования. */
-
-	/* Включение внешнего источника тактирования HSE. */
-	/* LL_RCC_HSE_Enable(); */
-	/* Ожидание активации источника HSI. */
-	/* while (LL_RCC_HSE_IsReady() != 1); */
-
 	/* Установка источника сигнала для PLL - PLLSRC.
 	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_12);
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_16);
 
 	/* Включение PLL. */
 	LL_RCC_PLL_Enable();
@@ -77,18 +48,79 @@ static void rcc_config(void)
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 	/* Ожидание активации переключателя. */
 	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+}
 
-	/* Системный источник тактирования SYSCLK настроен. */
-
+/**
+ * @brief TODO
+ */
+static void ahbclk_init_64mhz()
+{
 	/* Настройка делителя для шины AHB - HCLK. */
 	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+}
 
+/**
+ * @brief TODO
+ */
+static void apb1clk_init_32mhz()
+{
 	/* Настройка делителя для шины APB1 - PCLK1. */
-	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+}
 
+/**
+ * @brief TODO
+ */
+static void apb2clk_init_64mhz()
+{
 	/* Настройка делителя для шины APB2 - PCLK2. */
 	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
 
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_8);
+}
+
+/**
+ * @brief TODO
+ */
+static void rtcclk_init()
+{
+	LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_LSI);
+}
+
+/**
+ * @brief TODO
+ */
+static void mco_init_sysclk()
+{
+	LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_LSI);
+}
+
+/**
+ * @brief	Производит настройку источников тактирования:
+ * 				SYSCLK, AHBCLK, APB1CLK, APB2CLK, RTCCLK, MCO;
+ *
+ *			The system Clock is configured as follow :
+ *				System Clock source		= PLL (HSI)
+ *				SYSCLK (MHz)			= 64
+ *				AHBCLK/HCLK (MHz)		= 64
+ *				APB1CLK	(MHz)			= 32
+ *				APB2CLK	(MHz)			= 64
+ *				ADCCLK (MHz)			= 8
+ *				RTCCLK (KHz)			= 40
+ */
+static void rcc_init(void)
+{
+	sysclk_init_64mhz();
+
+	ahbclk_init_64mhz();
+
+	apb1clk_init_32mhz();
+
+	apb2clk_init_64mhz();
+
+	rtcclk_init();
+
+	mco_init_sysclk();
 }
 
 /**
@@ -96,7 +128,7 @@ static void rcc_config(void)
  *
  * @param	hclk_freq	частота шины HCLK в герцах
  */
-static void systick_config(uint32_t hclk_freq)
+static void systick_init(uint32_t hclk_freq)
 {
 	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
 	LL_Init1msTick(hclk_freq);
@@ -105,25 +137,25 @@ static void systick_config(uint32_t hclk_freq)
 /**
  * @brief	Настройка устройств платформы(платы)
  */
-void board_config(void)
+void board_init(void)
 {
-	/** Fire LD3 (green) led. */
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+	/** Fire D2 led. */
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 }
 
 /**
  * @brief	Настройка внутренних подсистем системы на кристалле.
  */
-void soc_config(void)
+void soc_init(void)
 {
 	/* Настройка внутренней флеш памяти. */
-	flash_config();
+	flash_init();
 	/* Настройка подсистемы тактирования. */
-	rcc_config();
-	/* Настраивает системный таймер ядра. */
-	systick_config(HCLK_FREQ);
+	rcc_init();
 	/* Настройка вспомогательных параметров. */
 	LL_SetSystemCoreClock(HCLK_FREQ);
+	/* Настраивает системный таймер ядра. */
+	systick_init(SystemCoreClock);
 
 	/** Configuring GPIO. */
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
