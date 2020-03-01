@@ -16,7 +16,7 @@ void scheduler_init(void)
 
 	LL_TIM_SetPrescaler(TIM2, 100);
 
-	LL_TIM_SetAutoReload(TIM2, 64000);
+	LL_TIM_SetAutoReload(TIM2, 24000);
 
 	/* Set TIM_CR1_URS = 0 */
 	LL_TIM_SetUpdateSource(TIM2, LL_TIM_UPDATESOURCE_REGULAR);

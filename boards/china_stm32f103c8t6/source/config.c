@@ -10,7 +10,7 @@
 #include "config.h"
 
 /** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	64000000
+#define HCLK_FREQ	24000000
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
@@ -27,7 +27,7 @@ static void flash_init(void)
 /**
  * @brief TODO
  */
-static void sysclk_init_64mhz()
+static void sysclk_init_24mhz()
 {
 	/* Включение внутреннего источника тактирования HSI.
 	 * HSI активен по умолчанию. */
@@ -37,7 +37,7 @@ static void sysclk_init_64mhz()
 
 	/* Установка источника сигнала для PLL - PLLSRC.
 	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_16);
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_6);
 
 	/* Включение PLL. */
 	LL_RCC_PLL_Enable();
@@ -53,7 +53,7 @@ static void sysclk_init_64mhz()
 /**
  * @brief TODO
  */
-static void ahbclk_init_64mhz()
+static void ahbclk_init_24mhz()
 {
 	/* Настройка делителя для шины AHB - HCLK. */
 	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
@@ -62,21 +62,21 @@ static void ahbclk_init_64mhz()
 /**
  * @brief TODO
  */
-static void apb1clk_init_32mhz()
+static void apb1clk_init_24mhz()
 {
 	/* Настройка делителя для шины APB1 - PCLK1. */
-	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
 }
 
 /**
  * @brief TODO
  */
-static void apb2clk_init_64mhz()
+static void apb2clk_init_24mhz()
 {
 	/* Настройка делителя для шины APB2 - PCLK2. */
 	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
 
-	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_8);
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_2);
 }
 
 /**
@@ -110,13 +110,13 @@ static void mco_init_sysclk()
  */
 static void rcc_init(void)
 {
-	sysclk_init_64mhz();
+	sysclk_init_24mhz();
 
-	ahbclk_init_64mhz();
+	ahbclk_init_24mhz();
 
-	apb1clk_init_32mhz();
+	apb1clk_init_24mhz();
 
-	apb2clk_init_64mhz();
+	apb2clk_init_24mhz();
 
 	rtcclk_init();
 
