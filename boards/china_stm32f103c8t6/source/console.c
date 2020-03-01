@@ -472,6 +472,6 @@ void USART1_IRQHandler(void)
 
 void scheduler_process(void)
 {
-	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_3);
+//	LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 	console_process();
 }

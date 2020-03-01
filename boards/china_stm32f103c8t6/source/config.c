@@ -140,7 +140,10 @@ static void systick_init(uint32_t hclk_freq)
 void board_init(void)
 {
 	/** Fire D2 led. */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_0);
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_14);
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_15);
 }
 
 /**
@@ -158,8 +161,12 @@ void soc_init(void)
 	systick_init(SystemCoreClock);
 
 	/** Configuring GPIO. */
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_14, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_15, LL_GPIO_MODE_OUTPUT);
 
 }
 
