@@ -29,9 +29,13 @@ set(MAIN_SOURCES	"${MAIN_SOURCES}"
 					
 set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/TI/TM4C/Include")
 
-#set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/include")
+set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/include")
 
-#file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f3xx/source/*_ll_*.c")
+set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/")
+
+file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/source/*.c")
+
+file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/driverlib/*.c")
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
@@ -45,6 +49,9 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_
 														-Wl,--gc-sections")
 								
 add_definitions("-DTM4C1233H6PM")
+add_definitions("-DTARGET_IS_TM4C123_RA1")
+add_definitions("-DPART_TM4C1233H6PM")
+add_definitions("-Dgcc")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
