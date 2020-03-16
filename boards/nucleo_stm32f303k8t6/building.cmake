@@ -32,6 +32,7 @@ set(MAIN_SOURCES	"${MAIN_SOURCES}"
 					"${BOARD_SRC_PATH}/scheduler.c"
 					"${BOARD_SRC_PATH}/i2c.c"
 					"${BOARD_SRC_PATH}/gpio.c"
+					"${BOARD_SRC_PATH}/pwm.c"
 					)
 					
 set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/ST/STM32F3xx/Include")

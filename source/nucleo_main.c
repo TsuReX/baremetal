@@ -14,7 +14,7 @@
 #include "ds3231m.h"
 #include "ina3221.h"
 #include "gpio.h"
-
+#include "pwm.h"
 /**
  * @brief	C-code entry point.
  *
@@ -34,12 +34,28 @@ int main(void)
 
 	i2c_init();
 
-	gpio_setup_it();
+//	gpio_setup_it();
 
-	uint32_t i = 0;
+	pwm_init();
+
+	uint32_t duty = 10;
+	uint32_t up = 1;
 	while (1) {
 		LL_mDelay(DELAY_500_MS * 2);
-		print("Main thread iteration %d\r\n", i++);
-		ina3221_print_voltage_current();
+		print("Duty cycle %d\r\n", duty);
+//		ina3221_print_voltage_current();
+		pwd_duty(duty);
+
+		if (up == 1)
+			duty += 10;
+
+		if (up == 0)
+			duty -= 10;
+
+		if (duty == 100)
+			up = 0;
+
+		if (duty == 10)
+			up = 1;
 	}
 }
