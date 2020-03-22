@@ -70,3 +70,15 @@ add_custom_command(	TARGET "flash"
 							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
 							reset$<SEMICOLON>
 							exit\")
+
+#######################################################################
+# Определение дополнительной цели для выполнения операции отладки
+add_custom_target("debug" DEPENDS ${PROJ_NAME})
+
+# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
+
+# Определение команд для цели flash
+add_custom_command(	TARGET "debug"
+					POST_BUILD
+					COMMAND sh
+					ARGS ${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/debug.sh ${OOCD_CONFIG})
