@@ -107,6 +107,8 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
 
 	include(${BOARD_SCRIPT_CMAKE})
 
+	# Подключение подпроекта программатора
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_programmer")
 
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
 
@@ -147,4 +149,4 @@ message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 add_executable(${PROJ_NAME} ${MAIN_ASM_SOURCES} ${MAIN_SOURCES} ${DRIVER_SOURCES})
 
-target_link_libraries(${PROJ_NAME} -lc -lm -lnosys ringbuf)
+target_link_libraries(${PROJ_NAME} "-lc -lm -lnosys ${LINKER_FLAGS}" ringbuf)

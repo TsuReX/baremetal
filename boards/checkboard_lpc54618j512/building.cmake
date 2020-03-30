@@ -42,22 +42,17 @@ set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
 	
 set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
 	
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_lpc54618j512.ld \
-														-mcpu=cortex-m4 -specs=nano.specs \
-														-Wl,--gc-sections")
+set(LINKER_FLAGS "${LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_lpc54618j512.ld"
+									"-mcpu=cortex-m4 -specs=nano.specs"
+									"-Wl,--gc-sections")
 								
-add_definitions("-DTM4C1233H6PM")
-add_definitions("-DTARGET_IS_TM4C123_RA1")
-add_definitions("-DPART_TM4C1233H6PM")
-add_definitions("-Dgcc")
-
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/oocd_ti-icdi.cfg")
+set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/oocd_jlink.cfg")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
