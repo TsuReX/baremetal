@@ -89,6 +89,24 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 	endif()
 
 	include(${BOARD_SCRIPT_CMAKE})
+	
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
+
+	## Подключение файлов исходных кодов и заголовков
+	set(MAIN_INCLUDE	"include")
+	
+	set(MAIN_SOURCES	"source/checkboard_main.c")
+	
+	set(CORE_INCLUDE	"base/Core/Include")
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
+		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
+	endif()
+
+	include(${BOARD_SCRIPT_CMAKE})
+
 
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
 

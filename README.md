@@ -41,5 +41,6 @@ china_stm32f103c8t6
 china_stm32f407vet6
 nucleo_stm32f303k8t6
 stellaris_lm4f120h5qr
+checkboard_lpc54618j512
 
 TODO: Ввести параметр FLASHER_TYPE, который будет определять, какой .cmake скрипт использовать для определения цели flash для прошивки, и, какой .cfg скрипт программатора использовать.
