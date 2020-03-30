@@ -52,17 +52,18 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/oocd_jlink.cfg")
+set(OOCD_CONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
-							reset halt$<SEMICOLON>
-							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-							reset$<SEMICOLON>
-							exit\")
+					ARGS -f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx_1.cfg)
+#					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
+#							reset halt$<SEMICOLON>
+#							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
+#							reset$<SEMICOLON>
+#							exit\")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки

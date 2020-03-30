@@ -89,7 +89,7 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 	endif()
 
 	include(${BOARD_SCRIPT_CMAKE})
-	
+
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
 
 	## Подключение файлов исходных кодов и заголовков
