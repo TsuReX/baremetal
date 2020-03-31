@@ -13,45 +13,55 @@ MEMORY
 {
   /* Define each memory region */
 	PROGRAM_FLASH (rx) : ORIGIN = 0x0, LENGTH = 0x80000 /* 512K bytes (alias Flash) */  
-	SRAM_UPPER (rwx) : ORIGIN = 0x20000000, LENGTH = 0x28000 /* 160K bytes (alias RAM) */  
+	SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x28000 /* 160K bytes (alias RAM) */
 }
 
-  /* Define a symbol for the top of each memory region */
-__base_PROGRAM_FLASH = 0x0  ; /* PROGRAM_FLASH */  
-__base_Flash = 0x0 ; /* Flash */  
-__top_PROGRAM_FLASH = 0x0 + 0x80000 ; /* 512K bytes */  
-__top_Flash = 0x0 + 0x80000 ; /* 512K bytes */  
+	/* Define a symbol for the top of each memory region */
+/* __base_PROGRAM_FLASH = 0x0  ; /* PROGRAM_FLASH */
+/* __top_PROGRAM_FLASH = 0x0 + 0x80000 ; /* 512K bytes */
+/*__base_SRAM = 0x20000000  ; /* SRAM_UPPER */
+/* __top_SRAM = 0x20000000 + 0x28000 ; /* 160K bytes */
 
-__base_SRAM_UPPER = 0x20000000  ; /* SRAM_UPPER */  
-__base_RAM = 0x20000000 ; /* RAM */  
-__top_SRAM_UPPER = 0x20000000 + 0x28000 ; /* 160K bytes */  
-__top_RAM = 0x20000000 + 0x28000 ; /* 160K bytes */  
 
 ENTRY(main)
 
 SECTIONS
 {
-	. = __base_SRAM_UPPER;
-    .text : ALIGN(4)
-    {
-       *(.text*)
-       *(.rodata .rodata .constdata)
-       . = ALIGN(4);
-    } > SRAM_UPPER
-	
-	. = 1024;
-    
-    .data : ALIGN(4)
-    {
-        *(.data)
+	.text : ALIGN(4)
+	{
+		*(.isr_vector)
+		*(.after_vectors*)
+		*(.text*)
+		*(.rodata .rodata .constdata)
+	} > SRAM
 
-     } > SRAM_UPPER AT > PROGRAM_FLASH
-	
-	. = 2048;
-    
-    .bss : ALIGN(4)
-    {
-       *(.bss)
+	.data : ALIGN(4)
+	{
+		*(.data)
+	} > SRAM
 
-    } > SRAM_UPPER AT > PROGRAM_FLASH
+	.bss : ALIGN(4)
+	{
+		*(.bss)
+	} > SRAM
+
+	_StackSize = 0x1000;
+	.stack ORIGIN(SRAM) + LENGTH(SRAM) - _StackSize - 0:  ALIGN(4)
+    {
+        _vStackBase = .;
+        . = ALIGN(4);
+        _vStackTop = . + _StackSize;
+    } > SRAM
+
+	/* ## Create checksum value (used in startup) ## */
+	PROVIDE(__valid_user_code_checksum = 0 - 
+                                         (_vStackTop 
+                                         + (ResetISR + 1) 
+                                         + (NMI_Handler + 1) 
+                                         + (HardFault_Handler + 1) 
+                                         + (( DEFINED(MemManage_Handler) ? MemManage_Handler : 0 ) + 1)   /* MemManage_Handler may not be defined */
+                                         + (( DEFINED(BusFault_Handler) ? BusFault_Handler : 0 ) + 1)     /* BusFault_Handler may not be defined */
+                                         + (( DEFINED(UsageFault_Handler) ? UsageFault_Handler : 0 ) + 1) /* UsageFault_Handler may not be defined */
+                                         ) );
+
 }
