@@ -74,5 +74,5 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 # Определение команд для цели flash
 add_custom_command(	TARGET "debug"
 					POST_BUILD
-					COMMAND sh
-					ARGS ${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/debug.sh ${OOCD_CONFIG})
+					COMMAND openocd
+					ARGS -f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx_1.cfg)

@@ -40,7 +40,7 @@ SECTIONS
 		*(.data)
 	} > SRAM
 
-	.bss : ALIGN(4)
+	.bss : ALIGN(4096)
 	{
 		*(.bss)
 	} > SRAM

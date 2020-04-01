@@ -16,6 +16,7 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 #define IAP_BASE_ADDR		0x03000204
 #define PREPARE_OPCODE		50
 #define WRITE_OPCODE		51
+#define ERASE_OPCODE		52
 
 #define IAP_CMD_SUCCESS		0
 #define IAP_INVALID_SECTOR	7
@@ -601,14 +602,9 @@ WEAK void SMARTCARD1_IRQHandler(void)
 
 static int32_t prepare_flash(uint32_t start_sector, size_t sectors_count)
 {
-	return start_sector + sectors_count;
-}
-
-static int32_t _prepare_flash(uint32_t start_sector, size_t sectors_count)
-{
 	iap_call	prepare = (iap_call)(IAP_BASE_ADDR | 0x1);
-	uint32_t	prep_args[] = {PREPARE_OPCODE, start_sector, start_sector + sectors_count};
-	uint32_t	prep_res[] = {0};
+	uint32_t	prep_args[] = {PREPARE_OPCODE, start_sector, start_sector + sectors_count - 1};
+	uint32_t	prep_res[] = {0xFFFFFFFF};
 
 	prepare(prep_args, prep_res);
 	if (prep_res[0] != IAP_CMD_SUCCESS) {
@@ -619,11 +615,26 @@ static int32_t _prepare_flash(uint32_t start_sector, size_t sectors_count)
 	return 0;
 }
 
+static int32_t erase_flash(uint32_t start_sector, size_t sectors_count, uint32_t sys_clk)
+{
+	iap_call	erase = (iap_call)(IAP_BASE_ADDR | 0x1);
+	uint32_t	erase_args[] = {ERASE_OPCODE, start_sector, start_sector + sectors_count - 1, sys_clk};
+	uint32_t	erase_res[] = {0xFFFFFFFF};
+
+	erase(erase_args, erase_res);
+	if (erase_res[0] != IAP_CMD_SUCCESS) {
+		op_status = erase_res[0];
+		return -1;
+	}
+
+	return 0;
+}
+
 static int32_t write_flash(uint32_t dst_addr, uint32_t src_addr, size_t size, uint32_t sys_clk)
 {
 	iap_call	write = (iap_call)(IAP_BASE_ADDR | 0x1);
-	uint32_t	prep_args[] = {WRITE_OPCODE, dst_addr, src_addr, size, sys_clk};
-	uint32_t	prep_res[] = {0};
+	uint32_t	write_args[] = {WRITE_OPCODE, dst_addr, src_addr, size, sys_clk};
+	uint32_t	write_res[] = {0};
 
 	if (size & 0xFF != 0)
 		return -2;
@@ -631,9 +642,9 @@ static int32_t write_flash(uint32_t dst_addr, uint32_t src_addr, size_t size, ui
 	if (size > 4096)
 		return -3;
 
-	write(prep_args, prep_res);
-	if (prep_res[0] != IAP_CMD_SUCCESS) {
-		op_status = prep_res[0];
+	write(write_args, write_res);
+	if (write_res[0] != IAP_CMD_SUCCESS) {
+		op_status = write_res[0];
 		return -1;
 	}
 	return 0;
@@ -660,14 +671,19 @@ static void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
     if ((unsigned int *)g_pfnVectors!=(unsigned int *) 0x00000000) {
         *pSCB_VTOR = (unsigned int)g_pfnVectors;
     }
-
     // Reenable interrupts
     __asm volatile ("cpsie i");
 
-	if (prepare_flash(0, 1) != 0)
+    uint32_t sys_clk = 204000;
+
+    if (prepare_flash(0, 1) != 0)
 		goto finish;
-//	if (write_flash(dst_addr, src_addr, size, 204000) != 0)
-//		return;
+
+	if (erase_flash(0, 1, sys_clk) != 0)
+		goto finish;
+
+	if (write_flash(dst_addr, src_addr, size, sys_clk) != 0)
+		goto finish;
 finish:
 	while (1);
 }
