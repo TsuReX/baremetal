@@ -682,6 +682,9 @@ static void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 	if (erase_flash(0, 1, sys_clk) != 0)
 		goto finish;
 
+    if (prepare_flash(0, 1) != 0)
+		goto finish;
+
 	if (write_flash(dst_addr, src_addr, size, sys_clk) != 0)
 		goto finish;
 finish:
