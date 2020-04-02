@@ -58,7 +58,8 @@ set(OOCD_CONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS -f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx_1.cfg)
+					ARGS	-f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx.cfg
+							-c \"do flash\")
 #					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
 #							reset halt$<SEMICOLON>
 #							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
@@ -75,4 +76,5 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS -f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx_1.cfg)
+					ARGS	-f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx.cfg
+							-c \"do debug\")

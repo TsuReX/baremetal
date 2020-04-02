@@ -23,7 +23,7 @@ MEMORY
 /* __top_SRAM = 0x20000000 + 0x28000 ; /* 160K bytes */
 
 
-ENTRY(main)
+ENTRY(program_flash)
 
 SECTIONS
 {
@@ -35,13 +35,14 @@ SECTIONS
 		*(.rodata .rodata .constdata)
 	} > SRAM
 
-	.data : ALIGN(4)
+	.data :  AT(ADDR(.text) + SIZEOF(.text))
 	{
 		*(.data)
 	} > SRAM
 
-	.bss : ALIGN(4096)
+	.bss ADDR(.data) + 0x1000 : AT(ADDR(.data) + SIZEOF(.data))
 	{
+		. = ALIGN(0x400);
 		*(.bss)
 	} > SRAM
 

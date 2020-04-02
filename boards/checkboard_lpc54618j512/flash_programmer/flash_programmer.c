@@ -1,17 +1,11 @@
 #include <stdint.h>
 #include <stddef.h>
-#include "crp.h"
+
+#include <fsl_common.h>
 
 #define WEAK __attribute__ ((weak))
 #define WEAK_AV __attribute__ ((weak, section(".after_vectors")))
 #define ALIAS(f) __attribute__ ((weak, alias (#f)))
-
-//*****************************************************************************
-// Variable to store CRP value in. Will be placed automatically
-// by the linker when "Enable Code Read Protect" selected.
-// See crp.h header for more information
-//*****************************************************************************
-__CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 
 #define IAP_BASE_ADDR		0x03000204
 #define PREPARE_OPCODE		50
@@ -26,16 +20,11 @@ typedef void (*iap_call)(uint32_t arguments[], uint32_t results[]);
 
 uint32_t op_status = 0;
 
-extern int main();
+extern int main(void);
+void reset(void);
 
 //*****************************************************************************
 // Forward declaration of the core exception handlers.
-// When the application defines a handler (with the same name), this will
-// automatically take precedence over these weak definitions.
-// If your application is a C++ one, then any interrupt handlers defined
-// in C++ files within in your main application will need to have C linkage
-// rather than C++ linkage. To do this, make sure that you are using extern "C"
-// { .... } around the interrupt handler within your main application code.
 //*****************************************************************************
      void ResetISR(void);
 WEAK void NMI_Handler(void);
@@ -50,9 +39,7 @@ WEAK void SysTick_Handler(void);
 WEAK void IntDefaultHandler(void);
 
 //*****************************************************************************
-// Forward declaration of the application IRQ handlers. When the application
-// defines a handler (with the same name), this will automatically take
-// precedence over weak definitions below
+// Forward declaration of the application IRQ handlers.
 //*****************************************************************************
 WEAK void WDT_BOD_IRQHandler(void);
 WEAK void DMA0_IRQHandler(void);
@@ -113,10 +100,7 @@ WEAK void SMARTCARD0_IRQHandler(void);
 WEAK void SMARTCARD1_IRQHandler(void);
 
 //*****************************************************************************
-// Forward declaration of the driver IRQ handlers. These are aliased
-// to the IntDefaultHandler, which is a 'forever' loop. When the driver
-// defines a handler (with the same name), this will automatically take
-// precedence over these weak definitions
+// Forward declaration of the driver IRQ handlers.
 //*****************************************************************************
 void WDT_BOD_DriverIRQHandler(void) ALIAS(IntDefaultHandler);
 void DMA0_DriverIRQHandler(void) ALIAS(IntDefaultHandler);
@@ -283,7 +267,6 @@ void ResetISR(void) {
 
     // Disable interrupts
     __asm volatile ("cpsid i");
-
 
     // Enable SRAM clock used by Stack
     __asm volatile ("LDR R0, =0x40000220\n\t"
@@ -650,11 +633,10 @@ static int32_t write_flash(uint32_t dst_addr, uint32_t src_addr, size_t size, ui
 	return 0;
 }
 
-static void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
+void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 {
 	// Disable interrupts
     __asm volatile ("cpsid i");
-
 
     // Enable SRAM clock used by Stack
     __asm volatile ("LDR R0, =0x40000220\n\t"
@@ -663,10 +645,6 @@ static void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 
     //SystemInit();
 
-    // Check to see if we are running the code from a non-zero
-    // address (eg RAM, external flash), in which case we need
-    // to modify the VTOR register to tell the CPU that the
-    // vector table is located at a non-0x0 address.
     unsigned int * pSCB_VTOR = (unsigned int *) 0xE000ED08;
     if ((unsigned int *)g_pfnVectors!=(unsigned int *) 0x00000000) {
         *pSCB_VTOR = (unsigned int)g_pfnVectors;
@@ -687,13 +665,26 @@ static void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 
 	if (write_flash(dst_addr, src_addr, size, sys_clk) != 0)
 		goto finish;
+
+	*pSCB_VTOR = (unsigned int)0x0;
+	reset();
+
 finish:
-	while (1);
+	while (1) {
+//		TODO: Signalize error
+		;
+	}
 }
 
-int main()
+int main(void)
 {
-
+	while (1) {
+		;
+	}
 	return 0;
 }
 
+void reset(void)
+{
+	SCB->AIRCR |= SCB_AIRCR_SYSRESETREQ_Msk;
+}

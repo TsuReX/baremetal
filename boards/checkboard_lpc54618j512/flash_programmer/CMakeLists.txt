@@ -9,13 +9,19 @@ project(${PROJ_NAME} C)
 
 set(SOURCES			"${CMAKE_CURRENT_SOURCE_DIR}/flash_programmer.c")
 
-set(INCLUDE			"${INCLUDE}	${CMAKE_CURRENT_SOURCE_DIR}")
-				
-set(INCLUDE			"${INCLUDE}	${CMAKE_CURRENT_SOURCE_DIR}/../../../base/Device/NXP/LPC546xx/Include")
+set(INCLUDE			"${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(INCLUDE			"${INCLUDE}	${CMAKE_CURRENT_SOURCE_DIR}/../../../base/Driver/NXP/LPC546xx/include")
+set(CORE_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/../../../base/core/include")
 
-file(GLOB			DRV_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../../base/Driver/NXP/LPC546xx/source/*.c")
+set(NXP_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/../../../base/device/nxp/lpc546xx/include")
+
+set(NXP_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/../../../base/driver/nxp/lpc546xx/include")
+
+set(NXP_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../base/driver/nxp/lpc546xx/source")
+#file(GLOB			NXP_DRV_SOURCES "${NXP_DRV_SOURCES_PATH}/*.c")
+set(NXP_DRV_SOURCES	"${NXP_DRV_SOURCES}"
+					"${NXP_DRV_SOURCES_PATH}/fsl_clock.c"
+					"${NXP_DRV_SOURCES_PATH}/fsl_usart.c")
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
@@ -26,13 +32,15 @@ set(LINKER_FLAGS	"-T ${CMAKE_CURRENT_SOURCE_DIR}/flash_programmer_lpc54618j512.l
 					"-mcpu=cortex-m4"
 					"-Wl,--gc-sections")
 
-add_executable(${PROJ_NAME} ${SOURCES} ${DRV_SOURCES})
+add_executable(${PROJ_NAME} ${SOURCES} ${NXP_DRV_SOURCES})
 
-target_include_directories(${PROJ_NAME} PRIVATE "${INCLUDE}")
+target_include_directories(${PROJ_NAME} PRIVATE ${INCLUDE}  ${NXP_DRV_INCLUDE} ${NXP_DEV_INCLUDE} ${CORE_INCLUDE})
 
-target_compile_options(${PROJ_NAME} PRIVATE "${C_FLAGS}")
+target_compile_options(${PROJ_NAME} PRIVATE ${C_FLAGS})
 
-target_link_libraries(${PROJ_NAME} PRIVATE "-lc -lm -lnosys ${LINKER_FLAGS}")
+target_link_libraries(${PROJ_NAME} PRIVATE "-lc -lm -lnosys -nostdlib ${LINKER_FLAGS}")
+
+target_compile_definitions(${PROJ_NAME} PRIVATE "CPU_LPC54618J512ET180")
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
