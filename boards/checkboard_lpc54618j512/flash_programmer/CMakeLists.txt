@@ -21,7 +21,9 @@ set(NXP_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../base/driver/nxp/l
 #file(GLOB			NXP_DRV_SOURCES "${NXP_DRV_SOURCES_PATH}/*.c")
 set(NXP_DRV_SOURCES	"${NXP_DRV_SOURCES}"
 					"${NXP_DRV_SOURCES_PATH}/fsl_clock.c"
-					"${NXP_DRV_SOURCES_PATH}/fsl_usart.c")
+					"${NXP_DRV_SOURCES_PATH}/fsl_gpio.c"
+					"${NXP_DRV_SOURCES_PATH}/fsl_reset.c"
+					"${NXP_DRV_SOURCES_PATH}/fsl_power.c")
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
