@@ -48,7 +48,7 @@ set(LINKER_FLAGS "${LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboa
 								
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
-add_custom_target("flash" DEPENDS ${PROJ_NAME})
+add_custom_target("flash" DEPENDS ${PROJ_NAME} "flash_programmer")
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md

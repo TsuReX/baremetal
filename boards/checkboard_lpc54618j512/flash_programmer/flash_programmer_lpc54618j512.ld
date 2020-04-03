@@ -31,24 +31,29 @@ SECTIONS
 	{
 		*(.isr_vector)
 		*(.after_vectors*)
+	} > SRAM
+	
+	.text : ALIGN(4) 
+	{
 		*(.text*)
 		*(.rodata .rodata .constdata)
 	} > SRAM
 
-	.data :  AT(ADDR(.text) + SIZEOF(.text))
+	.data :  ALIGN(4)/* AT(ADDR(.text) + SIZEOF(.text))*/
 	{
 		*(.data)
 	} > SRAM
 
-	.bss ADDR(.data) + 0x1000 : AT(ADDR(.data) + SIZEOF(.data))
+	.bss /*ADDR(.data) + 0x1000*/ : ALIGN(4)/*AT(ADDR(.data) + SIZEOF(.data))*/
 	{
-		. = ALIGN(0x400);
+		 . = ALIGN(0x400); 
 		*(.bss)
+		PROVIDE(end = .);
 	} > SRAM
 
 	_StackSize = 0x1000;
-	.stack ORIGIN(SRAM) + LENGTH(SRAM) - _StackSize - 0:  ALIGN(4)
-    {
+	.stack ORIGIN(SRAM) + LENGTH(SRAM) - _StackSize - 1024:  ALIGN(4)
+   {
         _vStackBase = .;
         . = ALIGN(4);
         _vStackTop = . + _StackSize;

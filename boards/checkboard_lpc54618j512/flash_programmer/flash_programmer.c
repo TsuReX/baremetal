@@ -655,19 +655,40 @@ void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
     // Reenable interrupts
     __asm volatile ("cpsie i");
 
+    if (size > (1 << 16)) {
+    	op_status = 0xF01;
+    	goto finish;
+    }
+
+    /* Writing should start from the beginning of the flash!!!!*/
+    if (dst_addr != 0) {
+		op_status = 0xF02;
+		goto finish;
+    }
     uint32_t sys_clk = 204000;
+    uint32_t sectors_count = (size - 1) >> 15; /* Divide by 32Kb */
 
-    if (prepare_flash(0, 1) != 0)
+    if (sectors_count == 0)
+    	++sectors_count;
+
+    if (prepare_flash(0, sectors_count) != 0)
 		goto finish;
 
-	if (erase_flash(0, 1, sys_clk) != 0)
+	if (erase_flash(0, sectors_count, sys_clk) != 0)
 		goto finish;
 
-    if (prepare_flash(0, 1) != 0)
-		goto finish;
+    uint32_t blocks_count = (size - 1) >> 13; /* Divide by 4Kb */
+    if (blocks_count == 0)
+    	++blocks_count;
 
-	if (write_flash(dst_addr, src_addr, size, sys_clk) != 0)
+    uint32_t block_size = 0x1000;
+	size_t i = 0;
+    for(; i <= blocks_count; ++i) {
+    	if (prepare_flash(0, sectors_count) != 0)
 		goto finish;
+		if (write_flash(dst_addr + i * block_size, src_addr + i * block_size, block_size, sys_clk) != 0)
+			goto finish;
+	}
 
 	*pSCB_VTOR = (unsigned int)0x0;
 	reset();
@@ -684,195 +705,24 @@ void reset(void)
 	SCB->AIRCR |= SCB_AIRCR_SYSRESETREQ_Msk;
 }
 
-#define IOCON_PIO_DIGITAL_EN 0x0100u  /*!<@brief Enables digital function */
-#define IOCON_PIO_FUNC0 0x00u         /*!<@brief Selects pin function 0 */
-#define IOCON_PIO_FUNC1 0x01u         /*!<@brief Selects pin function 1 */
-#define IOCON_PIO_INPFILT_OFF 0x0200u /*!<@brief Input filter disabled */
-#define IOCON_PIO_INV_DI 0x00u        /*!<@brief Input function is not inverted */
-#define IOCON_PIO_MODE_INACT 0x00u    /*!<@brief No addition pin function */
-#define IOCON_PIO_MODE_PULLUP 0x20u   /*!<@brief Selects pull-up function */
-#define IOCON_PIO_OPENDRAIN_DI 0x00u  /*!<@brief Open drain is disabled */
-#define IOCON_PIO_SLEW_STANDARD 0x00u /*!<@brief Standard mode, output slew rate control is enabled */
-
-/* clang-format off */
-/*
- * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-BOARD_InitPins:
-- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: B13, peripheral: FLEXCOMM0, signal: RXD_SDA_MOSI, pin_signal: PIO0_29/FC0_RXD_SDA_MOSI/CTIMER2_MAT3/SCT0_OUT8/TRACEDATA(2), mode: inactive, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
-  - {pin_num: A2, peripheral: FLEXCOMM0, signal: TXD_SCL_MISO, pin_signal: PIO0_30/FC0_TXD_SCL_MISO/CTIMER0_MAT0/SCT0_OUT9/TRACEDATA(1), mode: inactive, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
-  - {pin_num: C8, peripheral: GPIO, signal: 'PIO0, 4', pin_signal: PIO0_4/CAN0_RD/FC4_SCK/CTIMER3_CAP0/SCT0_GPI4/EMC_D(2)/ENET_MDC, mode: pullUp, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
-  - {pin_num: E7, peripheral: GPIO, signal: 'PIO0, 5', pin_signal: PIO0_5/CAN0_TD/FC4_RXD_SDA_MOSI/CTIMER3_MAT0/SCT0_GPI5/EMC_D(3)/ENET_MDIO, mode: pullUp, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
-  - {pin_num: A5, peripheral: GPIO, signal: 'PIO0, 6', pin_signal: PIO0_6/FC3_SCK/CTIMER3_CAP1/CTIMER4_MAT0/SCT0_GPI6/EMC_D(4)/ENET_RX_DV, mode: pullUp, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
-  - {pin_num: C3, peripheral: GPIO, signal: 'PIO2, 2', pin_signal: PIO2_2/ENET_CRS/FC3_SSEL3/SCT0_OUT6/CTIMER1_MAT1, mode: pullUp, invert: disabled, glitch_filter: disabled,
-    slew_rate: standard, open_drain: disabled}
-  - {pin_num: A13, peripheral: GPIO, signal: 'PIO3, 3', pin_signal: PIO3_3/LCD_VD(17)/FC9_TXD_SCL_MISO, mode: pullUp, invert: disabled, glitch_filter: disabled, slew_rate: standard,
-    open_drain: disabled}
-  - {pin_num: E3, peripheral: GPIO, signal: 'PIO3, 14', pin_signal: PIO3_14/SCT0_OUT4/FC9_RTS_SCL_SSEL1/CTIMER3_MAT1/TRACEDATA(2), mode: pullUp, invert: disabled,
-    glitch_filter: disabled, slew_rate: standard, open_drain: disabled}
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
- */
-/* clang-format on */
-
-/* FUNCTION ************************************************************************************************************
- *
- * Function Name : BOARD_InitPins
- * Description   : Configures pin routing and optionally pin electrical features.
- *
- * END ****************************************************************************************************************/
-/* Function assigned for the Core #0 (ARM Cortex-M4) */
 void BOARD_InitPins(void)
 {
-    /* Enables the clock for the IOCON block. 0 = Disable; 1 = Enable.: 0x01u */
+
     CLOCK_EnableClock(kCLOCK_Iocon);
 
-    const uint32_t port0_pin29_config = (/* Pin is configured as FC0_RXD_SDA_MOSI */
-                                         IOCON_PIO_FUNC1 |
-                                         /* No addition pin function */
-                                         IOCON_PIO_MODE_INACT |
-                                         /* Input function is not inverted */
-                                         IOCON_PIO_INV_DI |
-                                         /* Enables digital function */
-                                         IOCON_PIO_DIGITAL_EN |
-                                         /* Input filter disabled */
-                                         IOCON_PIO_INPFILT_OFF |
-                                         /* Standard mode, output slew rate control is enabled */
-                                         IOCON_PIO_SLEW_STANDARD |
-                                         /* Open drain is disabled */
-                                         IOCON_PIO_OPENDRAIN_DI);
-    /* PORT0 PIN29 (coords: B13) is configured as FC0_RXD_SDA_MOSI */
-    IOCON_PinMuxSet(IOCON, 0U, 29U, port0_pin29_config);
+    const uint32_t port5_pin0_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
+    IOCON_PinMuxSet(IOCON, 5U,0U, port5_pin0_config);
 
-    const uint32_t port0_pin30_config = (/* Pin is configured as FC0_TXD_SCL_MISO */
-                                         IOCON_PIO_FUNC1 |
-                                         /* No addition pin function */
-                                         IOCON_PIO_MODE_INACT |
-                                         /* Input function is not inverted */
-                                         IOCON_PIO_INV_DI |
-                                         /* Enables digital function */
-                                         IOCON_PIO_DIGITAL_EN |
-                                         /* Input filter disabled */
-                                         IOCON_PIO_INPFILT_OFF |
-                                         /* Standard mode, output slew rate control is enabled */
-                                         IOCON_PIO_SLEW_STANDARD |
-                                         /* Open drain is disabled */
-                                         IOCON_PIO_OPENDRAIN_DI);
-    /* PORT0 PIN30 (coords: A2) is configured as FC0_TXD_SCL_MISO */
-    IOCON_PinMuxSet(IOCON, 0U, 30U, port0_pin30_config);
-
-    const uint32_t port0_pin4_config = (/* Pin is configured as PIO0_4 */
-                                        IOCON_PIO_FUNC0 |
-                                        /* Selects pull-up function */
-                                        IOCON_PIO_MODE_PULLUP |
-                                        /* Input function is not inverted */
-                                        IOCON_PIO_INV_DI |
-                                        /* Enables digital function */
-                                        IOCON_PIO_DIGITAL_EN |
-                                        /* Input filter disabled */
-                                        IOCON_PIO_INPFILT_OFF |
-                                        /* Standard mode, output slew rate control is enabled */
-                                        IOCON_PIO_SLEW_STANDARD |
-                                        /* Open drain is disabled */
-                                        IOCON_PIO_OPENDRAIN_DI);
-    /* PORT0 PIN4 (coords: C8) is configured as PIO0_4 */
-    IOCON_PinMuxSet(IOCON, 0U, 4U, port0_pin4_config);
-
-    const uint32_t port0_pin5_config = (/* Pin is configured as PIO0_5 */
-                                        IOCON_PIO_FUNC0 |
-                                        /* Selects pull-up function */
-                                        IOCON_PIO_MODE_PULLUP |
-                                        /* Input function is not inverted */
-                                        IOCON_PIO_INV_DI |
-                                        /* Enables digital function */
-                                        IOCON_PIO_DIGITAL_EN |
-                                        /* Input filter disabled */
-                                        IOCON_PIO_INPFILT_OFF |
-                                        /* Standard mode, output slew rate control is enabled */
-                                        IOCON_PIO_SLEW_STANDARD |
-                                        /* Open drain is disabled */
-                                        IOCON_PIO_OPENDRAIN_DI);
-    /* PORT0 PIN5 (coords: E7) is configured as PIO0_5 */
-    IOCON_PinMuxSet(IOCON, 0U, 5U, port0_pin5_config);
-
-    const uint32_t port0_pin6_config = (/* Pin is configured as PIO0_6 */
-                                        IOCON_PIO_FUNC0 |
-                                        /* Selects pull-up function */
-                                        IOCON_PIO_MODE_PULLUP |
-                                        /* Input function is not inverted */
-                                        IOCON_PIO_INV_DI |
-                                        /* Enables digital function */
-                                        IOCON_PIO_DIGITAL_EN |
-                                        /* Input filter disabled */
-                                        IOCON_PIO_INPFILT_OFF |
-                                        /* Standard mode, output slew rate control is enabled */
-                                        IOCON_PIO_SLEW_STANDARD |
-                                        /* Open drain is disabled */
-                                        IOCON_PIO_OPENDRAIN_DI);
-    /* PORT0 PIN6 (coords: A5) is configured as PIO0_6 */
-    IOCON_PinMuxSet(IOCON, 0U, 6U, port0_pin6_config);
-
-    const uint32_t port2_pin2_config = (/* Pin is configured as PIO2_2 */
-                                        IOCON_PIO_FUNC0 |
-                                        /* Selects pull-up function */
-                                        IOCON_PIO_MODE_PULLUP |
-                                        /* Input function is not inverted */
-                                        IOCON_PIO_INV_DI |
-                                        /* Enables digital function */
-                                        IOCON_PIO_DIGITAL_EN |
-                                        /* Input filter disabled */
-                                        IOCON_PIO_INPFILT_OFF |
-                                        /* Standard mode, output slew rate control is enabled */
-                                        IOCON_PIO_SLEW_STANDARD |
-                                        /* Open drain is disabled */
-                                        IOCON_PIO_OPENDRAIN_DI);
-    /* PORT2 PIN2 (coords: C3) is configured as PIO2_2 */
-    IOCON_PinMuxSet(IOCON, 2U, 2U, port2_pin2_config);
-
-    const uint32_t port3_pin14_config = (/* Pin is configured as PIO3_14 */
-                                         IOCON_PIO_FUNC0 |
-                                         /* Selects pull-up function */
-                                         IOCON_PIO_MODE_PULLUP |
-                                         /* Input function is not inverted */
-                                         IOCON_PIO_INV_DI |
-                                         /* Enables digital function */
-                                         IOCON_PIO_DIGITAL_EN |
-                                         /* Input filter disabled */
-                                         IOCON_PIO_INPFILT_OFF |
-                                         /* Standard mode, output slew rate control is enabled */
-                                         IOCON_PIO_SLEW_STANDARD |
-                                         /* Open drain is disabled */
-                                         IOCON_PIO_OPENDRAIN_DI);
-    /* PORT3 PIN14 (coords: E3) is configured as PIO3_14 */
-    IOCON_PinMuxSet(IOCON, 3U, 14U, port3_pin14_config);
-
-    const uint32_t port3_pin3_config = (/* Pin is configured as PIO3_3 */
-                                        IOCON_PIO_FUNC0 |
-                                        /* Selects pull-up function */
-                                        IOCON_PIO_MODE_PULLUP |
-                                        /* Input function is not inverted */
-                                        IOCON_PIO_INV_DI |
-                                        /* Enables digital function */
-                                        IOCON_PIO_DIGITAL_EN |
-                                        /* Input filter disabled */
-                                        IOCON_PIO_INPFILT_OFF |
-                                        /* Standard mode, output slew rate control is enabled */
-                                        IOCON_PIO_SLEW_STANDARD |
-                                        /* Open drain is disabled */
-                                        IOCON_PIO_OPENDRAIN_DI);
-    /* PORT3 PIN3 (coords: A13) is configured as PIO3_3 */
-    IOCON_PinMuxSet(IOCON, 3U, 3U, port3_pin3_config);
+    const uint32_t port5_pin1_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
+    IOCON_PinMuxSet(IOCON, 5U, 1U, port5_pin1_config);
 }
 
 /*******************************************************************************
  * Definitions for BOARD_BootClockPLL180M configuration
  ******************************************************************************/
 #define BOARD_BOOTCLOCKPLL180M_CORE_CLOCK 180000000U /*!< Core clock frequency:180000000Hz */
+
+uint32_t SystemCoreClock = DEFAULT_SYSTEM_CLOCK;
 
 /*******************************************************************************
  ******************** Configuration BOARD_BootClockPLL180M *********************
@@ -956,13 +806,9 @@ void BOARD_BootClockPLL180M(void)
  ******************************************************************************/
 volatile uint32_t g_systickCounter;
 
-/*******************************************************************************
- * Code
- ******************************************************************************/
 WEAK_AV void SysTick_Handler(void)
 {
-    if (g_systickCounter != 0U)
-    {
+    if (g_systickCounter != 0U) {
         g_systickCounter--;
     }
 }
@@ -970,36 +816,16 @@ WEAK_AV void SysTick_Handler(void)
 void SysTick_DelayTicks(uint32_t n)
 {
     g_systickCounter = n;
-    while (g_systickCounter != 0U)
-    {
+    while (g_systickCounter != 0U) {
     }
 }
 
-#define APP_BOARD_TEST_LED_PORT 2U
-#define APP_BOARD_TEST_LED_PIN 2U
-#define APP_SW_PORT 0U
-#define APP_SW_PIN 6U
-
-/*!
- * @brief Main function
- */
 int main(void)
 {
-    uint32_t port_state = 0;
-
-    /* Define the init structure for the output LED pin*/
-    gpio_pin_config_t led_config = {
-        kGPIO_DigitalOutput,
-        0,
-    };
-
-    /* Board pin, clock, debug console init */
     /* attach 12 MHz clock to FLEXCOMM0 (debug console) */
     CLOCK_AttachClk(kFRO12M_to_FLEXCOMM0);
-    CLOCK_EnableClock(kCLOCK_Gpio0);
-    CLOCK_EnableClock(kCLOCK_Gpio1);
-    CLOCK_EnableClock(kCLOCK_Gpio2);
-    CLOCK_EnableClock(kCLOCK_Gpio3);
+
+    CLOCK_EnableClock(kCLOCK_Gpio5);
 
     BOARD_InitPins();
     BOARD_BootClockPLL180M();
@@ -1007,36 +833,35 @@ int main(void)
     /* Print a note to terminal. */
 
     /* Init output LED GPIO. */
-    GPIO_PortInit(GPIO, APP_BOARD_TEST_LED_PORT);
-    GPIO_PortInit(GPIO, APP_SW_PORT);
-    GPIO_PinInit(GPIO, APP_BOARD_TEST_LED_PORT, APP_BOARD_TEST_LED_PIN, &led_config);
-    GPIO_PinWrite(GPIO, APP_BOARD_TEST_LED_PORT, APP_BOARD_TEST_LED_PIN, 1);
+    GPIO_PortInit(GPIO, 5);
+
+    gpio_pin_config_t hl1 = { kGPIO_DigitalOutput, 0};
+    GPIO_PinInit(GPIO, 5, 0, &hl1);
+    GPIO_PinWrite(GPIO, 5, 0, 1);
+
+    gpio_pin_config_t hl2 = { kGPIO_DigitalOutput, 0};
+    GPIO_PinInit(GPIO, 5, 1, &hl2);
+    GPIO_PinWrite(GPIO, 5, 1, 0);
 
     /* Port masking */
-    GPIO_PortMaskedSet(GPIO, APP_BOARD_TEST_LED_PORT, 0x0000FFFF);
-    GPIO_PortMaskedWrite(GPIO, APP_BOARD_TEST_LED_PORT, 0xFFFFFFFF);
-    port_state = GPIO_PortRead(GPIO, APP_BOARD_TEST_LED_PORT);
+//    GPIO_PortMaskedSet(GPIO, APP_BOARD_TEST_LED_PORT, 0x0000FFFF);
+//    GPIO_PortMaskedWrite(GPIO, APP_BOARD_TEST_LED_PORT, 0xFFFFFFFF);
+//    port_state = GPIO_PortRead(GPIO, APP_BOARD_TEST_LED_PORT);
 //    PRINTF("\r\n Standard port read: %x\r\n", port_state);
-    port_state = GPIO_PortMaskedRead(GPIO, APP_BOARD_TEST_LED_PORT);
+//    port_state = GPIO_PortMaskedRead(GPIO, APP_BOARD_TEST_LED_PORT);
 //    PRINTF("\r\n Masked port read: %x\r\n", port_state);
 
     /* Set systick reload value to generate 1ms interrupt */
-    if (SysTick_Config(SystemCoreClock / 1000U))
-    {
-        while (1)
-        {
+    if (SysTick_Config(SystemCoreClock / 1000U)) {
+        while (1) {
         }
     }
 
-    while (1)
-    {
-        port_state = GPIO_PortRead(GPIO, APP_SW_PORT);
-        if (!(port_state & (1 << APP_SW_PIN)))
-        {
-//            PRINTF("\r\n Port state: %x\r\n", port_state);
-            GPIO_PortToggle(GPIO, APP_BOARD_TEST_LED_PORT, 1u << APP_BOARD_TEST_LED_PIN);
-        }
-        /* Delay 1000 ms */
+    while (1) {
+//        port_state = GPIO_PortRead(GPIO, APP_SW_PORT);
+//        if (!(port_state & (1 << APP_SW_PIN))) {
+            GPIO_PortToggle(GPIO, 5, 3);
+//        }
         SysTick_DelayTicks(1000U);
     }
 }

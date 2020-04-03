@@ -28,11 +28,19 @@ set(NXP_DRV_SOURCES	"${NXP_DRV_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(C_FLAGS			"-mcpu=cortex-m4;-s;-Werror")
+set(C_FLAGS			"-mcpu=cortex-m4;;-Werror")
 
 set(LINKER_FLAGS	"-T ${CMAKE_CURRENT_SOURCE_DIR}/flash_programmer_lpc54618j512.ld"
 					"-mcpu=cortex-m4"
-					"-Wl,--gc-sections")
+					"-Wl,--gc-sections"
+#					"-nostdlib"
+	)
+					
+set(LINKER_LIBS 	"-lc"
+					"-lm"
+					"-lnosys"
+					"-lpower_softabi -L${CMAKE_CURRENT_SOURCE_DIR}"
+	)
 
 add_executable(${PROJ_NAME} ${SOURCES} ${NXP_DRV_SOURCES})
 
@@ -40,7 +48,7 @@ target_include_directories(${PROJ_NAME} PRIVATE ${INCLUDE}  ${NXP_DRV_INCLUDE} $
 
 target_compile_options(${PROJ_NAME} PRIVATE ${C_FLAGS})
 
-target_link_libraries(${PROJ_NAME} PRIVATE "-lc -lm -lnosys -nostdlib ${LINKER_FLAGS}")
+target_link_libraries(${PROJ_NAME} PRIVATE ${LINKER_LIBS} ${LINKER_FLAGS})
 
 target_compile_definitions(${PROJ_NAME} PRIVATE "CPU_LPC54618J512ET180")
 
