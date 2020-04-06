@@ -11,6 +11,12 @@ void BOARD_InitPins(void)
 
     CLOCK_EnableClock(kCLOCK_Iocon);
 
+    const uint32_t port3_pin0_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
+    IOCON_PinMuxSet(IOCON, 3U, 0U, port3_pin0_config);
+
+    const uint32_t port3_pin2_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
+    IOCON_PinMuxSet(IOCON, 3U, 2U, port3_pin2_config);
+
     const uint32_t port5_pin0_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
     IOCON_PinMuxSet(IOCON, 5U,0U, port5_pin0_config);
 
@@ -121,11 +127,52 @@ void SysTick_DelayTicks(uint32_t n)
     }
 }
 
+static inline void power_on_hl1(void)
+{
+    GPIO_PinWrite(GPIO, 5, 0, 1);
+}
+
+static inline void power_off_hl1(void)
+{
+    GPIO_PinWrite(GPIO, 5, 0, 0);
+}
+
+static inline void power_on_hl2(void)
+{
+    GPIO_PinWrite(GPIO, 5, 2, 1);
+}
+
+static inline void power_off_hl2(void)
+{
+    GPIO_PinWrite(GPIO, 5, 2, 0);
+}
+
+static inline void power_on_bp(void)
+{
+    GPIO_PinWrite(GPIO, 3, 0, 0);
+}
+
+static inline void power_off_bp(void)
+{
+    GPIO_PinWrite(GPIO, 3, 0, 1);
+}
+
+static inline void power_on_spl(void)
+{
+    GPIO_PinWrite(GPIO, 3, 2, 0);
+}
+
+static inline void power_off_spl(void)
+{
+    GPIO_PinWrite(GPIO, 3, 2, 1);
+}
+
 int main(void)
 {
     /* attach 12 MHz clock to FLEXCOMM0 (debug console) */
     CLOCK_AttachClk(kFRO12M_to_FLEXCOMM0);
 
+    CLOCK_EnableClock(kCLOCK_Gpio3);
     CLOCK_EnableClock(kCLOCK_Gpio5);
 
     BOARD_InitPins();
@@ -134,16 +181,37 @@ int main(void)
     /* Print a note to terminal. */
 
     /* Init output LED GPIO. */
+    GPIO_PortInit(GPIO, 3);
     GPIO_PortInit(GPIO, 5);
 
     gpio_pin_config_t hl1 = { kGPIO_DigitalOutput, 0};
     GPIO_PinInit(GPIO, 5, 0, &hl1);
-    GPIO_PinWrite(GPIO, 5, 0, 1);
 
     gpio_pin_config_t hl2 = { kGPIO_DigitalOutput, 0};
     GPIO_PinInit(GPIO, 5, 1, &hl2);
-    GPIO_PinWrite(GPIO, 5, 1, 0);
 
+    gpio_pin_config_t pwr_no_bp_n = { kGPIO_DigitalOutput, 1};
+    GPIO_PinInit(GPIO, 3, 0, &pwr_no_bp_n);
+
+    gpio_pin_config_t pwr_on_spl_n = { kGPIO_DigitalOutput, 1};
+    GPIO_PinInit(GPIO, 3, 2, &pwr_on_spl_n);
+
+	if (SysTick_Config(SystemCoreClock / 1000U)) {
+		while (1) {
+			;
+		}
+	}
+
+	power_on_hl1();
+    SysTick_DelayTicks(2000U);
+
+    power_on_hl2();
+    SysTick_DelayTicks(2000U);
+
+    power_on_bp();
+    SysTick_DelayTicks(10000U);
+
+    power_off_bp();
     /* Port masking */
 //    GPIO_PortMaskedSet(GPIO, APP_BOARD_TEST_LED_PORT, 0x0000FFFF);
 //    GPIO_PortMaskedWrite(GPIO, APP_BOARD_TEST_LED_PORT, 0xFFFFFFFF);
@@ -153,10 +221,7 @@ int main(void)
 //    PRINTF("\r\n Masked port read: %x\r\n", port_state);
 
     /* Set systick reload value to generate 1ms interrupt */
-    if (SysTick_Config(SystemCoreClock / 1000U)) {
-        while (1) {
-        }
-    }
+
 
     while (1) {
 //        port_state = GPIO_PortRead(GPIO, APP_SW_PORT);
