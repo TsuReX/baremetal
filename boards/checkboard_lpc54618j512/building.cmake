@@ -19,52 +19,62 @@ set(BOARD_TYPE_STATUS "SET")
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
 #set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/source/startup_lpc54618.s" )
+set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512")
 
-set(MAIN_SOURCES	"${MAIN_SOURCES}"
-					## TODO Реализовать механизмы инициализации в файле и подключить его к сборке
-					##"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/source/system_lpc54618.c"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/source/startup_lpc54618.c"
-					#"${CMAKE_CURRENT_SOURCE_DIR}/source/checkboad_main.c"
-					)
+set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${BRD_PATH}/source/startup_lpc54618.c"
+						#"${BRD_PATH}/source/flash_programmer.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/checkboard_main.c"
+				)
 
-set(MAIN_INCLUDE	${MAIN_INCLUDE}	"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/include")
+set(MAIN_INCLUDE		"${BRD_PATH}/include")
+
+set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
 				
-set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/NXP/LPC546xx/Include")
+set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/nxp/lpc546xx/include")
 
-set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/NXP/LPC546xx/include")
+set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/include")
 
-file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/NXP/LPC546xx/source/*.c")
-
+#file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/NXP/LPC546xx/source/*.c")
+set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/source")
+set(DRIVER_SOURCES		"${DRV_SOURCES}"
+						"${DRV_SOURCES_PATH}/fsl_clock.c"
+						"${DRV_SOURCES_PATH}/fsl_gpio.c"
+						"${DRV_SOURCES_PATH}/fsl_reset.c"
+						"${DRV_SOURCES_PATH}/fsl_power.c")
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
-	
-set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
-	
-set(LINKER_FLAGS "${LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_lpc54618j512.ld"
-									"-mcpu=cortex-m4 -specs=nano.specs"
-									"-Wl,--gc-sections")
-								
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
+
+set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
+
+set(LINKER_FLAGS		"${LINKER_FLAGS}"
+						"-T ${BRD_PATH}/flash_lpc54618j512.ld"
+						"-mcpu=cortex-m4 -specs=nano.specs"
+						"-Wl,--gc-sections"
+				)
+
+set(LINKER_LIBS 		"-lc"
+						"-lm"
+						"-lnosys"
+						"-lpower_softabi -L${BRD_PATH}"
+				)
+
+add_definitions("-DCPU_LPC54618J512ET180")
+
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
-add_custom_target("flash" DEPENDS ${PROJ_NAME} "flash_programmer")
+add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-set(OOCD_CONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx.cfg
-							-c \"do flash\")
-#					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
-#							reset halt$<SEMICOLON>
-#							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-#							reset$<SEMICOLON>
-#							exit\")
+					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -f ${BRD_PATH}/lpc546xx.cfg -c \"do flash\")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки
@@ -76,5 +86,8 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG_PATH}/oocd_jlink.cfg -f ${OOCD_CONFIG_PATH}/lpc546xx.cfg
-							-c \"do debug\")
+					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -f ${BRD_PATH}/lpc546xx.cfg -c \"do debug\")
+
+
+include(${BRD_PATH}/fprog_building.cmake)
+					

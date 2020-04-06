@@ -53,6 +53,7 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 
 	include(${BOARD_SCRIPT_CMAKE})
 
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
 	
 	## Подключение файлов исходных кодов и заголовков
@@ -73,6 +74,7 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
 
 	include(${BOARD_SCRIPT_CMAKE})
 
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 
 	## Подключение файлов исходных кодов и заголовков
@@ -90,15 +92,11 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 
 	include(${BOARD_SCRIPT_CMAKE})
 
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
-
-	## Подключение файлов исходных кодов и заголовков
-	set(MAIN_INCLUDE	"include")
 	
-	set(MAIN_SOURCES	"source/checkboard_main.c")
+	set(PROJ_NAME checkboard)
 	
-	set(CORE_INCLUDE	"base/Core/Include")
-
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
 	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
@@ -108,8 +106,9 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
 	include(${BOARD_SCRIPT_CMAKE})
 
 	# Подключение подпроекта программатора
-	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_programmer")
+	#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_programmer")
 
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
 
 	##	TODO Сделать аналогично china_stm32f407vet6
@@ -149,4 +148,10 @@ message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 add_executable(${PROJ_NAME} ${MAIN_ASM_SOURCES} ${MAIN_SOURCES} ${DRIVER_SOURCES})
 
-target_link_libraries(${PROJ_NAME} "-lc -lm -lnosys ${LINKER_FLAGS}" ringbuf)
+target_link_libraries(${PROJ_NAME} ${LINKER_LIBS} ${LINKER_FLAGS} ringbuf)
+
+add_custom_command(
+        TARGET ${PROJ_NAME} POST_BUILD
+        COMMAND arm-none-eabi-objcopy -O binary
+                ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf
+                ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.bin)

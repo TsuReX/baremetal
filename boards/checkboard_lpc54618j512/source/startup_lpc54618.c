@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stddef.h>
+
 //*****************************************************************************
 // LPC54618 startup code for use with MCUXpresso IDE
 //
@@ -10,34 +13,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //*****************************************************************************
 
-#if defined (DEBUG)
-#pragma GCC push_options
-#pragma GCC optimize ("Og")
-#endif // (DEBUG)
-
-#if defined (__cplusplus)
-#ifdef __REDLIB__
-#error Redlib does not support C++
-#else
-//*****************************************************************************
-//
-// The entry point for the C++ library startup
-//
-//*****************************************************************************
-extern "C" {
-    extern void __libc_init_array(void);
-}
-#endif
-#endif
-
 #define WEAK __attribute__ ((weak))
 #define WEAK_AV __attribute__ ((weak, section(".after_vectors")))
 #define ALIAS(f) __attribute__ ((weak, alias (#f)))
-
-//*****************************************************************************
-#if defined (__cplusplus)
-extern "C" {
-#endif
 
 //*****************************************************************************
 // Variable to store CRP value in. Will be placed automatically
@@ -46,13 +24,6 @@ extern "C" {
 //*****************************************************************************
 #include <crp.h>
 __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
-
-//*****************************************************************************
-// Declaration of external SystemInit function
-//*****************************************************************************
-#if defined (__USE_CMSIS)
-extern void SystemInit(void);
-#endif // (__USE_CMSIS)
 
 //*****************************************************************************
 // Forward declaration of the core exception handlers.
@@ -202,14 +173,6 @@ void SHA_DriverIRQHandler(void) ALIAS(IntDefaultHandler);
 void SMARTCARD0_DriverIRQHandler(void) ALIAS(IntDefaultHandler);
 void SMARTCARD1_DriverIRQHandler(void) ALIAS(IntDefaultHandler);
 
-//*****************************************************************************
-// The entry point for the application.
-// __main() is the entry point for Redlib based applications
-// main() is the entry point for Newlib based applications
-//*****************************************************************************
-#if defined (__REDLIB__)
-extern void __main(void);
-#endif
 extern int main(void);
 
 //*****************************************************************************
@@ -222,16 +185,10 @@ extern void _vStackTop(void);
 WEAK extern void __valid_user_code_checksum();
 
 //*****************************************************************************
-//*****************************************************************************
-#if defined (__cplusplus)
-} // extern "C"
-#endif
-//*****************************************************************************
 // The vector table.
 // This relies on the linker script to place at correct location in memory.
 //*****************************************************************************
 extern void (* const g_pfnVectors[])(void);
-extern void * __Vectors __attribute__ ((alias ("g_pfnVectors")));
 
 __attribute__ ((used, section(".isr_vector")))
 void (* const g_pfnVectors[])(void) = {
@@ -321,7 +278,7 @@ void (* const g_pfnVectors[])(void) = {
 // memory.
 //*****************************************************************************
 __attribute__ ((section(".after_vectors.init_data")))
-void data_init(unsigned int romstart, unsigned int start, unsigned int len) {
+static void data_init(unsigned int romstart, unsigned int start, unsigned int len) {
     unsigned int *pulDest = (unsigned int*) start;
     unsigned int *pulSrc = (unsigned int*) romstart;
     unsigned int loop;
@@ -330,7 +287,7 @@ void data_init(unsigned int romstart, unsigned int start, unsigned int len) {
 }
 
 __attribute__ ((section(".after_vectors.init_bss")))
-void bss_init(unsigned int start, unsigned int len) {
+static void bss_init(unsigned int start, unsigned int len) {
     unsigned int *pulDest = (unsigned int*) start;
     unsigned int loop;
     for (loop = 0; loop < len; loop = loop + 4)
@@ -360,7 +317,6 @@ void ResetISR(void) {
     // Disable interrupts
     __asm volatile ("cpsid i");
 
-
     // Enable SRAM clock used by Stack
     __asm volatile ("LDR R0, =0x40000220\n\t"
                     "MOV R1, #56\n\t"
@@ -372,55 +328,6 @@ void ResetISR(void) {
 
 #endif // (__USE_CMSIS)
 
-    //
-    // Copy the data sections from flash to SRAM.
-    //
-    unsigned int LoadAddr, ExeAddr, SectionLen;
-    unsigned int *SectionTableAddr;
-
-    // Load base address of Global Section Table
-    SectionTableAddr = &__data_section_table;
-
-    // Copy the data sections from flash to SRAM.
-    while (SectionTableAddr < &__data_section_table_end) {
-        LoadAddr = *SectionTableAddr++;
-        ExeAddr = *SectionTableAddr++;
-        SectionLen = *SectionTableAddr++;
-        data_init(LoadAddr, ExeAddr, SectionLen);
-    }
-
-    // At this point, SectionTableAddr = &__bss_section_table;
-    // Zero fill the bss segment
-    while (SectionTableAddr < &__bss_section_table_end) {
-        ExeAddr = *SectionTableAddr++;
-        SectionLen = *SectionTableAddr++;
-        bss_init(ExeAddr, SectionLen);
-    }
-
-#if !defined (__USE_CMSIS)
-// Assume that if __USE_CMSIS defined, then CMSIS SystemInit code
-// will enable the FPU
-#if defined (__VFP_FP__) && !defined (__SOFTFP__)
-    //
-    // Code to enable the Cortex-M4 FPU only included
-    // if appropriate build options have been selected.
-    // Code taken from Section 7.1, Cortex-M4 TRM (DDI0439C)
-    //
-    // Read CPACR (located at address 0xE000ED88)
-    // Set bits 20-23 to enable CP10 and CP11 coprocessors
-    // Write back the modified value to the CPACR
-    asm volatile ("LDR.W R0, =0xE000ED88\n\t"
-                  "LDR R1, [R0]\n\t"
-                  "ORR R1, R1, #(0xF << 20)\n\t"
-                  "STR R1, [R0]");
-#endif // (__VFP_FP__) && !(__SOFTFP__)
-#endif // (__USE_CMSIS)
-
-
-#if !defined (__USE_CMSIS)
-// Assume that if __USE_CMSIS defined, then CMSIS SystemInit code
-// will setup the VTOR register
-
     // Check to see if we are running the code from a non-zero
     // address (eg RAM, external flash), in which case we need
     // to modify the VTOR register to tell the CPU that the
@@ -429,23 +336,11 @@ void ResetISR(void) {
     if ((unsigned int *)g_pfnVectors!=(unsigned int *) 0x00000000) {
         *pSCB_VTOR = (unsigned int)g_pfnVectors;
     }
-#endif // (__USE_CMSIS)
-#if defined (__cplusplus)
-    //
-    // Call C++ library initialisation
-    //
-    __libc_init_array();
-#endif
 
     // Reenable interrupts
     __asm volatile ("cpsie i");
 
-#if defined (__REDLIB__)
-    // Call the Redlib library, which in turn calls main()
-    __main();
-#else
     main();
-#endif
 
     //
     // main() shouldn't return, but if it does, we'll just enter an infinite loop
@@ -737,8 +632,3 @@ WEAK void SMARTCARD1_IRQHandler(void)
 {   SMARTCARD1_DriverIRQHandler();
 }
 
-//*****************************************************************************
-
-#if defined (DEBUG)
-#pragma GCC pop_options
-#endif // (DEBUG)
