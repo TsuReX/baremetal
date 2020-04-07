@@ -23,8 +23,10 @@ set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512")
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_lpc54618.c"
-						#"${BRD_PATH}/source/flash_programmer.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/checkboard_main.c"
+						"${BRD_PATH}/source/config.c"
+						"${BRD_PATH}/source/time.c"
+						"${BRD_PATH}/source/scheduler.c"
 				)
 
 set(MAIN_INCLUDE		"${BRD_PATH}/include")
@@ -41,6 +43,7 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_clock.c"
 						"${DRV_SOURCES_PATH}/fsl_gpio.c"
 						"${DRV_SOURCES_PATH}/fsl_reset.c"
+						"${DRV_SOURCES_PATH}/fsl_rit.c"
 						"${DRV_SOURCES_PATH}/fsl_power.c")
 #######################################################################
 ## Настройка параметров сбоки и компоновки
