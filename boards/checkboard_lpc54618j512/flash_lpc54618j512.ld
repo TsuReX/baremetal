@@ -37,13 +37,18 @@ SECTIONS
 		
 	.data  :  ALIGN(4)
 	{
+		__data_load__ = LOADADDR (.data);
+        __data_start__ = .;
 		*(.data)
+		__data_end__ = .;
 	} > SRAM AT > PROGRAM_FLASH
 
 	.bss : ALIGN(4)
 	{
+		__bss_start__ = .;
 		*(.bss)
 		PROVIDE(end = .);
+		__bss_end__ = .;
 	} > SRAM
 
 	_StackSize = 0x1000;

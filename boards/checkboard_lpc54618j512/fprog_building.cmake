@@ -57,3 +57,9 @@ add_custom_command(
         COMMAND arm-none-eabi-objcopy -O binary
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.bin)
+                
+add_custom_command(
+        TARGET ${SUBPROJ_NAME} POST_BUILD
+        COMMAND arm-none-eabi-objdump -D
+                ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf >
+                ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf.objdump)

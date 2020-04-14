@@ -27,6 +27,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/config.c"
 						"${BRD_PATH}/source/time.c"
 						"${BRD_PATH}/source/scheduler.c"
+						"${BRD_PATH}/source/console.c"
 				)
 
 set(MAIN_INCLUDE		"${BRD_PATH}/include")
@@ -44,7 +45,12 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_gpio.c"
 						"${DRV_SOURCES_PATH}/fsl_reset.c"
 						"${DRV_SOURCES_PATH}/fsl_rit.c"
-						"${DRV_SOURCES_PATH}/fsl_power.c")
+						"${DRV_SOURCES_PATH}/fsl_power.c"
+						"${DRV_SOURCES_PATH}/fsl_usart.c"
+						"${DRV_SOURCES_PATH}/fsl_dma.c"
+						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
+						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
+				)
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
@@ -68,7 +74,7 @@ add_definitions("-DCPU_LPC54618J512ET180")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
-add_custom_target("flash" DEPENDS ${PROJ_NAME})
+add_custom_target("flash" DEPENDS ${PROJ_NAME} fprog)
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md

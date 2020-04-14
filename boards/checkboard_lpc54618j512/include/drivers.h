@@ -6,6 +6,9 @@
 #include <fsl_iocon.h>
 #include <fsl_power.h>
 #include <fsl_rit.h>
+#include "fsl_usart.h"
+#include "fsl_usart_dma.h"
+#include "fsl_dma.h"
 
 #endif /* __DRIVERS_H */
 

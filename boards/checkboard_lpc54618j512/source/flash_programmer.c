@@ -42,9 +42,9 @@ void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 		goto finish;
     }
     uint32_t sys_clk = 204000;
-    uint32_t sectors_count = (size - 1) >> 15; /* Divide by 32Kb */
+    uint32_t sectors_count = size >> 15; /* Divide by 32Kb */
 
-    if (sectors_count == 0)
+    if (size & 0x7FFF != 0)
     	++sectors_count;
 
     if (prepare_flash(0, sectors_count) != 0)
@@ -53,19 +53,23 @@ void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 	if (erase_flash(0, sectors_count, sys_clk) != 0)
 		goto finish;
 
-    uint32_t blocks_count = (size - 1) >> 13; /* Divide by 4Kb */
+    uint32_t blocks_count = (size - 1) >> 12; /* Divide by 4Kb */
     if (blocks_count == 0)
     	++blocks_count;
 
     uint32_t block_size = 0x1000;
 	size_t i = 0;
     for(; i <= blocks_count; ++i) {
-    	if (prepare_flash(0, sectors_count) != 0)
-		goto finish;
-		if (write_flash(dst_addr + i * block_size, src_addr + i * block_size, block_size, sys_clk) != 0)
+    	if (prepare_flash(0, sectors_count) != 0) {
+    		op_status = 0xE00 + i;
+    		goto finish;
+    	}
+		if (write_flash(dst_addr + i * block_size, src_addr + i * block_size, block_size, sys_clk) != 0) {
+			op_status = 0xD00 + i;
 			goto finish;
+		}
 	}
-
+    op_status = 0xAAA;
 	reset();
 
 finish:

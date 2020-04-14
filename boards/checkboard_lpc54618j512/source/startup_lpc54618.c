@@ -271,6 +271,12 @@ void (* const g_pfnVectors[])(void) = {
 
 }; /* End of g_pfnVectors */
 
+extern uint32_t __data_load__;
+extern uint32_t __data_start__;
+extern uint32_t __data_end__;
+extern uint32_t __bss_start__;
+extern uint32_t __bss_end__;
+
 //*****************************************************************************
 // Functions to carry out the initialization of RW and BSS data sections. These
 // are written as separate functions rather than being inlined within the
@@ -322,6 +328,31 @@ void ResetISR(void) {
                     "MOV R1, #56\n\t"
                     "STR R1, [R0]");
 
+//    data_init(__data_load__, __data_start__, __data_end__ - __data_start__);
+//    bss_init(__bss_start__, __bss_end__ - __bss_start__);
+
+    uint32_t *pui32Src, *pui32Dest;
+    //
+    // Copy the data segment initializers from flash to SRAM.
+    //
+    pui32Src = &__data_load__;
+    for(pui32Dest = &__data_start__; pui32Dest < &__data_end__; )
+    {
+        *pui32Dest++ = *pui32Src++;
+    }
+
+    //
+    // Zero fill the bss segment.
+    //
+    __asm("    ldr     r0, =__bss_start__\n"
+          "    ldr     r1, =__bss_end__\n"
+          "    mov     r2, #0\n"
+          "    .thumb_func\n"
+          "zero_loop:\n"
+          "        cmp     r0, r1\n"
+          "        it      lt\n"
+          "        strlt   r2, [r0], #4\n"
+          "        blt     zero_loop");
 #if defined (__USE_CMSIS)
 // If __USE_CMSIS defined, then call CMSIS SystemInit code
     SystemInit();
