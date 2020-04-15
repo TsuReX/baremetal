@@ -9,6 +9,7 @@
 #include "fsl_usart.h"
 #include "fsl_usart_dma.h"
 #include "fsl_dma.h"
+#include "fsl_adc.h"
 
 #endif /* __DRIVERS_H */
 

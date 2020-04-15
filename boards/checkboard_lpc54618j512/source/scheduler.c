@@ -8,6 +8,7 @@
 
 #include "drivers.h"
 #include "scheduler.h"
+#include "console.h"
 
 void scheduler_init(void)
 {
@@ -32,6 +33,8 @@ void scheduler_init(void)
 
     /* Enable at the NVIC */
     EnableIRQ(RIT_IRQn);
+
+    d_print("DEBUG: Scheduler initialized\n\r");
 }
 
 void scheduler_close(void)

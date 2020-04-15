@@ -18,7 +18,7 @@ set(NXP_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/device/nxp/lpc546xx/includ
 set(NXP_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/include")
 
 set(NXP_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/source")
-file(GLOB			NXP_DRV_SOURCES "${NXP_DRV_SOURCES_PATH}/*.c")
+#file(GLOB			NXP_DRV_SOURCES "${NXP_DRV_SOURCES_PATH}/*.c")
 #set(NXP_DRV_SOURCES	"${NXP_DRV_SOURCES}"
 #					"${NXP_DRV_SOURCES_PATH}/fsl_clock.c"
 #					"${NXP_DRV_SOURCES_PATH}/fsl_gpio.c"

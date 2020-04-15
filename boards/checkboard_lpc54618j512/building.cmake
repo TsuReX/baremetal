@@ -28,6 +28,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/time.c"
 						"${BRD_PATH}/source/scheduler.c"
 						"${BRD_PATH}/source/console.c"
+						"${BRD_PATH}/source/adc.c"
 				)
 
 set(MAIN_INCLUDE		"${BRD_PATH}/include")
@@ -50,6 +51,8 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_dma.c"
 						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
 						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
+						"${DRV_SOURCES_PATH}/fsl_common.c"
+						"${DRV_SOURCES_PATH}/fsl_adc.c"
 				)
 #######################################################################
 ## Настройка параметров сбоки и компоновки
