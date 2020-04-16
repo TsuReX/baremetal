@@ -18,7 +18,6 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-#set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/source/startup_lpc54618.s" )
 set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512")
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
@@ -29,9 +28,13 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/scheduler.c"
 						"${BRD_PATH}/source/console.c"
 						"${BRD_PATH}/source/adc.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/nmi_handler.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/context.c"
 				)
 
-set(MAIN_INCLUDE		"${BRD_PATH}/include")
+set(MAIN_INCLUDE		"${BRD_PATH}/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/include/"
+				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
 				

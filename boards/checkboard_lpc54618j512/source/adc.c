@@ -62,9 +62,10 @@ void adc0_init(void)
     adc0_config.resolution = kADC_Resolution12bit;
     adc0_config.enableBypassCalibration = false;
     adc0_config.sampleTimeNumber = 0U;
+    ADC_Init(ADC0, &adc0_config);
 
     adc_conv_seq_config_t adc0_convseq;
-    adc0_convseq.channelMask = /*(1U << 5) | */(1U << 5) /*| (1U << 3)*/;
+    adc0_convseq.channelMask = 0x0FFF;
 	adc0_convseq.triggerMask      = 0U;
 	adc0_convseq.triggerPolarity  = kADC_TriggerPolarityPositiveEdge;
 	adc0_convseq.enableSingleStep = false;
@@ -76,9 +77,12 @@ void adc0_init(void)
 	ADC_DoSoftwareTriggerConvSeqA(ADC0);
 
 //	adc_result_info_t adcResultInfoStruct;
-//	while (!ADC_GetChannelConversionResult(ADC0, 4, &adcResultInfoStruct)) {
-//	}
+//	ADC_GetChannelConversionResult(ADC0, 3, &adcResultInfoStruct);
+//	ADC_GetChannelConversionResult(ADC0, 4, &adcResultInfoStruct);
+//	ADC_GetChannelConversionResult(ADC0, 5, &adcResultInfoStruct);
 //	ADC_GetConvSeqAGlobalConversionResult(ADC0, &adcResultInfoStruct);
+
+
 
 	print("Configuration Done.\r\n");
 }

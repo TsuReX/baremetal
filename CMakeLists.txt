@@ -158,6 +158,6 @@ add_custom_command(
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND arm-none-eabi-objdump -D
+        COMMAND arm-none-eabi-objdump -SD
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf >
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf.objdump)

@@ -14,7 +14,7 @@
 
 typedef void (*iap_call)(uint32_t arguments[], uint32_t results[]);
 
-uint32_t op_status = 0;
+uint32_t op_status = 0xDEADBEEF;
 
 int32_t prepare_flash(uint32_t start_sector, size_t sectors_count);
 int32_t erase_flash(uint32_t start_sector, size_t sectors_count, uint32_t sys_clk);
@@ -61,15 +61,15 @@ void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
 	size_t i = 0;
     for(; i <= blocks_count; ++i) {
     	if (prepare_flash(0, sectors_count) != 0) {
-    		op_status = 0xE00 + i;
+			op_status |= (0xE000 + i) << 16 ;
     		goto finish;
     	}
 		if (write_flash(dst_addr + i * block_size, src_addr + i * block_size, block_size, sys_clk) != 0) {
-			op_status = 0xD00 + i;
+			op_status |= (0xD000 + i) << 16;
 			goto finish;
 		}
 	}
-    op_status = 0xAAA;
+    op_status = 0xA000B000;
 	reset();
 
 finish:
