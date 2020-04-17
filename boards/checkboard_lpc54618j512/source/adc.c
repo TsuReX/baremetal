@@ -58,14 +58,14 @@ void adc0_init(void)
 
     adc_config_t adc0_config;
     adc0_config.clockMode = kADC_ClockSynchronousMode;
-    adc0_config.clockDividerNumber = 2;
+    adc0_config.clockDividerNumber = 180;
     adc0_config.resolution = kADC_Resolution12bit;
     adc0_config.enableBypassCalibration = false;
     adc0_config.sampleTimeNumber = 0U;
     ADC_Init(ADC0, &adc0_config);
 
     adc_conv_seq_config_t adc0_convseq;
-    adc0_convseq.channelMask = 0x0FFF;
+    adc0_convseq.channelMask = 0xFFF;
 	adc0_convseq.triggerMask      = 0U;
 	adc0_convseq.triggerPolarity  = kADC_TriggerPolarityPositiveEdge;
 	adc0_convseq.enableSingleStep = false;
@@ -74,48 +74,25 @@ void adc0_init(void)
 
 	ADC_SetConvSeqAConfig(ADC0, &adc0_convseq);
 	ADC_EnableConvSeqA(ADC0, true);
-	ADC_DoSoftwareTriggerConvSeqA(ADC0);
-
-//	adc_result_info_t adcResultInfoStruct;
-//	ADC_GetChannelConversionResult(ADC0, 3, &adcResultInfoStruct);
-//	ADC_GetChannelConversionResult(ADC0, 4, &adcResultInfoStruct);
-//	ADC_GetChannelConversionResult(ADC0, 5, &adcResultInfoStruct);
-//	ADC_GetConvSeqAGlobalConversionResult(ADC0, &adcResultInfoStruct);
-
-
+//	ADC_DoSoftwareTriggerConvSeqA(ADC0);
 
 	print("Configuration Done.\r\n");
 }
 
-uint32_t adc0_3_getval(void)
+void adc0_convert()
 {
-	adc_result_info_t adcResultInfoStruct;
-	ADC_DoSoftwareTriggerConvSeqA(ADC0);
+	size_t channel = 0;
 
-	/* Wait for the converter to be done. */
-	while (!ADC_GetChannelConversionResult(ADC0, 3, &adcResultInfoStruct)) {
-	}
-	return adcResultInfoStruct.result;
+	for (; channel < ADC0_CHANNEL_COUNT; ++channel)
+		(void)(ADC0->DAT[channel]);
+
+	ADC_DoSoftwareTriggerConvSeqA(ADC0);
 }
 
-uint32_t adc0_4_getval(void)
+uint32_t adc0_get_value(uint32_t channel)
 {
-	adc_result_info_t adcResultInfoStruct;
-	ADC_DoSoftwareTriggerConvSeqA(ADC0);
+	if (channel >= ADC0_CHANNEL_COUNT)
+		return 0xFFFFFFFF;
 
-	/* Wait for the converter to be done. */
-	while (!ADC_GetChannelConversionResult(ADC0, 4, &adcResultInfoStruct)) {
-	}
-	return adcResultInfoStruct.result;
-}
-
-uint32_t adc0_5_getval(void)
-{
-	adc_result_info_t adcResultInfoStruct;
-	ADC_DoSoftwareTriggerConvSeqA(ADC0);
-
-	/* Wait for the converter to be done. */
-	while (!ADC_GetChannelConversionResult(ADC0, 5, &adcResultInfoStruct)) {
-	}
-	return adcResultInfoStruct.result;
+	return ((ADC0->DAT[channel] & ADC_DAT_RESULT_MASK) >> ADC_DAT_RESULT_SHIFT);
 }
