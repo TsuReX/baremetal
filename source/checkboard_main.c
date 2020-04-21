@@ -9,7 +9,7 @@
 #include <adc.h>
 #include <context.h>
 
-#include <fsl_adc.h>
+#include <drivers.h>
 
 #define SCHED_PERIOD	2000
 
@@ -31,6 +31,33 @@ void scheduler_process(void)
 //	adc0_convert();
 }
 
+static int sctimer_init(void)
+{
+    const uint32_t port4_pin0_config = (/* Pin is configured as SCT0_GPI1 */
+                                         IOCON_FUNC5 |
+                                         /* No addition pin function */
+                                         IOCON_MODE_INACT |
+                                         /* Enables digital function */
+                                         IOCON_DIGITAL_EN |
+                                         /* Input filter disabled */
+                                         IOCON_INPFILT_OFF);
+
+    IOCON_PinMuxSet(IOCON, 4U, 0U, port4_pin0_config);
+
+    sctimer_config_t sctimer_config;
+    SCTIMER_GetDefaultConfig(&sctimer_config);
+
+    sctimer_config.clockMode = kSCTIMER_Sampled_ClockMode;
+    sctimer_config.clockSelect = kSCTIMER_Clock_On_Rise_Input_7;
+    sctimer_config.prescale_l = 250;
+
+    SCTIMER_Init(SCT0, &sctimer_config);
+
+    SCTIMER_StartTimer(SCT0, kSCTIMER_Counter_L);
+
+	print("SCTimer initialized\n\r");
+}
+
 int main(void)
 {
 	soc_config();
@@ -38,15 +65,8 @@ int main(void)
 	board_config();
 
 	power_on_hl1();
-//    mdelay(2000U);
-//
-//    power_on_hl2();
-//    mdelay(2000U);
-//
+
     power_on_bp();
-//    mdelay(10000U);
-//
-//    power_off_bp();
 
     console_init();
 
@@ -55,6 +75,8 @@ int main(void)
     scheduler_init();
 
     nmi_trigger();
+
+    sctimer_init();
 
     uint32_t local_counter = 0;
     while (1) {
@@ -76,10 +98,12 @@ int main(void)
     			value = (value * 805 * 11) / 1000;
     			break;
     		}
-			print("ADC0 channel %d value %d \n\r", channel, value);
+			print("ADC0 channel %d value %d\t\t\n\r", channel, value);
     	}
-//    	print("%c%c%c",0x8D,0x8D,0x8D);
+    	print("SCTimer %d\t\t\t\n\r", SCT0->COUNT);
+    	print("\033[15A");
     }
+
     return 0;
 }
 

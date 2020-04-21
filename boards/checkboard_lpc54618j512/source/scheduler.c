@@ -12,18 +12,12 @@
 
 void scheduler_init(void)
 {
-    /* Structure of initialize RIT */
     rit_config_t ritConfig;
-    /*
-     * ritConfig.enableRunInDebug = false;
-     */
     RIT_GetDefaultConfig(&ritConfig);
 
-    /* Init rit module */
     RIT_Init(RIT, &ritConfig);
 
-    /* Set timer period for Compare register. */
-    RIT_SetTimerCompare(RIT, CLOCK_GetFreq(kCLOCK_CoreSysClk) / 1000);
+    RIT_SetTimerCompare(RIT, 180000000 / 1000);
 
     /* Set to enable the Counter register auto clear to zero when the counter value equals the set period. */
     RIT_SetCountAutoClear(RIT, true);
@@ -34,7 +28,7 @@ void scheduler_init(void)
     /* Enable at the NVIC */
     EnableIRQ(RIT_IRQn);
 
-    d_print("DEBUG: Scheduler initialized\n\r");
+    d_print("RIT initialized\n\r");
 }
 
 void scheduler_close(void)

@@ -48,15 +48,10 @@ dma_handle_t dma_handle;
  */
 static void console_gpio_init(void)
 {
-    /* Enables the clock for the IOCON block. 0 = Disable; 1 = Enable.: 0x01u */
-    CLOCK_EnableClock(kCLOCK_Iocon);
-
     const uint32_t port1_pin5_config = (IOCON_FUNC1 | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
-    /* PORT0 PIN29 (coords: B13) is configured as FC0_RXD_SDA_MOSI */
     IOCON_PinMuxSet(IOCON, 1U, 5U, port1_pin5_config);
 
     const uint32_t port1_pin6_config = (IOCON_FUNC1 | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
-    /* PORT0 PIN30 (coords: A2) is configured as FC0_TXD_SCL_MISO */
     IOCON_PinMuxSet(IOCON, 1U, 6U, port1_pin6_config);
 }
 
@@ -78,18 +73,18 @@ void dma_irq_handler(dma_handle_t *handle, void *param, bool transferDone, uint3
  */
 static void console_usart0_init(void)
 {
-	usart_config_t config;
+	usart_config_t usart0_config;
 
-    USART_GetDefaultConfig(&config);
-    config.baudRate_Bps = 115200;
-    config.enableTx     = true;
-    config.enableRx     = true;
+	USART_GetDefaultConfig(&usart0_config);
 
-    USART_Init(USART0, &config, CLOCK_GetFlexCommClkFreq(0));
-//    USART_EnableRxDMA(USART0, true);
+    usart0_config.enableTx     = true;
+
+    USART_Init(USART0, &usart0_config, 12000000);
+
     USART_EnableTxDMA(USART0, true);
 
-    d_print("DEBUG: USART0 initialized\n\r");
+    d_print("\033c\033[J");
+    d_print("USART0 initialized\n\r");
 
     DMA_Init(DMA0);
 
@@ -97,9 +92,7 @@ static void console_usart0_init(void)
 
 	DMA_CreateHandle(&dma_handle, DMA0, USART_TX_DMA_CHANNEL);
 
-//	DMA_SetCallback(&dma_handle, dma_irq_handler, NULL);
-
-	d_print("DEBUG: DMA initialized\n\r");
+	d_print("DMA initialized\n\r");
 }
 
 /*
@@ -210,16 +203,11 @@ void console_init(void)
 	/* Настройка USART1. */
 	console_usart0_init();
 
-	/* Настройка и включение приемного канала 5 DMA1. */
-//	console_dma1_ch5_init(usart1_rx_buf, 1);
-
 	/* Настройка кольцевых буферов */
-//	rb_init_ring_buffer(&rx_rb);
-//	rb_init_ring_buffer(&tx_rb);
+	rb_init_ring_buffer(&rx_rb);
+	rb_init_ring_buffer(&tx_rb);
 
-//	console_start_reception();
-
-	d_print("DEBUG: Console initialized\n\r");
+	d_print("Console initialized\n\r");
 }
 
 /*

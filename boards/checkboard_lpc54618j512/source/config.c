@@ -9,8 +9,7 @@
 #include "drivers.h"
 #include "config.h"
 
-/** Частота шины HCLK (работы ядра процессора). */
-#define BOARD_BOOTCLOCKPLL180M_CORE_CLOCK 180000000U
+#define MAIN_CLK_180MHZ 180000000
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
@@ -18,7 +17,113 @@
  */
 static void flash_config(void)
 {
+	SYSCON->FLASHCFG = SYSCON->FLASHCFG | ((uint32_t)kCLOCK_Flash9Cycle << SYSCON_FLASHCFG_FLASHTIM_SHIFT);
+}
 
+static void pll_config(const pll_setup_t *pSetup)
+{
+    if ((SYSCON->SYSPLLCLKSEL & SYSCON_SYSPLLCLKSEL_SEL_MASK) == 0x01U)
+    {
+        /* Turn on the ext clock if system pll input select clk_in */
+        SYSCON->PDRUNCFGCLR[0] |= SYSCON_PDRUNCFG_PDEN_VD2_ANA_MASK;
+        SYSCON->PDRUNCFGCLR[1] |= SYSCON_PDRUNCFG_PDEN_SYSOSC_MASK;
+    }
+    /* Enable power VD3 for PLLs */
+    POWER_SetPLL();
+    /* Power off PLL during setup changes */
+    POWER_EnablePD(kPDRUNCFG_PD_SYS_PLL0);
+
+    /* Write PLL setup data */
+    SYSCON->SYSPLLCTRL = pSetup->pllctrl;
+    SYSCON->SYSPLLNDEC = pSetup->pllndec;
+    SYSCON->SYSPLLNDEC = pSetup->pllndec | (1UL << SYSCON_SYSPLLNDEC_NREQ_SHIFT); /* latch */
+    SYSCON->SYSPLLPDEC = pSetup->pllpdec;
+    SYSCON->SYSPLLPDEC = pSetup->pllpdec | (1UL << SYSCON_SYSPLLPDEC_PREQ_SHIFT); /* latch */
+    SYSCON->SYSPLLMDEC = pSetup->pllmdec;
+    SYSCON->SYSPLLMDEC = pSetup->pllmdec | (1UL << SYSCON_SYSPLLMDEC_MREQ_SHIFT); /* latch */
+
+    /* Flags for lock or power on */
+    if ((pSetup->flags & (PLL_SETUPFLAG_POWERUP | PLL_SETUPFLAG_WAITLOCK)) != 0U)
+    {
+        /* If turning the PLL back on, perform the following sequence to accelerate PLL lock */
+        uint32_t maxCCO    = (1UL << 18U) | 0x5dd2U; /* CCO = 1.6Ghz + MDEC enabled*/
+        uint32_t curSSCTRL = SYSCON->SYSPLLMDEC & ~(1UL << 17U);
+
+        /* Initialize  and power up PLL */
+        SYSCON->SYSPLLMDEC = maxCCO;
+        POWER_DisablePD(kPDRUNCFG_PD_SYS_PLL0);
+
+        /* Set mreq to activate */
+        SYSCON->SYSPLLMDEC = maxCCO | (1UL << 17U);
+
+        /* Delay for 72 uSec @ 12Mhz */
+        uint32_t count  = 72 * 12; //72 * 12000000 / 1000000;
+        __ASM volatile("    MOV    R0, %0" : : "r"(count));
+        __ASM volatile(
+            "loop:                          \n"
+    #if defined(__GNUC__) && !defined(__ARMCC_VERSION)
+            "    SUB    R0, R0, #1          \n"
+    #else
+            "    SUBS   R0, R0, #1          \n"
+    #endif
+            "    CMP    R0, #0              \n"
+
+            "    BNE    loop                \n");
+
+        /* clear mreq to prepare for restoring mreq */
+        SYSCON->SYSPLLMDEC = curSSCTRL;
+
+        /* set original value back and activate */
+        SYSCON->SYSPLLMDEC = curSSCTRL | (1UL << 17U);
+
+        /* Enable peripheral states by setting low */
+        POWER_DisablePD(kPDRUNCFG_PD_SYS_PLL0);
+    }
+    if ((pSetup->flags & PLL_SETUPFLAG_WAITLOCK) != 0U)
+    {
+        while (((SYSCON->SYSPLLSTAT & SYSCON_SYSPLLSTAT_LOCK_MASK) != 0U) == false)
+        {
+        }
+    }
+
+    /* Update current programmed PLL rate var */
+//    s_Pll_Freq = pSetup->pllRate;
+
+}
+
+static int32_t fro_config(uint32_t iFreq)
+{
+    uint32_t usb_adj;
+    if ((iFreq != 12000000U) && (iFreq != 48000000U) && (iFreq != 96000000U))
+    {
+        return kStatus_Fail;
+    }
+    /* Power up the FRO and set this as the base clock */
+    POWER_DisablePD(kPDRUNCFG_PD_FRO_EN);
+    /* back up the value of whether USB adj is selected, in which case we will have a value of 1 else 0 */
+    usb_adj = ((SYSCON->FROCTRL) & SYSCON_FROCTRL_USBCLKADJ_MASK) >> SYSCON_FROCTRL_USBCLKADJ_SHIFT;
+
+    if (iFreq > 12000000U)
+    {
+        /* Call ROM API to set FRO */
+        set_fro_frequency(iFreq);
+        if (iFreq == 96000000U)
+        {
+            SYSCON->FROCTRL |= (SYSCON_FROCTRL_SEL(1) | SYSCON_FROCTRL_WRTRIM(1) | SYSCON_FROCTRL_USBCLKADJ(usb_adj) |
+                                SYSCON_FROCTRL_HSPDCLK(1));
+        }
+        else
+        {
+            SYSCON->FROCTRL |= (SYSCON_FROCTRL_SEL(0) | SYSCON_FROCTRL_WRTRIM(1) | SYSCON_FROCTRL_USBCLKADJ(usb_adj) |
+                                SYSCON_FROCTRL_HSPDCLK(1));
+        }
+    }
+    else
+    {
+        SYSCON->FROCTRL &= ~SYSCON_FROCTRL_HSPDCLK(1);
+    }
+
+    return kStatus_Success;
 }
 
 /**
@@ -27,46 +132,18 @@ static void flash_config(void)
  */
 static void rcc_config(void)
 {
-	/*******************************************************************************
-	 ******************** Configuration BOARD_BootClockPLL180M *********************
-	 ******************************************************************************/
-	/* clang-format off */
-	/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-	!!Configuration
-	name: BOARD_BootClockPLL180M
-	called_from_default_init: true
-	outputs:
-	- {id: FRO12M_clock.outFreq, value: 12 MHz}
-	- {id: FROHF_clock.outFreq, value: 96 MHz}
-	- {id: MAIN_clock.outFreq, value: 180 MHz}
-	- {id: SYSPLL_clock.outFreq, value: 180 MHz}
-	- {id: System_clock.outFreq, value: 180 MHz}
-	- {id: USB0_clock.outFreq, value: 96 MHz}
-	settings:
-	- {id: SYSCON.MAINCLKSELB.sel, value: SYSCON.PLL_BYPASS}
-	- {id: SYSCON.M_MULT.scale, value: '30', locked: true}
-	- {id: SYSCON.N_DIV.scale, value: '1', locked: true}
-	- {id: SYSCON.PDEC.scale, value: '2', locked: true}
-	- {id: SYSCON.USB0CLKSEL.sel, value: SYSCON.fro_hf}
-	- {id: SYSCON_PDRUNCFG0_PDEN_SYS_PLL_CFG, value: Power_up}
-	sources:
-	- {id: SYSCON._clk_in.outFreq, value: 12 MHz, enabled: true}
-	- {id: SYSCON.fro_hf.outFreq, value: 96 MHz}
-	 * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
-	/* clang-format on */
-	/*!< Set up the clock sources */
-	/*!< Set up FRO */
 	POWER_DisablePD(kPDRUNCFG_PD_FRO_EN);  /*!< Ensure FRO is on  */
-	CLOCK_AttachClk(kFRO12M_to_MAIN_CLK);  /*!< Switch to FRO 12MHz first to ensure we can change voltage without
-											  accidentally  being below the voltage for current speed */
-	POWER_DisablePD(kPDRUNCFG_PD_SYS_OSC); /*!< Enable System Oscillator Power */
-	SYSCON->SYSOSCCTRL = ((SYSCON->SYSOSCCTRL & ~SYSCON_SYSOSCCTRL_FREQRANGE_MASK) |
-						  SYSCON_SYSOSCCTRL_FREQRANGE(0U)); /*!< Set system oscillator range */
-	POWER_SetVoltageForFreq(
-		180000000U); /*!< Set voltage for the one of the fastest clock outputs: System clock output */
-	CLOCK_SetFLASHAccessCyclesForFreq(180000000U); /*!< Set FLASH wait states for core */
 
-	/*!< Set up SYS PLL */
+	SYSCON->MAINCLKSELA = SYSCON_MAINCLKSELA_SEL(0U);
+
+	POWER_DisablePD(kPDRUNCFG_PD_SYS_OSC); /*!< Enable System Oscillator Power */
+
+	SYSCON->SYSOSCCTRL = SYSCON_SYSOSCCTRL_FREQRANGE(0U); /*!< Set system oscillator range */
+
+	POWER_SetVoltageForFreq(180000000U); /*!< Set voltage for the one of the fastest clock outputs: System clock output */
+
+	SYSCON->SYSPLLCLKSEL = SYSCON_SYSPLLCLKSEL_SEL(0x0);
+
 	const pll_setup_t pllSetup = {
 		.pllctrl = SYSCON_SYSPLLCTRL_SELI(32U) | SYSCON_SYSPLLCTRL_SELP(16U) | SYSCON_SYSPLLCTRL_SELR(0U),
 		.pllmdec = (SYSCON_SYSPLLMDEC_MDEC(8191U)),
@@ -74,36 +151,32 @@ static void rcc_config(void)
 		.pllpdec = (SYSCON_SYSPLLPDEC_PDEC(98U)),
 		.pllRate = 180000000U,
 		.flags   = PLL_SETUPFLAG_WAITLOCK | PLL_SETUPFLAG_POWERUP};
-	CLOCK_AttachClk(kFRO12M_to_SYS_PLL); /*!< Set sys pll clock source*/
-	CLOCK_SetPLLFreq(&pllSetup);         /*!< Configure PLL to the desired value */
-	/*!< Need to make sure ROM and OTP has power(PDRUNCFG0[17,29]= 0U)
-		 before calling this API since this API is implemented in ROM code */
-	CLOCK_SetupFROClocking(96000000U); /*!< Set up high frequency FRO output to selected frequency */
 
-	/*!< Set up dividers */
-	CLOCK_SetClkDiv(kCLOCK_DivAhbClk, 1U, false);  /*!< Reset divider counter and set divider to value 1 */
-	CLOCK_SetClkDiv(kCLOCK_DivUsb0Clk, 0U, true);  /*!< Reset USB0CLKDIV divider counter and halt it */
-	CLOCK_SetClkDiv(kCLOCK_DivUsb0Clk, 1U, false); /*!< Set USB0CLKDIV divider to value 1 */
+	pll_config(&pllSetup);         /*!< Configure PLL to the desired value */
 
-	/*!< Set up clock selectors - Attach clocks to the peripheries */
-	CLOCK_AttachClk(kSYS_PLL_to_MAIN_CLK); /*!< Switch MAIN_CLK to SYS_PLL */
-	CLOCK_AttachClk(kFRO_HF_to_USB0_CLK);  /*!< Switch USB0_CLK to FRO_HF */
-	SYSCON->MAINCLKSELA =
-		((SYSCON->MAINCLKSELA & ~SYSCON_MAINCLKSELA_SEL_MASK) |
-		 SYSCON_MAINCLKSELA_SEL(0U)); /*!< Switch MAINCLKSELA to FRO12M even it is not used for MAINCLKSELB */
-	/* Set SystemCoreClock variable. */
-//	SystemCoreClock = BOARD_BOOTCLOCKPLL180M_CORE_CLOCK;
+	fro_config(96000000U); /*!< Set up high frequency FRO output to selected frequency */
+
+	SYSCON->SCTCLKSEL = SYSCON_SCTCLKSEL_SEL(0x2);
+
+    SYSCON->SCTCLKDIV = SYSCON_SCTCLKDIV_DIV(0x0);
+
+    SYSCON->AHBCLKDIV = SYSCON_AHBCLKDIV_DIV(0x0);
+
+    SYSCON->MAINCLKSELB = SYSCON_MAINCLKSELB_SEL(0x2);
+
+	SYSCON->MAINCLKSELA = SYSCON_MAINCLKSELA_SEL(0x0); /*!< Switch MAINCLKSELA to FRO12M even it is not used for MAINCLKSELB */
+
 }
 
 /**
  * @brief	Наcтраивает системный таймер ядра (SysTick)
  *
- * @param	hclk_freq	частота шины HCLK в герцах
+ * @param	main_clk	частота шины ядра и системной шины в герцах
  */
-static void systick_config(uint32_t hclk_freq)
+static void systick_config(uint32_t main_clk)
 {
 	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
-	SysTick_Config(hclk_freq / 1000);
+	SysTick_Config(main_clk / 1000);
 	SysTick->CTRL  &= ~SysTick_CTRL_TICKINT_Msk;
 }
 
@@ -113,12 +186,13 @@ static void systick_config(uint32_t hclk_freq)
 void board_config(void)
 {
 	/* attach 12 MHz clock to FLEXCOMM0 (debug console) */
-	CLOCK_AttachClk(kFRO12M_to_FLEXCOMM0);
-
-	CLOCK_EnableClock(kCLOCK_Gpio3);
-	CLOCK_EnableClock(kCLOCK_Gpio5);
+	SYSCON->FCLKSEL[0] = SYSCON_AHBCLKCTRL_FLEXCOMM0(0x0);
 
     CLOCK_EnableClock(kCLOCK_Iocon);
+	CLOCK_EnableClock(kCLOCK_Gpio1);
+	CLOCK_EnableClock(kCLOCK_Gpio3);
+	CLOCK_EnableClock(kCLOCK_Gpio5);
+    CLOCK_EnableClock(kCLOCK_Adc0); /* SYSCON->AHBCLKCTRL[0] |= SYSCON_AHBCLKCTRL_ADC0_MASK; */
 
     const uint32_t port3_pin0_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
     IOCON_PinMuxSet(IOCON, 3U, 0U, port3_pin0_config);
@@ -158,6 +232,6 @@ void soc_config(void)
 	/* Настройка подсистемы тактирования. */
 	rcc_config();
 	/* Настраивает системный таймер ядра. */
-	systick_config(BOARD_BOOTCLOCKPLL180M_CORE_CLOCK);
+	systick_config(MAIN_CLK_180MHZ);
 }
 
