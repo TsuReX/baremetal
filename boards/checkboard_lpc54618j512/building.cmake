@@ -28,6 +28,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/scheduler.c"
 						"${BRD_PATH}/source/console.c"
 						"${BRD_PATH}/source/adc.c"
+						"${BRD_PATH}/source/freq_meter.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/nmi_handler.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/context.c"
 				)
@@ -56,7 +57,7 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
 						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
 						"${DRV_SOURCES_PATH}/fsl_adc.c"
-						"${DRV_SOURCES_PATH}/fsl_sctimer.c"
+#						"${DRV_SOURCES_PATH}/fsl_sctimer.c"
 				)
 #######################################################################
 ## Настройка параметров сбоки и компоновки

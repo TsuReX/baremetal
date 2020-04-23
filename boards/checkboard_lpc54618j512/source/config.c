@@ -193,6 +193,7 @@ void board_config(void)
 	CLOCK_EnableClock(kCLOCK_Gpio3);
 	CLOCK_EnableClock(kCLOCK_Gpio5);
     CLOCK_EnableClock(kCLOCK_Adc0); /* SYSCON->AHBCLKCTRL[0] |= SYSCON_AHBCLKCTRL_ADC0_MASK; */
+    CLOCK_EnableClock(kCLOCK_Sct0);
 
     const uint32_t port3_pin0_config = (IOCON_FUNC0 | IOCON_MODE_INACT | IOCON_DIGITAL_EN | IOCON_INPFILT_OFF);
     IOCON_PinMuxSet(IOCON, 3U, 0U, port3_pin0_config);

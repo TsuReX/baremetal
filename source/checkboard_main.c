@@ -8,7 +8,7 @@
 #include <console.h>
 #include <adc.h>
 #include <context.h>
-
+#include <freq_meter.h>
 #include <drivers.h>
 
 #define SCHED_PERIOD	2000
@@ -23,39 +23,12 @@ void scheduler_process(void)
 //		d_print("Iteration : %d\n\r", counter++);
 	}
 
-	if (sched_time % 50 == 0) {
+	if (sched_time % 10 == 0) {
 		console_process();
 	}
 	++sched_time;
 
 //	adc0_convert();
-}
-
-static int sctimer_init(void)
-{
-    const uint32_t port4_pin0_config = (/* Pin is configured as SCT0_GPI1 */
-                                         IOCON_FUNC5 |
-                                         /* No addition pin function */
-                                         IOCON_MODE_INACT |
-                                         /* Enables digital function */
-                                         IOCON_DIGITAL_EN |
-                                         /* Input filter disabled */
-                                         IOCON_INPFILT_OFF);
-
-    IOCON_PinMuxSet(IOCON, 4U, 0U, port4_pin0_config);
-
-    sctimer_config_t sctimer_config;
-    SCTIMER_GetDefaultConfig(&sctimer_config);
-
-    sctimer_config.clockMode = kSCTIMER_Sampled_ClockMode;
-    sctimer_config.clockSelect = kSCTIMER_Clock_On_Rise_Input_7;
-    sctimer_config.prescale_l = 250;
-
-    SCTIMER_Init(SCT0, &sctimer_config);
-
-    SCTIMER_StartTimer(SCT0, kSCTIMER_Counter_L);
-
-	print("SCTimer initialized\n\r");
 }
 
 int main(void)
@@ -76,13 +49,16 @@ int main(void)
 
     nmi_trigger();
 
-    sctimer_init();
+//    sctimer_init();
+
+    struct freq_meter_t fm9 = {.channel = fm_channel_9};
+    fm_init(&fm9);
 
     uint32_t local_counter = 0;
     while (1) {
 
     	adc0_convert();
-    	mdelay(1000U);
+    	mdelay(200U);
     	print("\n\rADC0 values:\n\r");
     	size_t channel = 0;
     	for (; channel < ADC0_CHANNEL_COUNT; ++channel) {
@@ -98,9 +74,14 @@ int main(void)
     			value = (value * 805 * 11) / 1000;
     			break;
     		}
-			print("ADC0 channel %d value %d\t\t\n\r", channel, value);
+			print("ADC0 channel %d value %d\n\r", channel, value);
     	}
-    	print("SCTimer %d\t\t\t\n\r", SCT0->COUNT);
+
+        fm_clock_start_count(&fm9);
+//        print("SCT0->CONFIG 0x%08X\r\n", SCT0->CONFIG);
+//        print("SCT0->CTRL 0x%08X\r\n", SCT0->CTRL);
+        mdelay(10);
+    	print("Counter chan 9 value: %d\n\r", fm_clock_stop_count(&fm9));
     	print("\033[15A");
     }
 

@@ -263,14 +263,14 @@ void print(const char *format, ...)
 	va_start(argptr, format);
 	sz = vsnprintf(str, 512, format, argptr);
 
-	if (sz > rb_get_data_fsize(&tx_rb)) {
-		uint8_t	data_buf[64];
-		/** Вывести имеющиеся данные для освобождения буфера. */
-		while (rb_get_data_size(&tx_rb) != 0) {
-			size_t data_size = rb_get_data(&tx_rb, data_buf, SIZE_TO_TRANSMIT);
-			USART_WriteBlocking(USART0, data_buf, data_size);
-		}
-	}
+//	if (sz > rb_get_data_fsize(&tx_rb)) {
+//		uint8_t	data_buf[64];
+//		/** Вывести имеющиеся данные для освобождения буфера. */
+//		while (rb_get_data_size(&tx_rb) != 0) {
+//			size_t data_size = rb_get_data(&tx_rb, data_buf, SIZE_TO_TRANSMIT);
+//			USART_WriteBlocking(USART0, data_buf, data_size);
+//		}
+//	}
 
 	if (sz > 0) {
 		rb_store_data(&tx_rb, str, sz);
