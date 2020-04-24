@@ -81,7 +81,7 @@ int main(void)
 //        print("SCT0->CONFIG 0x%08X\r\n", SCT0->CONFIG);
 //        print("SCT0->CTRL 0x%08X\r\n", SCT0->CTRL);
         mdelay(10);
-    	print("Counter chan 9 value: %d\n\r", fm_clock_stop_count(&fm9));
+        print("Counter chan 9 value: %d\n\r", fm_clock_stop_count(&fm9));
     	print("\033[15A");
     }
 
