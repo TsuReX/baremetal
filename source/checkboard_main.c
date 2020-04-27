@@ -13,14 +13,13 @@
 
 #define SCHED_PERIOD	2000
 
-//static volatile uint32_t counter = 0;
 static volatile uint32_t sched_time = 0;
 void scheduler_process(void)
 {
 	if (sched_time % SCHED_PERIOD == 0) {
 		GPIO_PortToggle(GPIO, 5, 3);
 		sched_time = 0;
-//		d_print("Iteration : %d\n\r", counter++);
+
 	}
 
 	if (sched_time % 10 == 0) {
@@ -28,7 +27,6 @@ void scheduler_process(void)
 	}
 	++sched_time;
 
-//	adc0_convert();
 }
 
 int main(void)
@@ -37,9 +35,18 @@ int main(void)
 
 	board_config();
 
-	power_on_hl1();
+	ok_led_off();
+	fail_led_off();
+	mdelay(1000);
+	ok_led_on();
+	fail_led_on();
+	mdelay(1000);
 
-    power_on_bp();
+	bp_on();
+	mdelay(1000);
+
+	if (bp_pwr_gd() != 0)
+		goto fail;
 
     console_init();
 
@@ -48,8 +55,6 @@ int main(void)
     scheduler_init();
 
     nmi_trigger();
-
-//    sctimer_init();
 
     struct freq_meter_t fm9 = {.channel = fm_channel_9};
     fm_init(&fm9);
@@ -78,12 +83,18 @@ int main(void)
     	}
 
         fm_clock_start_count(&fm9);
-//        print("SCT0->CONFIG 0x%08X\r\n", SCT0->CONFIG);
-//        print("SCT0->CTRL 0x%08X\r\n", SCT0->CTRL);
+
         mdelay(10);
         print("Counter chan 9 value: %d\n\r", fm_clock_stop_count(&fm9));
     	print("\033[15A");
     }
+
+fail:
+	while (1) {
+		fail_led_toggle();
+		mdelay(500);
+	}
+
 
     return 0;
 }
