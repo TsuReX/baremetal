@@ -40,7 +40,7 @@ static void adc0_power_init(void)
 
 }
 
-int32_t adc0_calibrate()
+static int32_t adc0_calibrate()
 {
     uint32_t tmp32   = ADC0->CTRL;
     /* The maximum ADC clock frequency during calibration is 30 MHz. */
