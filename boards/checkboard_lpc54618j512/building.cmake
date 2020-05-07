@@ -53,7 +53,7 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_rit.c"
 						"${DRV_SOURCES_PATH}/fsl_power.c"
 						"${DRV_SOURCES_PATH}/fsl_usart.c"
-						"${DRV_SOURCES_PATH}/fsl_dma.c"
+#						"${DRV_SOURCES_PATH}/fsl_dma.c"
 						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
 						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
 						"${DRV_SOURCES_PATH}/fsl_adc.c"
@@ -62,7 +62,7 @@ set(DRIVER_SOURCES		"${DRV_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4 -Wall")
 
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
 

@@ -44,7 +44,7 @@ void program_flash(uint32_t src_addr, uint32_t dst_addr, size_t size)
     uint32_t sys_clk = 204000;
     uint32_t sectors_count = size >> 15; /* Divide by 32Kb */
 
-    if (size & 0x7FFF != 0)
+    if ((size & 0x7FFF) != 0)
     	++sectors_count;
 
     if (prepare_flash(0, sectors_count) != 0)
@@ -115,7 +115,7 @@ int32_t write_flash(uint32_t dst_addr, uint32_t src_addr, size_t size, uint32_t 
 	uint32_t	write_args[] = {WRITE_OPCODE, dst_addr, src_addr, size, sys_clk};
 	uint32_t	write_res[] = {0};
 
-	if (size & 0xFF != 0)
+	if ((size & 0xFF) != 0)
 		return -2;
 
 	if (size > 4096)

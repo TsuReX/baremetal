@@ -46,7 +46,7 @@ void __attribute__((weak)) scheduler_process(void)
  */
 void RIT_IRQHandler(void)
 {
-	RIT_ClearStatusFlags(RIT, kRIT_TimerFlag);
 	scheduler_process();
+	RIT_ClearStatusFlags(RIT, kRIT_TimerFlag);
 	__DSB();
 }

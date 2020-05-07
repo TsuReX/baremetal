@@ -1,17 +1,25 @@
-/*
- * control.h
- *
- *  Created on: Apr 7, 2020
- *      Author: vasily
- */
 
 #ifndef BOARDS_CHECKBOARD_LPC54618J512_INCLUDE_CONTROL_H_
 #define BOARDS_CHECKBOARD_LPC54618J512_INCLUDE_CONTROL_H_
 
 #include <drivers.h>
 
-#define GET_ADDR(X) ((X) & 0xFF)
-#define GET_MUX(X) (((X) >> 8) & 0xFF)
+#define	RST_BMC_LVC3_N_SHIFT		0
+#define RST_PCH_RSTBTN_N_SHIFT		1
+#define	RST_RTCRST_N_SHIFT			2
+#define	RST_SRTCRST_N_SHIFT			3
+#define	RST_RSMRST_PCH_N_SHIFT		4
+#define	RST_PLTRST_N_SHIFT			5
+
+#define	RST_BMC_LVC3_N(X)		(((X) >> RST_BMC_LVC3_N_SHIFT) 		& 0x1)
+#define RST_PCH_RSTBTN_N(X)		(((X) >> RST_PCH_RSTBTN_N_SHIFT)	& 0x1)
+#define	RST_RTCRST_N(X)			(((X) >> RST_RTCRST_N_SHIFT)		& 0x1)
+#define	RST_SRTCRST_N(X)		(((X) >> RST_SRTCRST_N_SHIFT)		& 0x1)
+#define	RST_RSMRST_PCH_N(X)		(((X) >> RST_RSMRST_PCH_N_SHIFT)	& 0x1)
+#define	RST_PLTRST_N(X)			(((X) >> RST_PLTRST_N_SHIFT)		& 0x1)
+
+#define GET_ADDR(X)				((X) & 0xFF)
+#define GET_MUX(X)				(((X) >> 8) & 0xFF)
 
 #define MUX1	0x04
 #define MUX2	0x02
@@ -188,11 +196,84 @@ static inline uint32_t cpu1_phases(void)
 			(GPIO->B[PORT][I_CPU1_PH1_PIN]);
 }
 
-//void mux_addr_setup(uint8_t mux, uint8_t address);
+static inline void cpu0_on(void)
+{
+	GPIO->B[O_SYSPL_CPU0_ON_PORT][O_SYSPL_CPU0_ON_PIN] = 1;
+}
 
-//void mux_setup(uint32_t mux);
+static inline void cpu0_off(void)
+{
+	GPIO->B[O_SYSPL_CPU0_ON_PORT][O_SYSPL_CPU0_ON_PIN] = 0;
+}
+
+static inline void cpu1_on(void)
+{
+	GPIO->B[O_SYSPL_CPU1_ON_PORT][O_SYSPL_CPU1_ON_PIN] = 1;
+}
+
+static inline void cpu1_off(void)
+{
+	GPIO->B[O_SYSPL_CPU1_ON_PORT][O_SYSPL_CPU1_ON_PIN] = 0;
+}
+
+static inline void spl_stby_on(void)
+{
+	GPIO->B[O_SYSPL_STBY_ON_PORT][O_SYSPL_STBY_ON_PIN] = 1;
+}
+
+static inline void spl_stby_off(void)
+{
+	GPIO->B[O_SYSPL_STBY_ON_PORT][O_SYSPL_STBY_ON_PIN] = 1;
+}
+
+static inline void spl_on(void)
+{
+	GPIO->B[O_SYSPL_STBY_ON_PORT][O_SYSPL_STBY_ON_PIN] = 1;
+}
+
+static inline void spl_off(void)
+{
+	GPIO->B[O_SYSPL_ON_PORT][O_SYSPL_ON_PIN] = 0;
+}
+
+static inline uint32_t pwr_on_spl(void)
+{
+	return GPIO->B[I_PWR_ON_SPL_N_PORT][I_PWR_ON_SPL_N_PIN];
+}
+
+static inline void freq_on(void)
+{
+	GPIO->B[O_MEASURE_FREQ_EN_N_PORT][O_MEASURE_FREQ_EN_N_PIN] = 0;
+	GPIO->B[O_MEASURE_FREQ_RTC_EN_N_PORT][O_MEASURE_FREQ_RTC_EN_N_PIN] = 0;
+}
+
+static inline void freq_off(void)
+{
+	GPIO->B[O_MEASURE_FREQ_EN_N_PORT][O_MEASURE_FREQ_EN_N_PIN] = 1;
+	GPIO->B[O_MEASURE_FREQ_RTC_EN_N_PORT][O_MEASURE_FREQ_RTC_EN_N_PIN] = 1;
+}
+
+static inline void rst_check_on(void)
+{
+	GPIO->B[O_CHECK_RST_SPL_N_PORT][O_CHECK_RST_SPL_N_PIN] = 0;
+}
+
+static inline void rst_check_off(void)
+{
+	GPIO->B[O_CHECK_RST_SPL_N_PORT][O_CHECK_RST_SPL_N_PIN] = 1;
+}
+
+static inline uint32_t rst_get(void)
+{
+	return	(GPIO->B[I_RST_BMC_LVC3_N_PORT][I_RST_BMC_LVC3_N_PIN]		<< RST_BMC_LVC3_N_SHIFT)	|
+			(GPIO->B[I_RST_PCH_RSTBTN_N_PORT][I_RST_PCH_RSTBTN_N_PIN]	<< RST_PCH_RSTBTN_N_SHIFT)	|
+			(GPIO->B[I_RST_RTCRST_N_PORT][I_RST_RTCRST_N_PIN]			<< RST_RTCRST_N_SHIFT)		|
+			(GPIO->B[I_RST_SRTCRST_N_PORT][I_RST_SRTCRST_N_PORT]		<< RST_SRTCRST_N_SHIFT)		|
+			(GPIO->B[I_RST_RSMRST_PCH_N_PORT][I_RST_RSMRST_PCH_N_PIN]	<< RST_RSMRST_PCH_N_SHIFT)	|
+			(GPIO->B[I_RST_PLTRST_N_PORT][I_RST_PLTRST_N_PIN]			<< RST_PLTRST_N_SHIFT);
+
+}
 
 uint32_t volt_ohm_measure(enum circuit_t circuit, enum measurement_t measurement);
-
 
 #endif /* BOARDS_CHECKBOARD_LPC54618J512_INCLUDE_CONTROL_H_ */

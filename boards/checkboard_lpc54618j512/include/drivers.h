@@ -106,7 +106,7 @@
 #define I_PWR_GD_BP_N_PIN			1
 
 #define I_PWR_ON_SPL_N_PORT			3
-#define I_PWR_ON_BP_N_PIN			2
+#define I_PWR_ON_SPL_N_PIN			2
 
 #define O_SYSPL_STBY_ON_PORT		3
 #define O_SYSPL_STBY_ON_PIN			4
