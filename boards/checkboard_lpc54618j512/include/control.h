@@ -139,7 +139,7 @@ static inline void ok_led_off(void)
 
 static inline void ok_led_toggle(void)
 {
-	GPIO->NOT[O_LED_TST_OK_PORT] = O_LED_TST_OK_PIN;
+	GPIO->NOT[O_LED_TST_OK_PORT] = 1 << O_LED_TST_OK_PIN;
 }
 
 static inline void fail_led_on(void)
@@ -154,7 +154,7 @@ static inline void fail_led_off(void)
 
 static inline void fail_led_toggle(void)
 {
-	GPIO->NOT[O_LED_TST_FAIL_PORT] = O_LED_TST_FAIL_PIN;
+	GPIO->NOT[O_LED_TST_FAIL_PORT] = 1 << O_LED_TST_FAIL_PIN;
 }
 
 static inline void bp_on(void)

@@ -6,11 +6,12 @@
 #include <fsl_iocon.h>
 #include <fsl_power.h>
 #include <fsl_rit.h>
-#include "fsl_usart.h"
-#include "fsl_usart_dma.h"
-#include "fsl_dma.h"
-#include "fsl_adc.h"
-#include "fsl_sctimer.h"
+#include <fsl_usart.h>
+#include <fsl_usart_dma.h>
+#include <fsl_dma.h>
+#include <fsl_adc.h>
+#include <fsl_sctimer.h>
+#include <fsl_flexcomm.h>
 
 #define A_3V3_BP_ADC_PORT			0
 #define A_3V3_BP_ADC_PIN			14

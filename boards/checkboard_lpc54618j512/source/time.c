@@ -12,15 +12,16 @@
 
 void mdelay(uint32_t Delay)
 {
+	Delay *= 10;
   __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
   /* Add this code to indicate that local variable is not used */
   ((void)tmp);
 
   /* Add a period to guaranty minimum wait */
-  if(Delay < LL_MAX_DELAY)
-  {
-    Delay++;
-  }
+//  if(Delay < LL_MAX_DELAY)
+//  {
+//    Delay++;
+//  }
 
   while (Delay)
   {

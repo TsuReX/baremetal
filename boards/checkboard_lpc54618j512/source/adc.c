@@ -12,24 +12,6 @@
 #define PIO016_FUNC_ALT0 0x00u
 #define PIO031_FUNC_ALT0 0x00u
 
-static void adc0_gpio_init(void)
-{
-    IOCON->PIO[0][15] = ((IOCON->PIO[0][15] &
-							(~(IOCON_PIO_FUNC_MASK | IOCON_PIO_MODE_MASK | IOCON_PIO_DIGIMODE_MASK)))
-							| IOCON_PIO_FUNC(PIO015_FUNC_ALT0)
-							| IOCON_PIO_DIGIMODE(PIO015_DIGIMODE_ANALOG));
-
-    IOCON->PIO[0][16] = ((IOCON->PIO[0][16] &
-							(~(IOCON_PIO_FUNC_MASK | IOCON_PIO_MODE_MASK | IOCON_PIO_DIGIMODE_MASK)))
-							| IOCON_PIO_FUNC(PIO016_FUNC_ALT0)
-							| IOCON_PIO_DIGIMODE(PIO016_DIGIMODE_ANALOG));
-
-    IOCON->PIO[0][31] = ((IOCON->PIO[0][31] &
-							(~(IOCON_PIO_FUNC_MASK | IOCON_PIO_MODE_MASK | IOCON_PIO_DIGIMODE_MASK)))
-							| IOCON_PIO_FUNC(PIO031_FUNC_ALT0)
-							| IOCON_PIO_DIGIMODE(PIO031_DIGIMODE_ANALOG));
-}
-
 static void adc0_power_init(void)
 {
     /* SYSCON power. */
@@ -92,8 +74,6 @@ static int32_t adc0_calibrate()
 }
 void adc0_init(void)
 {
-	adc0_gpio_init();
-
 	adc0_power_init();
 
 	ADC0->CTRL |= ADC_CTRL_BYPASSCAL_MASK;

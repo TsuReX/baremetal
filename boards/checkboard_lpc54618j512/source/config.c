@@ -175,8 +175,8 @@ static void rcc_config(void)
  */
 static void systick_config(uint32_t main_clk)
 {
-	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
-	SysTick_Config(main_clk / 1000);
+	/* Производится настройка системного таймера ядра для определения интервала времени равного 0.1 миллисекунде.  */
+	SysTick_Config(main_clk / 10000);
 	SysTick->CTRL  &= ~SysTick_CTRL_TICKINT_Msk;
 }
 
@@ -368,12 +368,14 @@ void board_config(void)
 
     /* GPIO 4 ***********************************/
     /* Настройка входов/выходов GPIO4. */
+    /* ВНИМАНИЕ! Одновременное включение контактов RTC_CLK_KT_42 и CLK_KT_44 либо подачи на них сигналов недопустимо ввиду использования одного входа SCT0_GPI1 таймера.*/
     IOCON->PIO[D_RTC_CLK_KT_42_PORT][D_RTC_CLK_KT_42_PIN] = IOCON_PIO_FUNC(0x5) | IOCON_PIO_DIGIMODE(0x1) | IOCON_PIO_FILTEROFF(1);
 
     IOCON->PIO[O_MEASURE_FREQ_RTC_EN_N_PORT][O_MEASURE_FREQ_RTC_EN_N_PIN] = IOCON_PIO_FUNC(0x0) | IOCON_PIO_DIGIMODE(0x1);
     IOCON->PIO[O_MEASURE_FREQ_EN_N_PORT][O_MEASURE_FREQ_EN_N_PIN] = IOCON_PIO_FUNC(0x0) | IOCON_PIO_DIGIMODE(0x1);
 
     IOCON->PIO[D_CLK_KT_43_PORT][D_CLK_KT_43_PIN] = IOCON_PIO_FUNC(0x5) | IOCON_PIO_DIGIMODE(0x1) | IOCON_PIO_FILTEROFF(1);
+    /* ВНИМАНИЕ! Одновременное включение контактов RTC_CLK_KT_42 и CLK_KT_44 либо подачи на них сигналов недопустимо ввиду использования одного входа SCT0_GPI1 таймера.*/
     IOCON->PIO[D_CLK_KT_44_PORT][D_CLK_KT_44_PIN] = IOCON_PIO_FUNC(0x5) | IOCON_PIO_DIGIMODE(0x1) | IOCON_PIO_FILTEROFF(1);
     IOCON->PIO[D_CLK_KT_45_PORT][D_CLK_KT_45_PIN] = IOCON_PIO_FUNC(0x5) | IOCON_PIO_DIGIMODE(0x1) | IOCON_PIO_FILTEROFF(1);
     IOCON->PIO[D_CLK_KT_46_PORT][D_CLK_KT_46_PIN] = IOCON_PIO_FUNC(0x5) | IOCON_PIO_DIGIMODE(0x1) | IOCON_PIO_FILTEROFF(1);

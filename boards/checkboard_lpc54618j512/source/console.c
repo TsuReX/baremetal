@@ -10,37 +10,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "ringbuf.h"
-#include "console.h"
-#include "drivers.h"
-
-/* Содержащаяся в данном файле настройка и вариант использования USART1 будут специфичны для текстовой консоли.
- * Настройки и вариант использования USART1 для spi-manager будут иными и будут располагаться в другом файле.
- * USART1 может быть использован только либо для текстовой консоли, либо для spi-manager.*/
-
-/** Количество байтов передаваемых через USART1. */
-#define SIZE_TO_TRANSMIT	32
-/** Количество миллисекунд,
- * за которое должна завершиться передача байта даных через USART1. */
-#define TRANSMIT_TIMEOUT	20
-
-/** Размер передаваемого буфера в байтах.*/
-#define USART1_TX_BUF_SIZE	0x1
-/** Размер приемного буфера в байтах.*/
-#define USART1_RX_BUF_SIZE	0x1
+#include <ringbuf.h>
+#include <console.h>
+#include <drivers.h>
 
 #define USART_RX_DMA_CHANNEL 0
 #define USART_TX_DMA_CHANNEL 1
 
-///** Приемный буфер.*/
-//static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
-///** Передаваемый буфер.*/
-//static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
-
-/** Кольцевой буфер приема данных через USART 1. */
-static struct ring_buf rx_rb;
-/** Кольцевой буфер передачи данных через USART 1. */
-static struct ring_buf tx_rb;
 
 #define RELOAD_DIS	0
 #define RELOAD_EN	1
@@ -60,86 +36,23 @@ static struct ring_buf tx_rb;
 
 #define DST_INC_0	0
 
-DMA_ALLOCATE_HEAD_DESCRIPTORS(s_dma_descriptor_table0, FSL_FEATURE_DMA_MAX_CHANNELS);
-static dma_descriptor_t *s_dma_descriptor_table[] = {s_dma_descriptor_table0};
-__attribute__((aligned(16))) static dma_descriptor_t second_dma_descriptor;
-static dma_descriptor_t *first_desc;
-static dma_descriptor_t *second_desc = &second_dma_descriptor;
-
 /** DMA контроллер занят передачей. */
 #define RING_BUF_DMA_BUSY_ERR	1
 /** Кольцевой буфер пуст. */
 #define RING_BUF_EMPTY_ERR 2
 
-/**
- * @brief	Инициирует передачу данных через связку DMA0-USART0.
- *
- * @param[in]	rb	дескриптор кольцевого буфера
- *
- * @retval	0						передача запущена успешно
- * 			-RING_BUF_DMA_BUSY_ERR	передача не запущена по причине занятого контроллера DMA
- * 			-RING_BUF_EMPTY_ERR		передача не запущена по причине пустого буфера
- *
- */
-int32_t rb_dma_usart_transmit_async(struct ring_buf *rb)
-{
+/** Кольцевой буфер приема данных через USART 1. */
+static struct ring_buf rx_rb;
+/** Кольцевой буфер передачи данных через USART 1. */
+static struct ring_buf tx_rb;
 
-	if ((DMA0->COMMON[0].ACTIVE & (1 << USART_TX_DMA_CHANNEL)) != 0UL)
-		return -RING_BUF_DMA_BUSY_ERR;
+DMA_ALLOCATE_HEAD_DESCRIPTORS(s_dma_descriptor_table0, FSL_FEATURE_DMA_MAX_CHANNELS);
 
-//	if ((USART0->STAT & USART_STAT_TXIDLE_MASK) == 0)
-//		d_print("Before transmission USART0 NOT EMPTY\n\r");
+static dma_descriptor_t *s_dma_descriptor_table[] = {s_dma_descriptor_table0};
+__attribute__((aligned(16))) static dma_descriptor_t second_dma_descriptor;
 
-	DMA0->COMMON[0].ENABLECLR = 1 << USART_TX_DMA_CHANNEL;
-
-	size_t head = rb->array_head;
-	size_t tail = rb->array_tail;
-
-	if (tail == head)
-		return -RING_BUF_EMPTY_ERR;
-
-	first_desc = &s_dma_descriptor_table[0][1];
-//	d_print("before transmission tx_rb.array_tail %d\r\n", tx_rb.array_tail);
-//	d_print("before transmission tx_rb.array_head %d\r\n", tx_rb.array_head);
-	if (head < tail) {
-
-		uint32_t size = tail - head;
-		if (size > 20)
-			size -=20;
-
-		first_desc->xfercfg =
-				DMA_CHANNEL_XFER(RELOAD_DIS, CLRTRIG_EN, INTA_EN, INTB_DIS, WIDTH_1, SRC_INC_1, DST_INC_0, size);
-		first_desc->srcEndAddr = DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)&rb->buffer[head], SRC_INC_1, (size) * WIDTH_1, WIDTH_1);
-		first_desc->dstEndAddr = (void *)&USART0->FIFOWR;
-		first_desc->linkToNextDesc = 0;
-
-	} else { /* head > tail */
-
-//		if ((USART0->STAT & USART_STAT_TXIDLE_MASK) == 0)
-//			d_print("USART0 NOT EMPTY\n\r");
-//		d_print("Chain descriptor, head %d, tail %d, size %d\n\r", head, tail, RING_BUF_SIZE - head);
-		first_desc->xfercfg =
-				DMA_CHANNEL_XFER(RELOAD_EN, CLRTRIG_DIS, INTA_EN, INTB_DIS, WIDTH_1, SRC_INC_1, DST_INC_0, RING_BUF_SIZE - head);
-		first_desc->srcEndAddr = DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)&rb->buffer[head], SRC_INC_1, (RING_BUF_SIZE - head) * WIDTH_1, WIDTH_1);
-		first_desc->dstEndAddr = (void *)&USART0->FIFOWR;
-		first_desc->linkToNextDesc = second_desc;
-
-		second_desc->xfercfg =
-				DMA_CHANNEL_XFER(RELOAD_DIS, CLRTRIG_EN, INTA_DIS, INTB_EN, WIDTH_1, SRC_INC_1, DST_INC_0, tail);
-		second_desc->srcEndAddr = DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)(rb->buffer), SRC_INC_1, tail * WIDTH_1, WIDTH_1);
-		second_desc->dstEndAddr = (void *)&USART0->FIFOWR;
-		second_desc->linkToNextDesc = 0;
-//		second_desc->xfercfg |= DMA_CHANNEL_XFERCFG_SWTRIG_MASK;
-
-	}
-
-	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].CFG |= DMA_CHANNEL_CFG_PERIPHREQEN_MASK;
-	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].XFERCFG = first_desc->xfercfg;
-	DMA0->COMMON[0].ENABLESET = 1 << USART_TX_DMA_CHANNEL;
-	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].XFERCFG |= DMA_CHANNEL_XFERCFG_SWTRIG_MASK;
-
-	return 0;
-}
+static dma_descriptor_t *first_desc;
+static dma_descriptor_t *second_desc = &second_dma_descriptor;
 
 void DMA0_IRQHandler(void)
 {
@@ -160,39 +73,142 @@ void DMA0_IRQHandler(void)
 	}
 
 	if ((DMA0->COMMON[0].ERRINT & (1 << USART_TX_DMA_CHANNEL)) != 0) {
-//		d_print("DMA error on channel %d\r\n", (1 << USART_TX_DMA_CHANNEL) - 1);
-//		d_print("USART0->STAT %ld\r\n", USART0->STAT);
-//		d_print("USART0->FIFOSTAT %ld\r\n", USART0->FIFOSTAT);
+		d_print("DMA error on channel %d\r\n", (1 << USART_TX_DMA_CHANNEL) - 1);
+		d_print("USART0->STAT %ld\r\n", USART0->STAT);
+		d_print("USART0->FIFOSTAT %ld\r\n", USART0->FIFOSTAT);
 
 	}
 
+	/* Сбросить все запросы на обработку прерываний. */
 	DMA0->COMMON[0].INTA = 0xFFFFFFFF;
 	DMA0->COMMON[0].INTB = 0xFFFFFFFF;
 	DMA0->COMMON[0].ERRINT = 0xFFFFFFFF;
-//	d_print("%s\r\n", __func__);
+
+}
+
+void FLEXCOMM0_IRQHandler(void)
+{
+	uint32_t usart0_fifostat = USART0->FIFOSTAT;
+
+	if ((usart0_fifostat& USART_FIFOSTAT_RXERR(1)) != 0) {
+//		d_print("USART0 error on reception\r\n");
+//		d_print("USART0->STAT %ld\r\n", USART0->STAT);
+//		d_print("USART0->FIFOSTAT %ld\r\n", USART0->FIFOSTAT);
+	}
+
+	if ((usart0_fifostat & USART_FIFOSTAT_TXERR(1)) != 0) {
+//		d_print("USART0 error on transmitting\r\n");
+//		d_print("USART0->STAT %ld\r\n", USART0->STAT);
+//		d_print("USART0->FIFOSTAT %ld\r\n", USART0->FIFOSTAT);
+	}
+
+	if ((usart0_fifostat & USART_FIFOSTAT_RXNOTEMPTY(1)) != 0) {
+		rb_store_data(&rx_rb, (const void*)&USART0->FIFORD, 1);
+	}
+
+	/* Сбросить все запросы на прерывания (TXERR и RXERR). */
+	USART0->FIFOSTAT = 0xFFFFFFFF;
+
+	__DSB();
 }
 
 
-/*
- * @brief Настройка USART1 для работы на скорости 115200, включение прерываний.
+/**
+ * @brief	Инициирует передачу данных через связку DMA0-USART0.
+ *
+ * @param[in]	rb	дескриптор кольцевого буфера
+ *
+ * @retval	0						передача запущена успешно
+ * 			-RING_BUF_DMA_BUSY_ERR	передача не запущена по причине занятого контроллера DMA
+ * 			-RING_BUF_EMPTY_ERR		передача не запущена по причине пустого буфера
+ *
  */
-static void console_usart0_init(void)
+int32_t rb_dma_usart_transmit_async(struct ring_buf *rb)
 {
-	usart_config_t usart0_config;
+	/* Если DMA на данном канале еще работает, то завершиться с ошибкой. */
+	if ((DMA0->COMMON[0].ACTIVE & (1 << USART_TX_DMA_CHANNEL)) != 0UL)
+		return -RING_BUF_DMA_BUSY_ERR;
 
-	USART_GetDefaultConfig(&usart0_config);
+//	if ((USART0->STAT & USART_STAT_TXIDLE_MASK) == 0)
+//		d_print("Before transmission USART0 NOT EMPTY\n\r");
 
-	usart0_config.baudRate_Bps = 115200;
-    usart0_config.enableTx     = true;
+	/* Выключить данный канал DMA. */
+	DMA0->COMMON[0].ENABLECLR = 1 << USART_TX_DMA_CHANNEL;
 
-    USART_Init(USART0, &usart0_config, 12000000);
+	size_t head = rb->array_head;
+	size_t tail = rb->array_tail;
 
-    USART0->FIFOCFG |= USART_FIFOCFG_DMATX_MASK;
+	/* Если буфер для передачи пуст, то вернуться с ошибкой. */
+	if (tail == head)
+		return -RING_BUF_EMPTY_ERR;
 
-    d_print("\033c\033[J");
-    d_print("USART0 initialized\n\r");
+	first_desc = &s_dma_descriptor_table[0][1];
+//	d_print("before transmission tx_rb.array_tail %d\r\n", tx_rb.array_tail);
+//	d_print("before transmission tx_rb.array_head %d\r\n", tx_rb.array_head);
+	if (head < tail) {
 
+		/* TODO: Убрать
+		 * Данная конструкция используется исключительно в тестовых целях и
+		 * служит для предотвращения передачи всего буфера,
+		 * это позволяет накопить данные в буфере с перехлестом,
+		 * что в свою очередь ведет к использованию цепочечной передаче DMA,
+		 * функционирование которой проверяется. */
+		uint32_t size = tail - head;
+		if (size > 20)
+			size -=20;
+
+		first_desc->xfercfg =
+				DMA_CHANNEL_XFER(RELOAD_DIS, CLRTRIG_EN, INTA_EN, INTB_DIS, kDMA_Transfer8BitWidth, kDMA_AddressInterleave1xWidth, kDMA_AddressInterleave0xWidth, size);
+		first_desc->srcEndAddr =
+				DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)&rb->buffer[head], kDMA_AddressInterleave1xWidth,
+											(size) * kDMA_Transfer8BitWidth, kDMA_Transfer8BitWidth);
+		first_desc->dstEndAddr = (void *)&USART0->FIFOWR;
+//		first_desc->linkToNextDesc = 0;
+
+		/* Настройка цепочечной(связанной) передачи при переходе данных через конец буфера. */
+	} else { /* head > tail */
+
+		first_desc->xfercfg =
+				DMA_CHANNEL_XFER(RELOAD_EN, CLRTRIG_DIS, INTA_EN, INTB_DIS, WIDTH_1, kDMA_AddressInterleave1xWidth, kDMA_AddressInterleave0xWidth, RING_BUF_SIZE - head);
+		first_desc->srcEndAddr =
+				DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)&rb->buffer[head], kDMA_AddressInterleave1xWidth,
+											(RING_BUF_SIZE - head) * kDMA_Transfer8BitWidth, kDMA_Transfer8BitWidth);
+		first_desc->dstEndAddr = (void *)&USART0->FIFOWR;
+		first_desc->linkToNextDesc = second_desc;
+
+		second_desc->xfercfg =
+				DMA_CHANNEL_XFER(RELOAD_DIS, CLRTRIG_EN, INTA_DIS, INTB_EN, kDMA_Transfer8BitWidth, kDMA_AddressInterleave1xWidth, kDMA_AddressInterleave0xWidth, tail);
+		second_desc->srcEndAddr =
+				DMA_DESCRIPTOR_END_ADDRESS((uint32_t *)(rb->buffer), kDMA_AddressInterleave1xWidth,
+											tail * kDMA_Transfer8BitWidth, kDMA_Transfer8BitWidth);
+		second_desc->dstEndAddr = (void *)&USART0->FIFOWR;
+//		second_desc->linkToNextDesc = 0;
+
+	}
+	/* настроить данный канал DMA на взаимодействие с периферийным устройством и указать,
+	 * что запросы на разрешение передачи будут поступать от аппаратуры. */
+	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].CFG |= DMA_CHANNEL_CFG_PERIPHREQEN_MASK;
+	/* Так как конфигурация передачи для нулевого дескриптора размещается не в памяти,
+	 * а в регистре данного канала DMA, то устанавливаем нужную конфигурацию. */
+	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].XFERCFG = first_desc->xfercfg;
+	/* Включаем данный канал DMA. */
+	DMA0->COMMON[0].ENABLESET = 1 << USART_TX_DMA_CHANNEL;
+	/* Так как даже при наличии аппаратного запроса (HARDWARE REQUEST, не путать с HARDWARE TRIGGER)
+	 * передача не запуститься без програмного переключения,
+	 * то в регистре конфигурации данного канала активируется соответствующий бит и передача начинается. */
+	DMA0->CHANNEL[USART_TX_DMA_CHANNEL].XFERCFG |= DMA_CHANNEL_XFERCFG_SWTRIG_MASK;
+
+	return 0;
+}
+
+/*
+ * @brief Настройка DMA0.
+ */
+static void console_dma0_init(void)
+{
+	/* Включение тактирование блока управления DMA0. */
 	SYSCON->AHBCLKCTRLSET[0] = SYSCON_AHBCLKCTRL_DMA(1);
+
 	/* Установить DMA в состояние сброса. */
 	SYSCON->PRESETCTRLSET[0] = SYSCON_PRESETCTRL_DMA0_RST(1);
 	while (0u == (SYSCON->PRESETCTRL[0] & SYSCON_PRESETCTRL_DMA0_RST(1))) {
@@ -203,134 +219,111 @@ static void console_usart0_init(void)
 	while (SYSCON_PRESETCTRL_DMA0_RST(1) == (SYSCON->PRESETCTRL[0] & SYSCON_PRESETCTRL_DMA0_RST(1))) {
 	}
 
+	/* Указываем, где размещаетсяв памяти основная таблица дескрипторов всех каналов DMA0.
+	 * ВАЖНО! Таблица основных дескрипторов и все дескрипторы цепочечных передач ДОЛЖНы быть выровнены по границе 16 байтов. */
 	DMA0->SRAMBASE = (uint32_t)s_dma_descriptor_table[0];
 
-	/* enable dma peripheral */
+	/* Включение контроллера DMA0. */
 	DMA0->CTRL |= DMA_CTRL_ENABLE(1);
 
-	DMA0->COMMON[0].ENABLESET = 1 << USART_TX_DMA_CHANNEL;
+//	DMA0->COMMON[0].ENABLESET = 1 << USART_TX_DMA_CHANNEL;
 
-	NVIC_SetPriority(DMA0_IRQn, 16);
-	NVIC_EnableIRQ(DMA0_IRQn);
-	/* Enable channel interrupt */
+	/* Включение прерываний на данном канале.  */
 	DMA0->COMMON[0].INTENSET = 1 << USART_TX_DMA_CHANNEL;
 
+	/* Включение прерываний в NVIC для контроллера DMA0.  */
+	NVIC_SetPriority(DMA0_IRQn, DMA0_IRQn);
+	NVIC_EnableIRQ(DMA0_IRQn);
 
-	d_print("DMA initialized\n\r");
 }
 
 /*
- * @brief Отключение USART1.
+ * @brief Настройка USART1 для работы на скорости 115200, включение прерываний.
  */
-static void console_usart0_close(void)
+static void console_usart0_init(void)
 {
 
+    SYSCON->AHBCLKCTRLSET[1] = SYSCON_AHBCLKCTRL_FLEXCOMM0(1);
+
+	/* Установить FLEXCOMM0 в состояние сброса. */
+	SYSCON->PRESETCTRLSET[1] = SYSCON_PRESETCTRL_FC0_RST(1);
+	while (0u == (SYSCON->PRESETCTRL[1] & SYSCON_PRESETCTRL_FC0_RST(1))) {
+	}
+
+	/* Вывести FLEXCOMM0 из состояния сброса. */
+	SYSCON->PRESETCTRLCLR[1] = SYSCON_PRESETCTRL_FC0_RST(1);
+	while (SYSCON_PRESETCTRL_FC0_RST(1) == (SYSCON->PRESETCTRL[1] & SYSCON_PRESETCTRL_FC0_RST(1))) {
+	}
+
+    /* initialize flexcomm to USART mode */
+    FLEXCOMM0->PSELID = FLEXCOMM_PERIPH_USART;
+
+	/* Устанавливаем скорость передачи 115200. */
+	USART0->BRG = 7; /* FRO 12Mhz / (BRG + 1) = 1.5M */
+	USART0->OSR = 12; /* 1.5M / (OSR + 1) = 115384 (115200) */
+
+	/* Конфигурирование передающего канала TX. */
+
+	/* empty and enable txFIFO */
+	USART0->FIFOCFG |= USART_FIFOCFG_EMPTYTX_MASK | USART_FIFOCFG_ENABLETX_MASK;
+	/* setup trigger level */
+	USART0->FIFOTRIG &= ~(USART_FIFOTRIG_TXLVL_MASK);
+	USART0->FIFOTRIG |= USART_FIFOTRIG_TXLVL(kUSART_TxFifo0);
+	/* enable trigger interrupt, не используется приработе через DMA */
+	USART0->FIFOTRIG |= USART_FIFOTRIG_TXLVLENA_MASK;
+	/* Включение приема через DMA.  */
+	USART0->FIFOCFG |= USART_FIFOCFG_DMATX(1);
+
+	/* Конфигурирование принимающего канала RX. */
+
+	/* empty and enable rxFIFO */
+	USART0->FIFOCFG |= USART_FIFOCFG_EMPTYRX_MASK | USART_FIFOCFG_ENABLERX_MASK;
+	/* setup trigger level */
+	USART0->FIFOTRIG &= ~(USART_FIFOTRIG_RXLVL_MASK);
+	USART0->FIFOTRIG |= USART_FIFOTRIG_RXLVL(kUSART_RxFifo1);
+	/* enable trigger interrupt */
+	USART0->FIFOTRIG |= USART_FIFOTRIG_RXLVLENA_MASK;
+
+
+	/* setup configuration and enable USART */
+	USART0->CFG =	USART_CFG_PARITYSEL(kUSART_ParityDisabled)
+					| USART_CFG_STOPLEN(kUSART_OneStopBit)
+					| USART_CFG_DATALEN(kUSART_8BitsPerChar)
+					| USART_CFG_LOOP(0)
+					| USART_CFG_ENABLE_MASK;
+
+	USART0->FIFOINTENSET = USART_FIFOINTENSET_RXERR(1);
+	USART0->FIFOINTENSET = USART_FIFOINTENSET_TXERR(1);
+	USART0->FIFOINTENSET = USART_FIFOINTENSET_RXLVL(1);
+//	USART0->FIFOINTENSET = USART_FIFOINTENSET_TXLVL(1);
+
+	/* Включение прерываний в NVIC для контроллера DMA0.  */
+	NVIC_SetPriority(FLEXCOMM0_IRQn, FLEXCOMM0_IRQn);
+	NVIC_EnableIRQ(FLEXCOMM0_IRQn);
+
 }
 
 /*
- * @brief	Включает канал 4 DMA1 и передатчик USART1 для начала передачи данных.
- * 			Данные копируются из памяти с помощью канала 4 DMA 1 в буфер передатчика USART1.
- * 			Выполнение передачи происходит асинхронно относительно основной программы и
- * 			на данный момент никак не контролируется успешность выполнения этой операции.
- * 			После завершения
- */
-static void console_start_transmission()
-{
-//	d_print("before transmission tx_rb size %d\n\r", rb_get_data_size(&tx_rb));
-	rb_dma_usart_transmit_async(&tx_rb);
-//	d_print("rb_dma_usart_transmit_async returned: %ld \n\r", rb_dma_usart_transmit_async(&tx_rb));
-}
-
-/*
- * @brief	Выключает канал 4 DMA1 и передатчик USART1.
- * 			Выключение может происходить идним из нескольких способов:
- * 			синхронным и асинхронным.
- * 			В данный момент происходит синхронное принудительное отключение.
- */
-static void console_stop_transmission()
-{
-	/* TODO: Реализовать функцию после того, как будет решено,
-	 * какой вариант функции console_start_transmission (синхронный или асинхронный)
-	 * будет использоваться.
-	 * В случае синхронной передачи в данной функции не будет необходимости. */
-
-	/* Выключить передающий канал 4 DMA1. */
-	/* LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_4); */
-
-	/* TODO: Изучить вопрос выключения канала TX USART,
-	 * интересует момент выключения в момент передачи.
-	 * Вероятно, необходимо дождаться завершения.
-	 * Реализаций может быть две:
-	 * - синхронная - ожидать в цикле (может привести к бесконечному ожиданию),
-	 * либо же отключить принудительно, что может породить ошибки.
-	 * - асинхронная - установить флаг необходимости завершения,
-	 * а в обработчике окончания передачи (он должен быть включен) выключить канал.
-	 * Реализовать. */
-
-	/* Выключить передатчик USART1. */
-	/* LL_USART_DisableDirectionTx(USART1); */
-}
-
-/*
- * @brief	Включает канал 5 DMA1 и приемник USART 1 для приема данных по готовности.
- */
-//static void console_start_reception()
-//{
-//	/* Включить приемный канал 5 DMA1. */
-////	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
-//
-//	/* Включить приемник USART1. */
-////	LL_USART_EnableDirectionRx(USART1);
-//}
-
-/*
- * @brief	Отключает канал 5 DMA1 и приемник USART 1.
- */
-static void console_stop_reception()
-{
-	/* TODO: Проанализировать работу функции и
-	 * при необходимости реализовать отключение
-	 * передачи с ожиднием флагов завершеня
-	 * для избежания взникновения ошибок. */
-
-	/* Включить приемник USART1. */
-//	LL_USART_DisableDirectionRx(USART1);
-
-	/* Включить приемный канал 5 DMA1. */
-//	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
-}
-
-/*
- *	Настройка USART 1.
- *	Для работы USART 1 настраиваются AHB1, GPIO9/10, USART1, DMA4/5, NVIC.
+ *	Настройка USART 0.
  */
 void console_init(void)
 {
-	/* Настройка USART1. */
-	console_usart0_init();
-
 	/* Настройка кольцевых буферов */
 	rb_init_ring_buffer(&rx_rb);
 	rb_init_ring_buffer(&tx_rb);
 
+	console_usart0_init();
+
+    d_print("\033c\033[J");
+    d_print("USART0 initialized\n\r");
+
+    console_dma0_init();
+
+	d_print("DMA initialized\n\r");
+
 	d_print("Console initialized\n\r");
 }
 
-/*
- * @brief	Завершение работы консоли, выключение устройств и освобождение ресурсов.
- */
-void console_close(void)
-{
-	console_stop_reception();
-
-	console_stop_transmission();
-
-	console_usart0_close();
-
-	/* TODO: Рассмотреть необходимость отключения DMA. */
-
-	/* TODO: Рассмотреть необходимость отключения GPIO. */
-}
 /*
  * @brief	Обрабатывает приемный буфер с символами, передает буфер с символами на передачу.
  * 			Функция должна вызывается с необходимой периодичностью.
@@ -339,8 +332,6 @@ void console_close(void)
  */
 int32_t console_process(void)
 {
-//	console_start_transmission();
-
 	/* TODO: Обработать находящиеся в rx_rb принятые данные. */
 	/* На данный момент обработка данных заключается в их выдаче - программная закольцовка.
 	 * Данные перекладываются из кольцевого буфера приемника в кольцевой буфер передатчика.
@@ -350,11 +341,11 @@ int32_t console_process(void)
 
 	/** Перложить данные из приемного буфера в выходной. */
 	while (rb_get_data_size(&rx_rb) != 0) {
-		size_t data_size = rb_get_data(&rx_rb, data_buf, SIZE_TO_TRANSMIT);
+		size_t data_size = rb_get_data(&rx_rb, data_buf, ARRAY_SIZE(data_buf));
 		rb_store_data(&tx_rb, data_buf, data_size);
 	}
 
-	console_start_transmission();
+	rb_dma_usart_transmit_async(&tx_rb);
 
 	/* Возвращаемое значение может отражать факт переполнения кольцевого буфера приема. */
 	return 0;
@@ -393,6 +384,20 @@ void d_print(const char *format, ...)
 		return;
 	}
 
-	USART_WriteBlocking(USART0, (uint8_t *)str, sz);
+    /* Check whether txFIFO is enabled */
+    if (!(USART0->FIFOCFG & USART_FIFOCFG_ENABLETX_MASK)) {
+        return;
+    }
+    size_t i = 0;
+    for (; i < sz; ++i) {
+        /* Loop until txFIFO get some space for new data */
+        while (!(USART0->FIFOSTAT & USART_FIFOSTAT_TXNOTFULL_MASK)) {
+        }
+        USART0->FIFOWR = str[i];
+
+    }
+    /* Wait to finish transfer */
+    while (!(USART0->STAT & USART_STAT_TXIDLE_MASK)) {
+    }
 }
 

@@ -46,17 +46,17 @@ set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/includ
 #file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/NXP/LPC546xx/source/*.c")
 set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/source")
 set(DRIVER_SOURCES		"${DRV_SOURCES}"
+						"${DRV_SOURCES_PATH}/fsl_rit.c"
+						"${DRV_SOURCES_PATH}/fsl_adc.c"
+#						"${DRV_SOURCES_PATH}/fsl_reset.c"
+#						"${DRV_SOURCES_PATH}/fsl_power.c"
+#						"${DRV_SOURCES_PATH}/fsl_gpio.c"
+#						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
+#						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
 #						"${DRV_SOURCES_PATH}/fsl_clock.c"
 #						"${DRV_SOURCES_PATH}/fsl_common.c"
-						"${DRV_SOURCES_PATH}/fsl_gpio.c"
-						"${DRV_SOURCES_PATH}/fsl_reset.c"
-						"${DRV_SOURCES_PATH}/fsl_rit.c"
-						"${DRV_SOURCES_PATH}/fsl_power.c"
-						"${DRV_SOURCES_PATH}/fsl_usart.c"
+#						"${DRV_SOURCES_PATH}/fsl_usart.c"
 #						"${DRV_SOURCES_PATH}/fsl_dma.c"
-						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
-						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
-						"${DRV_SOURCES_PATH}/fsl_adc.c"
 #						"${DRV_SOURCES_PATH}/fsl_sctimer.c"
 				)
 #######################################################################
