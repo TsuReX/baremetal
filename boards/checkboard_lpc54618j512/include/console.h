@@ -26,6 +26,13 @@ void console_init(void);
 void console_close(void);
 
 /*
+ * @brief	Инициирует передачу данных из выходного буфера через DMA-USART.
+ *
+ * @retval	void
+ */
+void console_start_transmission();
+
+/*
  * @brief	Обрабатывает приемный буфер с символами, передает буфер с символами на передачу.
  * 			Функция должна вызывается с необходимой периодичностью.
  *

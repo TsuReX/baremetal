@@ -23,7 +23,7 @@ void scheduler_process(void)
 	}
 
 	if (sched_time % 100 == 0) {
-		console_process();
+		console_start_transmission();
 	}
 
 	++sched_time;
@@ -83,13 +83,19 @@ int main(void)
 			}
 			print("ADC0 channel %d value %ld\n\r", channel, value);
 		}
-		print("\033[15A");
+//		print("\033[15A");
+		break;
 	}
-
+	print("Enter command: ");
+	while(1) {
+		mdelay(50);
+		console_process();
+	}
 //fail:
 	while (1) {
 		fail_led_toggle();
 		mdelay(500);
+
 	}
 
     return 0;

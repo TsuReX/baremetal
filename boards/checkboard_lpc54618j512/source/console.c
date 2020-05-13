@@ -7,12 +7,14 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
+#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 
 #include <ringbuf.h>
 #include <console.h>
 #include <drivers.h>
+#include <getopt.h>
 
 #define USART_RX_DMA_CHANNEL 0
 #define USART_TX_DMA_CHANNEL 1
@@ -36,6 +38,12 @@
 
 #define DST_INC_0	0
 
+
+#define CMD_NAME_MAX_LEN	32
+//#define CMD_ARG_MAX_LEN	128
+#define CMD_ARGS_MAX_COUNT	16
+#define CMD_LINE_MAX_LEN	128
+
 /** DMA контроллер занят передачей. */
 #define RING_BUF_DMA_BUSY_ERR	1
 /** Кольцевой буфер пуст. */
@@ -53,6 +61,9 @@ __attribute__((aligned(16))) static dma_descriptor_t second_dma_descriptor;
 
 static dma_descriptor_t *first_desc;
 static dma_descriptor_t *second_desc = &second_dma_descriptor;
+
+static size_t chr_pos = 0;
+static char cmd_line[CMD_LINE_MAX_LEN];
 
 void DMA0_IRQHandler(void)
 {
@@ -324,6 +335,111 @@ void console_init(void)
 	d_print("Console initialized\n\r");
 }
 
+struct cmd {
+	char cmd_name[CMD_NAME_MAX_LEN];
+	int32_t (*handler)(size_t argc, const char **argv);
+};
+
+int32_t do_invade(size_t argc, const char **argv)
+{
+//	print("%s\r\n", __func__);
+
+//	size_t i = 0;
+//	for (; i < argc; ++i) {
+//		print("argv[%d]: %s\r\n", i, argv[i]);
+//	}
+
+	print("The World is ours!\r\n");
+	return 0;
+}
+
+struct cmd commands_array[] = {
+		{"invade", do_invade},
+//		{"", 0x0}
+};
+
+static uint32_t cmd_name_execute(size_t argc, const char** argv)
+{
+	size_t cmd_num = 0;
+
+	/* TODO: Реализовать поиск команды в списке команд. */
+//	print("%s\r\n", __func__);
+	for (; cmd_num < ARRAY_SIZE(commands_array); ++cmd_num) {
+		if (strcmp(argv[0],commands_array[cmd_num].cmd_name) == 0)
+			return commands_array[cmd_num].handler(argc, argv);
+	}
+	print("Hmm, Your command not found. Did You mean to conquer the World?\r\n");
+	return 0;
+}
+
+static uint32_t cmd_line_parse(char* cmd_line, char** argv)
+{
+//	print("%s\r\n", __func__);
+
+	size_t arg_num = 0;
+	char *head = cmd_line;
+	char *tail = cmd_line;
+
+	while (*head != 0) {
+
+		if (arg_num == CMD_ARGS_MAX_COUNT)
+			return arg_num;
+
+		if (*head == ' ') {
+			++head;
+			continue;
+		}
+
+		tail = head;
+
+		while (*tail != 0){
+			if (*tail == ' ') {
+				/* ВНИМАНИЕ! Модифицируется cmd_line! */
+				*tail = 0;
+				argv[arg_num] = head;
+//				print("arg_num: %d %s \r\n", arg_num, head);
+				++arg_num;
+				head = ++tail;
+				break;
+			}
+			++tail;
+		}
+
+		if (head == tail)
+			continue;
+
+		argv[arg_num] = head;
+//		print("arg_num: %d %s \r\n", arg_num, head);
+		return ++arg_num;
+
+
+	}
+
+	return arg_num;
+}
+
+static void cmd_line_process(char* cmd_line)
+/*static void cmd_line_process(const char* cmd_line)
+ * Функция cmd_line_parse может изменять аргумент,
+ * поэтому тип cmd_line не может быть константным. */
+{
+
+	char *argv[CMD_ARGS_MAX_COUNT];
+	size_t argc = 0;
+
+//	print("%s\r\n", __func__);
+//	print("Received command: %s, length %d\r\n", cmd_line, strlen(cmd_line));
+
+	argc = cmd_line_parse(cmd_line, argv);
+
+	cmd_name_execute(argc, (const char**)argv);
+}
+
+void console_start_transmission()
+{
+	rb_dma_usart_transmit_async(&tx_rb);
+}
+
 /*
  * @brief	Обрабатывает приемный буфер с символами, передает буфер с символами на передачу.
  * 			Функция должна вызывается с необходимой периодичностью.
@@ -332,22 +448,63 @@ void console_init(void)
  */
 int32_t console_process(void)
 {
-	/* TODO: Обработать находящиеся в rx_rb принятые данные. */
-	/* На данный момент обработка данных заключается в их выдаче - программная закольцовка.
-	 * Данные перекладываются из кольцевого буфера приемника в кольцевой буфер передатчика.
-	 * После чего следует вывод сообщения о том, что была вызвана функция console_process(). */
+	uint8_t	chr;
 
-	uint8_t	data_buf[64];
+	while (1) {
+		/* Приемный буфер пуст. */
+		if (rb_get_data_size(&rx_rb) == 0)
+			break;
 
-	/** Перложить данные из приемного буфера в выходной. */
-	while (rb_get_data_size(&rx_rb) != 0) {
-		size_t data_size = rb_get_data(&rx_rb, data_buf, ARRAY_SIZE(data_buf));
-		rb_store_data(&tx_rb, data_buf, data_size);
+		rb_get_data(&rx_rb, &chr, 1);
+
+		/* Буфер команды заполнен. */
+		if (chr_pos == (CMD_LINE_MAX_LEN - 1) && chr != '\r') {
+			/* Сбросить cmd_line, chr, chr_pos и rx_rb до конца или до возврата каретки */
+			while(rb_get_data_size(&rx_rb) != 0) {
+				rb_get_data(&rx_rb, &chr, 1);
+				if (chr == '\r')
+					break;
+			}
+			chr_pos = 0;
+
+			print("\r\nCommand length is exceeded!\r\n");
+			break;
+		}
+
+		/* Получен символ возврата каретки. */
+		if (chr == '\r') {
+			print("\r\n");
+			if (chr_pos != 0)
+				cmd_line_process(cmd_line);
+			print("Enter command: ");
+			chr_pos = 0;
+			break;
+		}
+
+		/* Получен непечатаемый специальный символ.
+		 * В случае приема специального символа стирания backspace (chr == 0x08)
+		 * необходимо удалить с экрана поледний(курсор пока всегда на нем стоит) символ строки,
+		 * это возможно реализовать удалив последний символ из cmd_line, вернуть каретку в начало
+		 * и вывести cmd_line (уже без последнего символа). */
+	/*
+		if (chr == '\?') {
+
+		}
+	*/
+
+		/* Получен печатный символ. Условие не предусматривает обработку сложный составных управляющих символов,
+		 * поэтому после отбрасывания первого непечатаемого символа следующие за ним символы выводятся,
+		 * так как они обычные печатные и экранируются первым непечатным символом. */
+		if ((chr > 31) && (chr < 127)) {
+
+			cmd_line[chr_pos] = chr;
+			++chr_pos;
+			cmd_line[chr_pos] = 0;
+
+			rb_store_data(&tx_rb, &chr, 1);
+		}
 	}
 
-	rb_dma_usart_transmit_async(&tx_rb);
-
-	/* Возвращаемое значение может отражать факт переполнения кольцевого буфера приема. */
 	return 0;
 }
 
