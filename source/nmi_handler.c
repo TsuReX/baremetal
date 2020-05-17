@@ -1,5 +1,5 @@
 __attribute__((naked, section(".after_vectors")))
-void NMI_Handler(void)
+void nmi_handler(void)
 {
 	__asm(	".syntax unified\n"
 			"mrs r0, CONTROL\n"
