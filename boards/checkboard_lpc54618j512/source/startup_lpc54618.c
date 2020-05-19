@@ -297,16 +297,28 @@ static void bss_init(uint32_t start, size_t len) {
         *pulDest++ = 0;
 }
 
+void setup_psp()
+{
+	__asm(	".syntax unified\n"
+			"ldr r0, =0x12345678\n"
+			"msr PSP, r0\n"
+			".syntax divided\n"
+		);
+	return;
+}
+
 __attribute__ ((section(".after_vectors.reset")))
 void reset_handler(void) {
 
     // Disable interrupts
     __asm volatile ("cpsid i");
 
+
     // Enable SRAM clock used by Stack
     __asm volatile ("LDR R0, =0x40000220\n\t"
                     "MOV R1, #56\n\t"
                     "STR R1, [R0]");
+    setup_psp();
 
     data_init((uint32_t)&__data_load__, (uint32_t)&__data_start__, (size_t)&__data_end__ - (size_t)&__data_start__);
     bss_init((uint32_t)&__bss_start__, (uint32_t)&__bss_end__ - (uint32_t)&__bss_start__);

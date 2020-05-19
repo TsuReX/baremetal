@@ -6,15 +6,18 @@
 #include <drivers.h>
 #include <context.h>
 
-void nmi_trigger()
-{
-	SCB->ICSR |= (1u << SCB_ICSR_NMIPENDSET_Pos);
-}
-
 #define EXC_RETURN_BASE_FRAME		(1u << 4u)
 #define EXC_RETURN_THREAD_MODE		(1u << 3u)
 #define EXC_RETURN_PROCESS_STACK	(1u << 2u)
 #define STACK_ALIGNED				(1u << 9u)
+
+uint32_t msp = 0xFFFFFFFF;
+uint32_t _exc_return = 0x0;
+
+void nmi_trigger()
+{
+	SCB->ICSR |= (1u << SCB_ICSR_NMIPENDSET_Pos);
+}
 
 static void base_frame_print(const struct base_frame_t *frame)
 {
@@ -77,4 +80,6 @@ void context_parse(size_t frame_size, uint32_t exc_return, uint32_t sp)
 		print("Stack pointer was ALIGNED\n\r");
 	else
 		print("Stack pointer was NOT ALIGNED\n\r");
+
+	print("msp: 0x%08lX, exc_return: 0x%08lX\n\r", msp, _exc_return);
 }

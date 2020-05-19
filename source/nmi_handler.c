@@ -1,6 +1,18 @@
+#include <stdint.h>
+
+extern uint32_t msp;
+extern uint32_t _exc_return;
+
 __attribute__((naked, section(".after_vectors")))
 void nmi_handler(void)
 {
+	__asm(	".syntax unified\n"
+			"mov %0, lr\n"
+			"mov %1, sp\n"
+			".syntax divided\n"
+			: "=r" (_exc_return), "=r" (msp)
+		);
+
 	__asm(	".syntax unified\n"
 			"mrs r0, CONTROL\n"
 			"mov r1, #0x1\n"
