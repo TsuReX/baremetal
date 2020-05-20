@@ -3,6 +3,38 @@
 extern uint32_t msp;
 extern uint32_t _exc_return;
 
+/*
+ * @brief	Сохраняет контекст текущего процесса.
+ */
+void context_store(void)
+{
+	/* 0.	msp -= (9 * 4) (36=0x24); Не забыть сохранить EXC_RETURN!!!
+	 * 1.	Сохранить регистры r4-r11, psp начиная с адреса из msp;
+	 * 2.	На основании анализа EXC_RETURN;
+	 *		определить размер сохраняемого контекста
+	 *		0x68 + 0x24 или 0x20 + 0x24;
+	 * 3.	Сохранить контекст начиная с адреса msp в contexts[proc_num];
+	 * 4.	msp += context_size.
+	 *
+	 * Оптимизировать (1) - сохранять сразу в contexts! */
+}
+
+/*
+ * @brief	Восстанавливает контекст процесса.
+ */
+void context_load(void)
+{
+	/* 1.	msp -= context_size (вычислить на основе contexts[proc_next].exc_return);
+	 * 2.	Скопировать по адресу msp контекст из contexts[proc_next];
+	 * 3.	Восстановить регистры r4-r11, psp начиная с адреса из msp;
+	 * 4.	msp += (9 * 4) (36=0x24); Не забыть загрузить EXC_RETURN!!!
+	 *
+	 *  Оптимизировать (3) - восстановить  сразу из contexts! */
+}
+
+/*
+ *
+ */
 __attribute__((naked, section(".after_vectors")))
 void nmi_handler(void)
 {
