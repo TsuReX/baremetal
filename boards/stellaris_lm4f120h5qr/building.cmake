@@ -18,24 +18,28 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
+set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr")
+
 #set(MAIN_ASM_SOURCES    "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/startup.s" )
 
-set(MAIN_SOURCES	"${MAIN_SOURCES}"
-					## TODO Реализовать механизмы инициализации в файле и подключить его к сборке
-					##"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/system_tm4c1233h6pm.c"
-					"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/source/startup_tm4c1233h6pm.c"
-					"${CMAKE_CURRENT_SOURCE_DIR}/source/stellaris_main.c"
-					)
+set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${BRD_PATH}/source/startup_tm4c1233h6pm.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/stellaris_main.c"
+				)
 					
-set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/TI/TM4C/Include")
+set(MAIN_INCLUDE		"${BRD_PATH}/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/include/"
+				)
 
-set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/include")
+set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
 
-set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/")
+set(DEVICE_INCLUDE 		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/ti/tm4c/include")
 
-file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/source/*.c")
+set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/ti/tm4c/include")
 
-file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/TI/TM4C/driverlib/*.c")
+file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/ti/tm4c/source/*.c")
+
+file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/ti/tm4c/driverlib/*.c")
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
@@ -44,10 +48,13 @@ set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
 	
 set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
 	
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/flash_tm4c1233h6pm.ld \
-														-mcpu=cortex-m4 -specs=nano.specs \
-														-Wl,--gc-sections")
-								
+set(LINKER_FLAGS		"${LINKER_FLAGS}"
+						"-T ${BRD_PATH}/flash_tm4c1233h6pm.ld"
+						"-mcpu=cortex-m4 -specs=nano.specs"
+						"-Wl,--gc-sections"
+						"-nostdlib"
+				)
+					
 add_definitions("-DTM4C1233H6PM")
 add_definitions("-DTARGET_IS_TM4C123_RA1")
 add_definitions("-DPART_TM4C1233H6PM")

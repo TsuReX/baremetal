@@ -77,13 +77,6 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 
-	## Подключение файлов исходных кодов и заголовков
-	set(MAIN_INCLUDE	"include")
-	
-	set(MAIN_SOURCES	"source/stellaris_main.c")
-	
-	set(CORE_INCLUDE	"base/Core/Include")
-
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
 	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
@@ -104,9 +97,6 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
 	endif()
 
 	include(${BOARD_SCRIPT_CMAKE})
-
-	# Подключение подпроекта программатора
-	#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512/flash_programmer")
 
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f407vet6")
