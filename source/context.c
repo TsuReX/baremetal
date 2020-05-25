@@ -12,11 +12,21 @@
 #define STACK_ALIGNED				(1u << 9u)
 
 uint32_t msp = 0xFFFFFFFF;
-uint32_t _exc_return = 0x0;
+uint32_t exc_return = 0x0;
+
+uint32_t current_context_num = 0;
+uint32_t next_context_num = 0;
+
+struct context context_array[CONTEXT_COUNT];
 
 void nmi_trigger()
 {
 	SCB->ICSR |= (1u << SCB_ICSR_NMIPENDSET_Pos);
+}
+
+void pendsv_trigger()
+{
+	SCB->ICSR |= (1u << SCB_ICSR_PENDSVSET_Pos);
 }
 
 static void base_frame_print(const struct base_frame_t *frame)
@@ -81,5 +91,140 @@ void context_parse(size_t frame_size, uint32_t exc_return, uint32_t sp)
 	else
 		print("Stack pointer was NOT ALIGNED\n\r");
 
-	print("msp: 0x%08lX, exc_return: 0x%08lX\n\r", msp, _exc_return);
+}
+
+/*
+ * @brief	Сохраняет контекст текущего процесса.
+ */
+void context_store(uint32_t *context_stack, uint32_t context_num)
+{
+	if((((struct context*)context_stack)->exc_return & EXC_RETURN_BASE_FRAME) != 0) {
+		/* Base context. */
+		memcpy(&context_array[context_num], context_stack, BASE_CONTEXT_SIZE);
+	}
+	else {
+		/* Extended context. */
+		memcpy(&context_array[context_num], context_stack, FULL_CONTEXT_SIZE);
+	}
+}
+
+/*
+ * @brief	Восстанавливает контекст процесса.
+ */
+void context_load(uint32_t *context_stack, uint32_t context_num)
+{
+	if((context_array[context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
+		/* Base context. */
+		memcpy(context_stack, &context_array[context_num], BASE_CONTEXT_SIZE);
+	}
+	else {
+		/* Extended context. */
+		memcpy( context_stack, &context_array[context_num],FULL_CONTEXT_SIZE);
+	}
+}
+
+__attribute__((naked, section(".after_vectors")))
+void pendsv_handler(void)
+{
+	/* extended_context_store */
+	__asm(	".syntax unified\n"
+			"add sp, #-0x28\n"
+			"mov r0, lr\n"
+			"mrs r1, PSP\n"
+			"stm sp, {r0,r1,r4-r11}\n"
+			".syntax divided\n"
+		);
+
+	/* contex_param_save*/
+	__asm(	".syntax unified\n"
+			"mov %0, lr\n"
+			"mov %1, sp\n"
+			".syntax divided\n"
+			: "=r" (exc_return), "=r" (msp)
+		);
+
+	/* any_actions */
+
+	/* context_store */
+	if((context_array[current_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
+		/* Base context. */
+		memcpy((void*)msp, &context_array[current_context_num], BASE_CONTEXT_SIZE);
+		__asm(	".syntax unified\n"
+				"add sp, #0x48\n"
+				".syntax divided\n"
+			);
+	}
+	else {
+		/* Extended context. */
+		memcpy((void*)current_context_num, &context_array[current_context_num], FULL_CONTEXT_SIZE);
+		__asm(	".syntax unified\n"
+				"add sp, #0x90\n"
+				".syntax divided\n"
+			);
+	}
+
+	/* context_load */
+	if((context_array[next_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
+		/* Base context. */
+		__asm(	".syntax unified\n"
+				"add sp, #0x-48\n"
+				".syntax divided\n"
+			);
+		memcpy((void*)msp, &context_array[next_context_num], BASE_CONTEXT_SIZE);
+	}
+	else {
+		/* Extended context. */
+		__asm(	".syntax unified\n"
+				"add sp, #-0x90\n"
+				".syntax divided\n"
+			);
+		memcpy((void*)msp, &context_array[next_context_num],FULL_CONTEXT_SIZE);
+	}
+
+	/* extended_context_load */
+	__asm(	".syntax unified\n"
+			"ldm sp, {r0,r1,r4-r11}\n"
+			"msr PSP, r1\n"
+			"mov lr, r0\n"
+			"add sp, #0x28\n"
+			".syntax divided\n"
+		);
+}
+
+__attribute__((used, naked, section(".after_vectors")))
+void temp_pendsv_handler(void)
+{
+
+	__asm(	".syntax unified\n"
+			"ldr r0, =__stack_end__\n"
+			"mov sp, r0\n"
+			".syntax divided\n"
+		);
+
+	/* context_load */
+	if((context_array[next_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
+		/* Base context. */
+		__asm(	".syntax unified\n"
+				"add sp, #0x-48\n"
+				".syntax divided\n"
+			);
+		memcpy((void*)msp, &context_array[next_context_num], BASE_CONTEXT_SIZE);
+	}
+	else {
+		/* Extended context. */
+		__asm(	".syntax unified\n"
+				"add sp, #-0x90\n"
+				".syntax divided\n"
+			);
+		memcpy((void*)msp, &context_array[next_context_num],FULL_CONTEXT_SIZE);
+	}
+
+	/* extended_context_load */
+	__asm(	".syntax unified\n"
+			"ldm sp, {r0,r1,r4-r11}\n"
+			"msr PSP, r1\n"
+			"mov lr, r0\n"
+			"add sp, #0x28\n"
+			".syntax divided\n"
+		);
 }

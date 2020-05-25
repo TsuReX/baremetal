@@ -40,10 +40,10 @@ WEAK void hard_fault_handler(void);
 WEAK void mem_manage_handler(void);
 WEAK void bus_fault_handler(void);
 WEAK void usage_fault_handler(void);
-WEAK void SVC_Handler(void);
-WEAK void DebugMon_Handler(void);
-WEAK void PendSV_Handler(void);
-WEAK void SysTick_Handler(void);
+WEAK void svc_handler(void);
+WEAK void debugmon_handler(void);
+WEAK void pendsv_handler(void);
+WEAK void systick_handler(void);
 WEAK void IntDefaultHandler(void);
 
 //*****************************************************************************
@@ -203,21 +203,21 @@ extern void (* const isr_vector_table[])(void);
 __attribute__ ((used, section(".isr_vector")))
 void (* const isr_vector_table[])(void) = {
 	(void (*)(void))&__stack_end__,                       // The initial stack pointer
-    reset_handler,              // The reset handler
-    nmi_handler,                // The NMI handler
-    hard_fault_handler,         // The hard fault handler
-    mem_manage_handler,         // The MPU fault handler
-    bus_fault_handler,          // The bus fault handler
-    usage_fault_handler,        // The usage fault handler
+	reset_handler,              // The reset handler
+	nmi_handler,                // The NMI handler
+	hard_fault_handler,         // The hard fault handler
+	mem_manage_handler,         // The MPU fault handler
+	bus_fault_handler,          // The bus fault handler
+	usage_fault_handler,        // The usage fault handler
 	(void (*)(void))&firmware_checksum,        	// LPC MCU checksum
-    0,                          // ECRP
-    0,                          // Reserved
-    0,                          // Reserved
-    SVC_Handler,                // SVCall handler
-    DebugMon_Handler,           // Debug monitor handler
-    0,                          // Reserved
-    PendSV_Handler,             // The PendSV handler
-    SysTick_Handler,            // The SysTick handler
+	0,                          // ECRP
+	0,                          // Reserved
+	0,                          // Reserved
+	svc_handler,                // SVCall handler
+	debugmon_handler,           // Debug monitor handler
+	0,                          // Reserved
+	pendsv_handler,             // The PendSV handler
+	systick_handler,            // The SysTick handler
 
     // Chip Level - LPC54618
     WDT_BOD_IRQHandler,         // 16: Windowed watchdog timer, Brownout detect
@@ -366,19 +366,19 @@ WEAK_AV void usage_fault_handler(void)
 { while(1) {}
 }
 
-WEAK_AV void SVC_Handler(void)
+WEAK_AV void svc_handler(void)
 { while(1) {}
 }
 
-WEAK_AV void DebugMon_Handler(void)
+WEAK_AV void debugmon_handler(void)
 { while(1) {}
 }
 
-WEAK_AV void PendSV_Handler(void)
+WEAK_AV void pendsv_handler(void)
 { while(1) {}
 }
 
-WEAK_AV void SysTick_Handler(void)
+WEAK_AV void systick_handler(void)
 { while(1) {}
 }
 
