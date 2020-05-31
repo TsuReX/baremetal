@@ -99,6 +99,14 @@ struct context {
 	uint32_t	reserved;
 };
 
+typedef void (*func_ptr)(void);
+
+void pendsv_setup(func_ptr handler);
+
+func_ptr pendsv_get();
+
 void nmi_trigger();
+
+void pendsv_trigger();
 
 #endif /* INCLUDE_CONTEXT_H_ */

@@ -19,6 +19,18 @@ uint32_t next_context_num = 0;
 
 struct context context_array[CONTEXT_COUNT];
 
+#define PENDSV_POS	14
+
+void pendsv_setup(func_ptr handler)
+{
+	SCB->VTOR[PENDSV_POS] = handler;
+}
+
+func_ptr pendsv_get()
+{
+	return SCB->VTOR[PENDSV_POS];
+}
+
 void nmi_trigger()
 {
 	SCB->ICSR |= (1u << SCB_ICSR_NMIPENDSET_Pos);
