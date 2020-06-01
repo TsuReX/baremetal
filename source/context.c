@@ -136,6 +136,52 @@ void context_load(uint32_t *context_stack, uint32_t context_num)
 }
 
 __attribute__((naked, section(".after_vectors")))
+void pendsv_ret_to_init(void)
+{
+	__asm(
+		".syntax unified\n"
+		"@ set new main stack pointer\n"
+		"ldr r0, =msp\n"
+		"ldr sp, [r0]\n"
+		
+		"@ r0 - destination address\n"
+		"mov r0, sp\n"
+
+		"@ r1 - source address\n"
+		"ldr r1, =contex_array\n"
+		"ldr r1, [r1]\n"
+		"mov r2, #0x90\n"
+		"ldr r3, =next_contex_num\n"
+		"ldr r3, [r3]\n"
+		"mov r0, #0x0\n"
+		"umlal r0, r1, r2, r3\n"
+
+		"@ r2 - size\n"
+		"ldr r2, [r1, #0x0]	@ r2 = contex_array[next_contex_num].exc_return\n"
+		"mov r3, #EXC_RETURN_BASE_FRAME\n"
+		"and r2, r3\n"
+		"ite neq \n"
+		"movne r2, #0x48\n"
+		"moveq r2, #0x90\n"
+
+		"@ move sp to the end of exception handler stack\n"
+		"add sp, r2\n"
+
+		"@ copy context from special place to stack\n"
+		"@mov r3, lr @ unnecessary because this function is the last\n"
+		"bl memcpy\n"
+		"@mov lr, r3 @ unnecessary\n"
+
+		"@ restore lr, psp, r4-r11\n"
+		"ldm sp, {r0,r1,r4-r11}\n"
+		"msr PSP, r1\n"
+		"mov lr, r0\n"
+		"add sp, #0x28\n"
+		".syntax divided\n"
+	);
+}
+
+__attribute__((naked, section(".after_vectors")))
 void pendsv_handler(void)
 {
 	__asm(
