@@ -16,6 +16,8 @@ uint32_t exc_return = 0x0;
 
 uint32_t current_context_num = 0;
 uint32_t next_context_num = 0;
+uint32_t msp = (uint32_t)&__stack_end__;
+
 
 struct context context_array[CONTEXT_COUNT];
 
@@ -362,4 +364,29 @@ void temp_pendsv_handler(void)
 			"add sp, #0x28\n"
 			".syntax divided\n"
 		);
+}
+
+void init_process_start()
+{
+	msp = __stack_end__;
+	pendsv_setup(pendsv_ret_to_init);
+	pendsv_trigger();
+	/* Control flow doesn't reach here.
+	 * It switches to init_process() function. */
+}
+void init_process(void)
+{
+	pendsv_setup(pendsv_handler);
+	/* Process body. */
+	while(1);
+}
+
+void init_process_create(uint32_t proc_addr, size_t  proc_addr_size)
+{
+	memset(&context_array[0], 0, sizeof(context_array[0]));
+	context_array[0].exc_return = 0xFFFFFFFD; /* Return to thread mode and process stack with basic frame. */
+	context_array[0].psp = (proc_addr & !0x7) + (proc_addr_size & !0x7) - 8;
+	context_array[0].lr = 0xDEADBEEF;
+	context_array[0].pc = init_process;
+	context_array[0].xpsr = 0x1000000; /* Set EPRS.T bit! */
 }
