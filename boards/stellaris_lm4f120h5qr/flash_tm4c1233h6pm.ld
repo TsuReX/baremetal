@@ -50,7 +50,7 @@ SECTIONS
 	} > SRAM
 
 	__stack_size__ = 0x1000;
-	.stack ORIGIN(SRAM) + LENGTH(SRAM) - __stack_size__ - 1024:  ALIGN(4)
+	.stack :  ALIGN(1024)
 	{
 		__stack_start__ = .;
 		. = ALIGN(4);
