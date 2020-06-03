@@ -219,8 +219,10 @@ static void bss_init(uint32_t start, size_t len) {
 void setup_psp()
 {
 	__asm(	".syntax unified\n"
-			"ldr r0, =0x12345678\n"
+			"ldr r0, =__stack_end__\n"
 			"msr PSP, r0\n"
+			"ldr r1, =0x2\n"
+			"msr CONTROL, r1\n"
 			".syntax divided\n"
 		);
 	return;

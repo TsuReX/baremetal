@@ -368,14 +368,19 @@ void pendsv_handler(void)
 void init_process_start()
 {
 	msp = __stack_end__;
-	pendsv_setup(pendsv_ret_to_init);
+//	pendsv_setup(pendsv_ret_to_init);
+	__asm(	".syntax unified\n"
+			"ldr r1,=0x2\n"
+			"msr CONTROL, r1\n"
+			".syntax divided\n"
+		);
 	pendsv_trigger();
 	/* Control flow doesn't reach here.
 	 * It switches to init_process() function. */
 }
 void init_process(void)
 {
-	pendsv_setup(pendsv_handler);
+//	pendsv_setup(pendsv_handler);
 	/* Process body. */
 	while(1);
 }
@@ -384,7 +389,7 @@ void init_process_create(uint32_t proc_addr, size_t  proc_addr_size)
 {
 	memset(&context_array[0], 0, sizeof(context_array[0]));
 	context_array[0].exc_return = 0xFFFFFFFD; /* Return to thread mode and process stack with basic frame. */
-	context_array[0].psp = (proc_addr & !0x7) + (proc_addr_size & !0x7) - 8;
+	context_array[0].psp = (proc_addr & ~0x7) + (proc_addr_size & ~0x7) - 8;
 	context_array[0].lr = 0xDEADBEEF;
 	context_array[0].pc = (uint32_t)init_process;
 	context_array[0].xpsr = 0x1000000; /* Set EPRS.T bit! */
