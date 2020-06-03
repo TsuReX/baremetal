@@ -12,8 +12,8 @@
 #define EXC_RETURN_PROCESS_STACK	(1u << 2u)
 #define STACK_ALIGNED				(1u << 9u)
 
-uint32_t current_context_num = 0;
-uint32_t next_context_num = 0;
+uint32_t current_contex_num = 0;
+uint32_t next_contex_num = 0;
 extern uint32_t __stack_end__;
 uint32_t msp = (uint32_t)&__stack_end__;
 
@@ -149,7 +149,7 @@ void pendsv_ret_to_init(void)
 		"mov r0, sp\n"
 
 		"@ r1 - source address\n"
-		"ldr r1, =contex_array\n"
+		"ldr r1, =context_array\n"
 		"ldr r1, [r1]\n"
 		"mov r2, #0x90\n"
 		"ldr r3, =next_contex_num\n"
@@ -158,8 +158,8 @@ void pendsv_ret_to_init(void)
 		"umlal r0, r1, r2, r3\n"
 
 		"@ r2 - size\n"
-		"ldr r2, [r1, #0x0]	@ r2 = contex_array[next_contex_num].exc_return\n"
-		"ldr r3, =EXC_RETURN_BASE_FRAME\n"
+		"ldr r2, [r1, #0x0]	@ r2 = context_array[next_contex_num].exc_return\n"
+		"ldr r3, =0x8\n"
 		"and r2, r3\n"
 		"ite ne \n"
 		"movne r2, #0x48\n"
@@ -194,7 +194,7 @@ void pendsv_handler(void)
 		"stm sp, {r0,r1,r4-r11}\n"
 
 		"@ r0 - destination address\n"
-		"ldr r0, =contex_array\n"
+		"ldr r0, =context_array\n"
 		"ldr r0, [r0]\n"
 		"mov r1, #0x90\n"
 		"ldr r2, =current_contex_num\n"
@@ -206,7 +206,7 @@ void pendsv_handler(void)
 		"mov r1, sp\n"
 
 		"@ r2 - size\n"
-		"ldr r3, =EXC_RETURN_BASE_FRAME\n"
+		"ldr r3, =0x8\n"
 		"and lr, r3\n"
 		"ite ne \n"
 		"movne r2, #0x48\n"
@@ -226,7 +226,7 @@ void pendsv_handler(void)
 		"mov r0, sp\n"
 
 		"@ r1 - source address\n"
-		"ldr r1, =contex_array\n"
+		"ldr r1, =context_array\n"
 		"ldr r1, [r1]\n"
 		"mov r2, #0x90\n"
 		"ldr r3, =next_contex_num\n"
@@ -235,8 +235,8 @@ void pendsv_handler(void)
 		"umlal r0, r1, r2, r3\n"
 
 		"@ r2 - size\n"
-		"ldr r2, [r1, #0x0]	@ r2 = contex_array[next_contex_num].exc_return\n"
-		"ldr r3, =EXC_RETURN_BASE_FRAME\n"
+		"ldr r2, [r1, #0x0]	@ r2 = context_array[next_contex_num].exc_return\n"
+		"ldr r3, =0x8\n"
 		"and r2, r3\n"
 		"ite ne \n"
 		"movne r2, #0x48\n"

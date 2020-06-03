@@ -102,5 +102,6 @@ SECTIONS {
         _stack = .;
         __stack = .;
         KEEP(*(.stack))
+        __stack_end__ = .;
     } > REGION_STACK
 }

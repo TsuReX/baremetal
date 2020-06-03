@@ -109,4 +109,10 @@ void nmi_trigger();
 
 void pendsv_trigger();
 
+void init_process_start();
+
+void init_process_create(uint32_t proc_addr, size_t  proc_addr_size);
+
+
+
 #endif /* INCLUDE_CONTEXT_H_ */

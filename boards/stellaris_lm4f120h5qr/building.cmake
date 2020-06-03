@@ -53,7 +53,7 @@ set(LINKER_FLAGS		"${LINKER_FLAGS}"
 						"-T ${BRD_PATH}/flash_tm4c1233h6pm.ld"
 						"-mcpu=cortex-m4 -specs=nano.specs"
 						"-Wl,--gc-sections"
-						"-nostdlib"
+#						"-nostdlib"
 				)
 					
 add_definitions("-DTM4C1233H6PM")
