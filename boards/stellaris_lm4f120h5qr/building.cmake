@@ -45,15 +45,16 @@ file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/ti/tm4c/driver
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4")
+set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m4 -g -ggdb")
 	
-set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
+set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4 -g -ggdb")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
 						"-T ${BRD_PATH}/flash_tm4c1233h6pm.ld"
 						"-mcpu=cortex-m4 -specs=nano.specs"
 						"-Wl,--gc-sections"
 #						"-nostdlib"
+						"-lnosys"
 				)
 					
 add_definitions("-DTM4C1233H6PM")

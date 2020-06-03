@@ -8,100 +8,53 @@
 
 MEMORY
 {
-    FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00080000
+    PROGRAM_FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00080000
     SRAM (WX)  : ORIGIN = 0x20000000, LENGTH = 0x00040000
 }
+	/* Define a symbol for the top of each memory region */
+__flash_start__	= ORIGIN(PROGRAM_FLASH); /* PROGRAM_FLASH */
+__flash_end__	= ORIGIN(PROGRAM_FLASH) + LENGTH(PROGRAM_FLASH); /* 512K bytes */
 
-REGION_ALIAS("REGION_TEXT", FLASH);
-REGION_ALIAS("REGION_BSS", SRAM);
-REGION_ALIAS("REGION_DATA", SRAM);
-REGION_ALIAS("REGION_STACK", SRAM);
-REGION_ALIAS("REGION_HEAP", SRAM);
-REGION_ALIAS("REGION_ARM_EXIDX", FLASH);
-REGION_ALIAS("REGION_ARM_EXTAB", FLASH);
+__sram_start__	= ORIGIN(SRAM); /* SRAM_UPPER */
+__sram_end__	= ORIGIN(SRAM) + LENGTH(SRAM); /* 160K bytes */
 
-SECTIONS {
 
-    PROVIDE (_intvecs_base_address = 0x0);
+ENTRY(reset_handler)
 
-    .intvecs (_intvecs_base_address) : AT (_intvecs_base_address) {
-        KEEP (*(.intvecs))
-    } > REGION_TEXT
-
-    PROVIDE (_vtable_base_address = 0x20000000);
-
-    .vtable (_vtable_base_address) : AT (_vtable_base_address) {
-        KEEP (*(.vtable))
-    } > REGION_DATA
-
-    .text : {
-        CREATE_OBJECT_SYMBOLS
-        *(.text)
-        *(.text.*)
-        . = ALIGN(0x4);
-        KEEP (*(.ctors))
-        . = ALIGN(0x4);
-        KEEP (*(.dtors))
-        . = ALIGN(0x4);
-        __init_array_start = .;
-        KEEP (*(.init_array*))
-        __init_array_end = .;
-        *(.init)
-        *(.fini*)
-    } > REGION_TEXT
-
-    PROVIDE (__etext = .);
-    PROVIDE (_etext = .);
-    PROVIDE (etext = .);
-
-    .rodata : {
-        *(.rodata)
-        *(.rodata*)
-    } > REGION_TEXT
-
-    .data : ALIGN (4) {
-        __data_load__ = LOADADDR (.data);
+SECTIONS
+{
+	.text : ALIGN(4)
+	{
+		__text_start__ = .;
+		*(.isr_vector)
+		*(.after_vectors*)
+		*(.text*)
+		*(.rodata .rodata .constdata)
+		__text_end__ = .;
+	} > PROGRAM_FLASH
+		
+	.data  :  ALIGN(4)
+	{
+		__data_load__ = LOADADDR (.data);
         __data_start__ = .;
-        *(.data)
-        *(.data*)
-        . = ALIGN (4);
-        __data_end__ = .;
-    } > REGION_DATA AT> REGION_TEXT
+		*(.data)
+		__data_end__ = .;
+	} > SRAM AT > PROGRAM_FLASH
 
-    .ARM.exidx : {
-        __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > REGION_ARM_EXIDX
+	.bss : ALIGN(4)
+	{
+		__bss_start__ = .;
+		*(.bss)
+		PROVIDE(end = .);
+		__bss_end__ = .;
+	} > SRAM
 
-    .ARM.extab : {
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-    } > REGION_ARM_EXTAB
+	__stack_size__ = 0x1000;
+	.stack ORIGIN(SRAM) + LENGTH(SRAM) - __stack_size__ - 1024:  ALIGN(4)
+	{
+		__stack_start__ = .;
+		. = ALIGN(4);
+		__stack_end__ = . + __stack_size__;
+	} > SRAM
 
-    .bss : {
-        __bss_start__ = .;
-        *(.shbss)
-        *(.bss)
-        *(.bss.*)
-        *(COMMON)
-        . = ALIGN (4);
-        __bss_end__ = .;
-    } > REGION_BSS
-
-    .heap : {
-        __heap_start__ = .;
-        end = __heap_start__;
-        _end = end;
-        __end = end;
-        KEEP(*(.heap))
-        __heap_end__ = .;
-        __HeapLimit = __heap_end__;
-    } > REGION_HEAP
-
-    .stack : ALIGN(0x8) {
-        _stack = .;
-        __stack = .;
-        KEEP(*(.stack))
-        __stack_end__ = .;
-    } > REGION_STACK
 }
