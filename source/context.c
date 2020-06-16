@@ -106,36 +106,6 @@ void pendsv_trigger()
 //
 //}
 
-/*
- * @brief	Сохраняет контекст текущего процесса.
- */
-//void context_store(uint32_t *context_stack, uint32_t context_num)
-//{
-//	if((((struct context*)context_stack)->exc_return & EXC_RETURN_BASE_FRAME) != 0) {
-//		/* Base context. */
-//		memcpy(&context_array[context_num], context_stack, BASE_CONTEXT_SIZE);
-//	}
-//	else {
-//		/* Extended context. */
-//		memcpy(&context_array[context_num], context_stack, FULL_CONTEXT_SIZE);
-//	}
-//}
-
-/*
- * @brief	Восстанавливает контекст процесса.
- */
-//void context_load(uint32_t *context_stack, uint32_t context_num)
-//{
-//	if((context_array[context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
-//		/* Base context. */
-//		memcpy(context_stack, &context_array[context_num], BASE_CONTEXT_SIZE);
-//	}
-//	else {
-//		/* Extended context. */
-//		memcpy( context_stack, &context_array[context_num],FULL_CONTEXT_SIZE);
-//	}
-//}
-
 __attribute__((naked, section(".after_vectors")))
 void pendsv_ret_to_init(void)
 {
@@ -211,19 +181,22 @@ void pendsv_handler(void)
 		"ite ne \n"
 		"movne r2, #0x48\n"
 		"moveq r2, #0x90\n"
-
+		
+		"@ save r2"
+		"push r2"
+		
 		"@ copy context from stack to special place\n"
 		"mov r3, lr @ save lr for future using\n"
 		"bl memcpy\n"
 		"mov lr, r3 @ restore modified lr\n"
-
+		
+		"@ restore r2"
+		"pop r2"
+		
 		"@ move sp to the beginning of exception handler stack\n"
 		"add sp, r2\n"
 
 		"@ any action\n"
-
-		"@ r0 - destination address\n"
-		"mov r0, sp\n"
 
 		"@ r1 - source address\n"
 		"ldr r1, =context_array\n"
@@ -231,8 +204,7 @@ void pendsv_handler(void)
 		"mov r2, #0x90\n"
 		"ldr r3, =next_contex_num\n"
 		"ldr r3, [r3]\n"
-		"mov r0, #0x0\n"
-		"umlal r0, r1, r2, r3\n"
+		"umlal r3, r1, r2, r3\n"
 
 		"@ r2 - size\n"
 		"ldr r2, [r1, #0x0]	@ r2 = context_array[next_contex_num].exc_return\n"
@@ -243,7 +215,10 @@ void pendsv_handler(void)
 		"moveq r2, #0x90\n"
 
 		"@ move sp to the end of exception handler stack\n"
-		"add sp, r2\n"
+		"sub sp, r2\n"
+
+		"@ r0 - destination address\n"
+		"mov r0, sp\n"
 
 		"@ copy context from special place to stack\n"
 		"@mov r3, lr @ unnecessary because this function is the last\n"
@@ -258,112 +233,6 @@ void pendsv_handler(void)
 		".syntax divided\n"
 	);
 }
-
-//__attribute__((naked, section(".after_vectors")))
-//void _pendsv_handler(void)
-//{
-//	/* extended_context_store */
-//	__asm(	".syntax unified\n"
-//			"add sp, #-0x28\n"
-//			"mov r0, lr\n"
-//			"mrs r1, PSP\n"
-//			"stm sp, {r0,r1,r4-r11}\n"
-//			".syntax divided\n"
-//		);
-//
-//	/* contex_param_save*/
-//	__asm(	".syntax unified\n"
-//			"mov %0, lr\n"
-//			"mov %1, sp\n"
-//			".syntax divided\n"
-//			: "=r" (exc_return), "=r" (msp)
-//		);
-//
-//	/* any_actions */
-//
-//	/* context_store */
-//	if((context_array[current_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
-//		/* Base context. */
-//		memcpy((void*)msp, &context_array[current_context_num], BASE_CONTEXT_SIZE);
-//		__asm(	".syntax unified\n"
-//				"add sp, #0x48\n"
-//				".syntax divided\n"
-//			);
-//	}
-//	else {
-//		/* Extended context. */
-//		memcpy((void*)current_context_num, &context_array[current_context_num], FULL_CONTEXT_SIZE);
-//		__asm(	".syntax unified\n"
-//				"add sp, #0x90\n"
-//				".syntax divided\n"
-//			);
-//	}
-//
-//	/* context_load */
-//	if((context_array[next_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
-//		/* Base context. */
-//		__asm(	".syntax unified\n"
-//				"add sp, #0x-48\n"
-//				".syntax divided\n"
-//			);
-//		memcpy((void*)msp, &context_array[next_context_num], BASE_CONTEXT_SIZE);
-//	}
-//	else {
-//		/* Extended context. */
-//		__asm(	".syntax unified\n"
-//				"add sp, #-0x90\n"
-//				".syntax divided\n"
-//			);
-//		memcpy((void*)msp, &context_array[next_context_num],FULL_CONTEXT_SIZE);
-//	}
-//
-//	/* extended_context_load */
-//	__asm(	".syntax unified\n"
-//			"ldm sp, {r0,r1,r4-r11}\n"
-//			"msr PSP, r1\n"
-//			"mov lr, r0\n"
-//			"add sp, #0x28\n"
-//			".syntax divided\n"
-//		);
-//}
-
-//__attribute__((used, naked, section(".after_vectors")))
-//void temp_pendsv_handler(void)
-//{
-//
-//	__asm(	".syntax unified\n"
-//			"ldr r0, =__stack_end__\n"
-//			"mov sp, r0\n"
-//			".syntax divided\n"
-//		);
-//
-//	/* context_load */
-//	if((context_array[next_context_num].exc_return & EXC_RETURN_BASE_FRAME) != 0) {
-//		/* Base context. */
-//		__asm(	".syntax unified\n"
-//				"add sp, #0x-48\n"
-//				".syntax divided\n"
-//			);
-//		memcpy((void*)msp, &context_array[next_context_num], BASE_CONTEXT_SIZE);
-//	}
-//	else {
-//		/* Extended context. */
-//		__asm(	".syntax unified\n"
-//				"add sp, #-0x90\n"
-//				".syntax divided\n"
-//			);
-//		memcpy((void*)msp, &context_array[next_context_num],FULL_CONTEXT_SIZE);
-//	}
-//
-//	/* extended_context_load */
-//	__asm(	".syntax unified\n"
-//			"ldm sp, {r0,r1,r4-r11}\n"
-//			"msr PSP, r1\n"
-//			"mov lr, r0\n"
-//			"add sp, #0x28\n"
-//			".syntax divided\n"
-//		);
-//}
 
 void init_process_start()
 {
