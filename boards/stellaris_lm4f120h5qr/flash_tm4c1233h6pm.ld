@@ -8,15 +8,15 @@
 
 MEMORY
 {
-    PROGRAM_FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00080000
-    SRAM (WX)  : ORIGIN = 0x20000000, LENGTH = 0x00040000
+    PROGRAM_FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00040000
+    SRAM (WX)  : ORIGIN = 0x20000000, LENGTH = 0x00008000
 }
 	/* Define a symbol for the top of each memory region */
 __flash_start__	= ORIGIN(PROGRAM_FLASH); /* PROGRAM_FLASH */
-__flash_end__	= ORIGIN(PROGRAM_FLASH) + LENGTH(PROGRAM_FLASH); /* 512K bytes */
+__flash_end__	= ORIGIN(PROGRAM_FLASH) + LENGTH(PROGRAM_FLASH); /* 256K bytes */
 
 __sram_start__	= ORIGIN(SRAM); /* SRAM_UPPER */
-__sram_end__	= ORIGIN(SRAM) + LENGTH(SRAM); /* 160K bytes */
+__sram_end__	= ORIGIN(SRAM) + LENGTH(SRAM); /* 32K bytes */
 
 
 ENTRY(reset_handler)
