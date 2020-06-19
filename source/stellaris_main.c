@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <context.h>
+#include <config.h>
 
 extern	uint32_t __stack_end__;
 
