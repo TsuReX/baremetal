@@ -35,6 +35,7 @@ extern uint32_t __bss_end__;
 extern uint32_t __stack_start__;
 extern uint32_t __stack_end__;
 
+void usb0_irq_handler(void);
 
 extern void (* const isr_vector_table[])(void);
 
@@ -101,7 +102,7 @@ void (* const isr_vector_table[])(void) = {
 	0,                                      // Reserved
 	0,                                      // Reserved
 	IntDefaultHandler,                      // Hibernate
-	IntDefaultHandler,                      // USB0
+	usb0_irq_handler,                      // USB0
 	IntDefaultHandler,                      // PWM Generator 3
 	IntDefaultHandler,                      // uDMA Software Transfer
 	IntDefaultHandler,                      // uDMA Error

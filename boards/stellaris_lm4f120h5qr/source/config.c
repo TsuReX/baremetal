@@ -141,6 +141,7 @@ void board_config(void)
 	GPIOF->IEV = 0;
 	GPIOF->IM = 0;
 
+	SYSCTL->RCGCUSB = 1;
 }
 
 /**

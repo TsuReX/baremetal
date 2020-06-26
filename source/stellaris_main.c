@@ -14,6 +14,14 @@
 #include <drivers.h>
 #include <time.h>
 
+static uint8_t	led_value = 1;
+
+void usb0_irq_handler(void) {
+	GPIOF->DATA = led_value++;
+	led_value = led_value & 0x7;
+
+
+}
 
 int32_t main()
 {
