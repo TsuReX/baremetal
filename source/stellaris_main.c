@@ -11,17 +11,26 @@
 #include <stdbool.h>
 #include <context.h>
 #include <config.h>
-#include <TIVA.h>
+#include <drivers.h>
+#include <time.h>
+
 
 int32_t main()
 {
-//	soc_config();
+	soc_config();
 
 	board_config();
 
-	GPIOF->DATA = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);;
+	while(1) {
 
-	while(1);
+		GPIOF->DATA = 4;
+		mdelay(500);
+		GPIOF->DATA = 2;
+		mdelay(500);
+		GPIOF->DATA = 8;
+		mdelay(500);
+
+	}
 
 	return 0;
 }
