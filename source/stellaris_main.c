@@ -11,17 +11,17 @@
 #include <stdbool.h>
 #include <context.h>
 #include <config.h>
-
-extern	uint32_t __stack_end__;
+#include <TIVA.h>
 
 int32_t main()
 {
-	uint32_t	init_process_address = (uint32_t)&__stack_end__;
-	size_t		init_process_address_size = 0x1000;
+//	soc_config();
 
-	init_process_create(init_process_address, init_process_address_size);
+	board_config();
 
-	init_process_start();
+	GPIOF->DATA = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);;
+
+	while(1);
 
 	return 0;
 }

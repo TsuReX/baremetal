@@ -29,35 +29,77 @@ static void flash_config(void)
  */
 static void rcc_config(void)
 {
-	SYSCTL->RCC = 0;
+
+	SYSCTL->RCC2 |= (0x1 << 31);
+
 	SYSCTL_RCC_MOSCDIS;
-	SYSCTL_RCC_OSCSRC_MAIN;
-	SYSCTL_RCC_XTAL_16MHZ;
+	SYSCTL->RCC &= ~(0x1 << 0);
+
+	SYSCTL_RIS_MOSCPUPRIS;
+	while (SYSCTL->RIS & (0x1 << 8) == 0);
+
+/* 1. */
 	SYSCTL_RCC_BYPASS;
-	SYSCTL_RCC_PWRDN;
+	SYSCTL->RCC |= (0x1 << 11);
+	SYSCTL->RCC2 |= (0x1 << 11);
+
 	SYSCTL_RCC_USESYSDIV;
-	SYSCTL_RCC_SYSDIV_S;
-	SYSCTL_RCC_ACG;
+	SYSCTL->RCC |= (0x1 << 22);
 
-	SYSCTL_RCC2_OSCSRC2_MO;
-	SYSCTL_RCC2_BYPASS2;
-	SYSCTL_RCC2_PWRDN2;
-	SYSCTL_RCC2_USBPWRDN;
-	SYSCTL_RCC2_SYSDIV2LSB;
-	SYSCTL_RCC2_SYSDIV2_S;
-	SYSCTL_RCC2_DIV400;
-	SYSCTL_RCC2_USERCC2;
+/* 2.*/
+	SYSCTL_RCC_XTAL_16MHZ;
+	SYSCTL->RCC |= (0x15 << 6);
 
-	SYSCTL->PLLSTAT;
-	SYSCTL_PLLSTAT;
+	SYSCTL_RCC_OSCSRC_MAIN;
+	SYSCTL->RCC &= ~(0x3 << 4);
+	SYSCTL->RCC2 &= ~(0x3 << 4);
 
-	SYSCTL->PLLFREQ0;
-	SYSCTL_PLLFREQ0_MINT_S;
+	SYSCTL_RCC_PWRDN;
+	SYSCTL->RCC &= ~(0x1 << 13);
+	SYSCTL->RCC2 &= ~(0x1 << 13);
+
+/* 2.1 */
+	/* 400MHz = (16MHz * (49 + (1024 / 1204) ) / ((0 + 1) * (0 + 1))); */
+
 	SYSCTL_PLLFREQ0_MFRAC_S;
+	SYSCTL_PLLFREQ0_MINT_S;
+	SYSCTL->PLLFREQ0 = (1024 << 10) | (49 << 0);
 
-	SYSCTL->PLLFREQ1;
-	SYSCTL_PLLFREQ1_N_S;
 	SYSCTL_PLLFREQ1_Q_S;
+	SYSCTL_PLLFREQ1_N_S;
+	SYSCTL->PLLFREQ1 = (0 << 8) | (0 << 0);
+
+	SYSCTL_PLLSTAT;
+	while (SYSCTL->PLLSTAT == 0);
+
+/* 3.*/
+	SYSCTL_RCC_USESYSDIV;
+	SYSCTL->RCC &= ~(0x1 << 22);
+//
+//	SYSCTL_RCC_SYSDIV_M;
+//	SYSCTL->RCC &= ~(0xF << 23);
+//	SYSCTL->RCC |= (0x1 << 23);
+	SYSCTL_RCC2_DIV400;
+	SYSCTL->RCC2 |= (0x1 << 30);
+
+	SYSCTL->RCC2 &= ~(0x7F << 22);
+	SYSCTL->RCC2 |= (0x4 << 22);
+
+/* 4.*/
+	SYSCTL_RIS_PLLLRIS;
+	while (SYSCTL->RIS & (0x1 << 6) == 0);
+
+/* 5.*/
+	SYSCTL_RCC_BYPASS;
+	SYSCTL->RCC &= ~(0x1 << 11);
+	SYSCTL->RCC2 &= ~(0x1 << 11);
+
+/* 6.*/
+	SYSCTL_RCC_ACG;
+	SYSCTL->RCC &= ~(0x1 << 27);
+
+/* 7.*/
+
 
 }
 
@@ -66,10 +108,11 @@ static void rcc_config(void)
  *
  * @param	freq	частота шины HCLK в герцах
  */
-static void systick_config(uint32_t freq)
+static void systick_config(uint32_t main_clk)
 {
-	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
-//	LL_Init1msTick(hclk_freq);
+	/* Производится настройка системного таймера ядра для определения интервала времени равного 0.1 миллисекунде.  */
+	SysTick_Config(main_clk / 10000);
+	SysTick->CTRL  &= ~SysTick_CTRL_TICKINT_Msk;
 }
 
 /**
@@ -77,6 +120,26 @@ static void systick_config(uint32_t freq)
  */
 void board_config(void)
 {
+	/* 1. */
+	SYSCTL->RCGCGPIO |= (0x1 << 5);
+	/* 2. */
+	GPIOF->DIR = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
+	/* 3. */
+	GPIOF->AFSEL = 0;
+	GPIOF->PCTL = 0;
+	GPIOF->DEN = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
+	/* 4. */
+	GPIOF->DR2R = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
+	/* 5. */
+	GPIOF->PUR = (0x1 << 3) | (0x1 << 2) | (0x1 << 1);
+	GPIOF->PDR = 0;
+	GPIOF->ODR = 0;
+	GPIOF->SLR = 0;
+	/* 6. */
+	GPIOF->IS = 0;
+	GPIOF->IBE = 0;
+	GPIOF->IEV = 0;
+	GPIOF->IM = 0;
 
 }
 
