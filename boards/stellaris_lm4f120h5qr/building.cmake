@@ -76,20 +76,15 @@ set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/oocd_t
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
-							reset halt$<SEMICOLON>
-							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-							reset$<SEMICOLON>
-							exit\")
-
+					ARGS	-f ${BRD_PATH}/oocd_ti-icdi.cfg -c \"do flash\")
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки
 add_custom_target("debug" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 
-# Определение команд для цели flash
+# Определение команд для цели debug
 add_custom_command(	TARGET "debug"
 					POST_BUILD
-					COMMAND sh
-					ARGS ${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/debug.sh ${OOCD_CONFIG})
+					COMMAND openocd
+					ARGS	-f ${BRD_PATH}/oocd_ti-icdi.cfg -c \"do debug\")

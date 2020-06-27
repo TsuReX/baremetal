@@ -69,6 +69,8 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "stellaris_lm4f120h5qr")
 
+	set(PROJ_NAME stellaris)
+
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
 	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
