@@ -20,13 +20,13 @@ set(BOARD_TYPE_STATUS "SET")
 ## Подключение файло исходных кодов и заголовков
 set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/source/")
 
-set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/startup_stm32f103xb.s" )
+set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/startup_stm32f103xb.s")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include")
 
-
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/small_china_main.c"
 						"${BOARD_SRC_PATH}/stm32f1xx_it.c"
 						"${BOARD_SRC_PATH}/system_stm32f1xx.c"
 						"${BOARD_SRC_PATH}/config.c"
