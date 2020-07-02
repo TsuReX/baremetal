@@ -18,40 +18,61 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BOARD_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/source/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/source/")
 
 set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/startup_stm32f103xb.s" )
 
-set(MAIN_INCLUDE	${MAIN_INCLUDE}	"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include")
+set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include")
 
 
-set(MAIN_SOURCES	"${MAIN_SOURCES}"
-					"${BOARD_SRC_PATH}/stm32f1xx_it.c"
-					"${BOARD_SRC_PATH}/system_stm32f1xx.c"
-					"${BOARD_SRC_PATH}/config.c"
-					"${BOARD_SRC_PATH}/console.c"
-					"${BOARD_SRC_PATH}/scheduler.c"
-					#"${BOARD_SRC_PATH}/i2c.c"
-					#"${BOARD_SRC_PATH}/gpio.c"
-					)
-					
-set(DEVICE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Device/ST/STM32F1xx/Include")
+set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${BOARD_SRC_PATH}/stm32f1xx_it.c"
+						"${BOARD_SRC_PATH}/system_stm32f1xx.c"
+						"${BOARD_SRC_PATH}/config.c"
+						"${BOARD_SRC_PATH}/console.c"
+						"${BOARD_SRC_PATH}/scheduler.c"
+						#"${BOARD_SRC_PATH}/i2c.c"
+						#"${BOARD_SRC_PATH}/gpio.c"
+				)
 
-set(DRIVER_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f1xx/include")
+set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
+		
+set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/st/stm32f1xx/include")
 
-file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/ST/stm32f1xx/source/*_ll_*.c")
+set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/include")
+
+set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/source")
+
+set(DRIVER_SOURCES 		"${DRV_SOURCES}"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_i2c.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_gpio.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_usart.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_dma.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_tim.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_utils.c"
+				)
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS	"${CMAKE_C_FLAGS} -mcpu=cortex-m3")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall")
 	
-set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
+set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
 	
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}	-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/flash.ld \
-														-mcpu=cortex-m3 -specs=nano.specs \
-														-Wl,--gc-sections")
-								
+set(LINKER_FLAGS		"${LINKER_FLAGS}"
+						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/flash_stm32f103c8t6.ld"
+						"-mcpu=cortex-m3"
+						"-specs=nano.specs"
+						"-Wl,--gc-sections"
+#						"-nostdlib"
+				)
+
+set(LINKER_LIBS			"-lc"
+						"-lm"
+						"-lnosys"
+				)
+		
 add_definitions("-DSTM32F103xB")
 add_definitions("-DUSE_FULL_LL_DRIVER")
 

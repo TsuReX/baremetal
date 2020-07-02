@@ -40,7 +40,7 @@ int main(void)
 	uint32_t i = 0;
 	while (1) {
 		LL_mDelay(DELAY_500_MS * 2);
-		print("Main thread iteration %d\r\n", i++);
+		print("Main thread iteration %ld\r\n", i++);
 		/*ina3221_print_voltage_current();*/
 		LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
