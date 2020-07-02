@@ -30,6 +30,9 @@
 #ifndef __USB_CORE_H
 #define __USB_CORE_H
 
+#include <stdint.h>
+#include <drivers.h>
+
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 typedef enum _CONTROL_STATE

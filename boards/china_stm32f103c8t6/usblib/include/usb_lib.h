@@ -31,14 +31,14 @@
 #define __USB_LIB_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "../usblib/usb_core.h"
-#include "../usblib/usb_def.h"
-#include "../usblib/usb_init.h"
-#include "../usblib/usb_int.h"
-#include "../usblib/usb_mem.h"
-#include "../usblib/usb_regs.h"
-#include "../usblib/usb_sil.h"
-#include "../usblib/usb_type.h"
+#include "usb_core.h"
+#include "usb_def.h"
+#include "usb_init.h"
+#include "usb_int.h"
+#include "usb_mem.h"
+#include "usb_regs.h"
+#include "usb_sil.h"
+#include "usb_type.h"
 #include "hw_config.h"
 
 /* Exported types ------------------------------------------------------------*/

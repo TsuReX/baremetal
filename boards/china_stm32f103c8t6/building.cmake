@@ -18,22 +18,38 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/source/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/")
 
-set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/startup_stm32f103xb.s")
+set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/source/startup_stm32f103xb.s")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
-						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include")
+						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include"
+
+						"${BOARD_SRC_PATH}/usb/include"
+
+						"${BOARD_SRC_PATH}/usblib/include"
+				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/small_china_main.c"
-						"${BOARD_SRC_PATH}/stm32f1xx_it.c"
-						"${BOARD_SRC_PATH}/system_stm32f1xx.c"
-						"${BOARD_SRC_PATH}/config.c"
-						"${BOARD_SRC_PATH}/console.c"
-						"${BOARD_SRC_PATH}/scheduler.c"
-						#"${BOARD_SRC_PATH}/i2c.c"
-						#"${BOARD_SRC_PATH}/gpio.c"
+						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
+						"${BOARD_SRC_PATH}/source/system_stm32f1xx.c"
+						"${BOARD_SRC_PATH}/source/config.c"
+						"${BOARD_SRC_PATH}/source/console.c"
+						"${BOARD_SRC_PATH}/source/scheduler.c"
+
+#						"${BOARD_SRC_PATH}/usb/source/usb_desc.c"
+#						"${BOARD_SRC_PATH}/usb/source/usb_endp.c"
+#						"${BOARD_SRC_PATH}/usb/source/usb_istr.c"
+#						"${BOARD_SRC_PATH}/usb/source/usb_prop.c"
+#						"${BOARD_SRC_PATH}/usb/source/usb_pwr.c"
+
+						"${BOARD_SRC_PATH}/usblib/source/usb_core.c"
+						"${BOARD_SRC_PATH}/usblib/source/usb_init.c"
+						"${BOARD_SRC_PATH}/usblib/source/usb_int.c"
+						"${BOARD_SRC_PATH}/usblib/source/usb_mem.c"
+						"${BOARD_SRC_PATH}/usblib/source/usb_regs.c"
+						"${BOARD_SRC_PATH}/usblib/source/usb_sil.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
