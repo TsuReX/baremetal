@@ -15,10 +15,10 @@
 #include "ina3221.h"
 #include "gpio.h"
 */
-#include "hw_config.h"
-#include "usb_lib.h"
-#include "usb_desc.h"
-#include "usb_pwr.h"
+//#include "hw_config.h"
+//#include "usb_lib.h"
+//#include "usb_desc.h"
+//#include "usb_pwr.h"
 
 /**
  * @brief	C-code entry point.
@@ -41,9 +41,9 @@ int main(void)
 
 	/*gpio_setup_it();*/
 
-	Set_USBClock();
-	USB_Interrupts_Config();
-	USB_Init();
+//	Set_USBClock();
+//	USB_Interrupts_Config();
+//	USB_Init();
 
 	uint32_t i = 0;
 	while (1) {

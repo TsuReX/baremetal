@@ -44,12 +44,12 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 #						"${BOARD_SRC_PATH}/usb/source/usb_prop.c"
 #						"${BOARD_SRC_PATH}/usb/source/usb_pwr.c"
 
-						"${BOARD_SRC_PATH}/usblib/source/usb_core.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_init.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_int.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_mem.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_regs.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_sil.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_core.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_init.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_int.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_mem.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_regs.c"
+#						"${BOARD_SRC_PATH}/usblib/source/usb_sil.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
@@ -98,7 +98,8 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_stlinkv2.cfg")
+#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_stlinkv2.cfg")
+set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_jlink.cfg")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
