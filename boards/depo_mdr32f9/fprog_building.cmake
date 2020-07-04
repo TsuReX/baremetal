@@ -33,7 +33,6 @@ set(FPROG_LINKER_FLAGS	"-T ${BRD_PATH}/fprog_mdr32f9.ld"
 set(FPROG_LINKER_LIBS 	"-lc"
 						"-lm"
 						"-lnosys"
-						"-lpower_softabi -L${BRD_PATH}"
 	)
 
 add_executable(${SUBPROJ_NAME} ${SOURCES} ${STM_DRV_SOURCES})
