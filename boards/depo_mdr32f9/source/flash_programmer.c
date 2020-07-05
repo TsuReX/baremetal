@@ -41,5 +41,5 @@ int32_t write_flash(uint32_t dst_addr, uint32_t src_addr, size_t size, uint32_t 
 
 void reset(void)
 {
-//	SCB->AIRCR |= SCB_AIRCR_SYSRESETREQ_Msk;
+	SCB->AIRCR |= SCB_AIRCR_SYSRESETREQ_Msk;
 }

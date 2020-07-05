@@ -1,7 +1,7 @@
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __DRIVERS_H
+#define __DRIVERS_H
 
-
+#include <MDR32Fx.h>
 #include <MDR32F9Qx_adc.h>
 #include <MDR32F9Qx_audio.h>
 #include <MDR32F9Qx_comp.h>
@@ -42,5 +42,5 @@ static inline uint16_t swap_bytes_in_word(uint16_t word)
 	return word;
 }
 
-#endif /* __MAIN_H */
+#endif /* __DRIVERS_H */
 
