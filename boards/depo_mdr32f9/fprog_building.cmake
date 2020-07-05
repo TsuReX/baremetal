@@ -13,12 +13,14 @@ set(INCLUDE			"${BRD_PATH}/include")
 
 set(CORE_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
 
-set(STM_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/device/st/stm32f1xx/include")
+set(MDR_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include")
 
-set(STM_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/include")
+set(MDR_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
 
-set(STM_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/source")
-
+set(MDR_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
+#set(MDR_DRV_SOURCES	"${MDR_DRV_SOURCES}"
+#						"${MDR_DRV_SOURCES_PATH}/fsl_clock.c"
+#	)
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
@@ -35,12 +37,12 @@ set(FPROG_LINKER_LIBS 	"-lc"
 						"-lnosys"
 	)
 
-add_executable(${SUBPROJ_NAME} ${SOURCES} ${STM_DRV_SOURCES})
+add_executable(${SUBPROJ_NAME} ${SOURCES} ${MDR_DRV_SOURCES})
 
 target_include_directories(${SUBPROJ_NAME} PRIVATE
 											${INCLUDE} 
-											${STM_DRV_INCLUDE}
-											${STM_DEV_INCLUDE}
+											${MDR_DRV_INCLUDE}
+											${MDR_DEV_INCLUDE}
 											${CORE_INCLUDE}
 							)
 
@@ -48,12 +50,9 @@ target_compile_options(${SUBPROJ_NAME} PRIVATE ${C_FLAGS})
 
 target_link_libraries(${SUBPROJ_NAME} PRIVATE ${FPROG_LINKER_LIBS} ${FPROG_LINKER_FLAGS})
 
-target_compile_definitions(${SUBPROJ_NAME} PRIVATE	"STM32F103xB"
+target_compile_definitions(${SUBPROJ_NAME} PRIVATE	"USE_MDR1986VE9x"
 													"USE_FULL_LL_DRIVER"
 							)
-#add_definitions("-DSTM32F103xB")
-#add_definitions("-DUSE_FULL_LL_DRIVER")
-
 
 add_custom_command(
         TARGET ${SUBPROJ_NAME} POST_BUILD

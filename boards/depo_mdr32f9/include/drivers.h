@@ -1,53 +1,33 @@
-/**
-  ******************************************************************************
-  * @file    Templates_LL/Inc/main.h 
-  * @author  MCD Application Team
-  * @brief   Header for main.c module
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/* LL drivers common to all LL examples */
-#include "stm32f1xx_ll_bus.h"
-#include "stm32f1xx_ll_rcc.h"
-#include "stm32f1xx_ll_system.h"
-#include "stm32f1xx_ll_utils.h"
-#include "stm32f1xx_ll_pwr.h"
-#include "stm32f1xx_ll_exti.h"
-#include "stm32f1xx_ll_gpio.h"
-/* LL drivers specific to LL examples IPs */
-#include "stm32f1xx_ll_adc.h"
-/*#include "stm32f1xx_ll_comp.h"*/
-#include "stm32f1xx_ll_cortex.h"
-#include "stm32f1xx_ll_crc.h"
-#include "stm32f1xx_ll_dac.h"
-#include "stm32f1xx_ll_dma.h"
-/*#include "stm32f1xx_ll_hrtim.h"*/
-#include "stm32f1xx_ll_i2c.h"
-#include "stm32f1xx_ll_iwdg.h"
-/*#include "stm32f1xx_ll_opamp.h"*/
-#include "stm32f1xx_ll_rtc.h"
-#include "stm32f1xx_ll_spi.h"
-#include "stm32f1xx_ll_tim.h"
-#include "stm32f1xx_ll_usart.h"
-#include "stm32f1xx_ll_wwdg.h"
 
-#if defined(USE_FULL_ASSERT)
-#include "stm32_assert.h"
-#endif /* USE_FULL_ASSERT */
+#include <MDR32F9Qx_adc.h>
+#include <MDR32F9Qx_audio.h>
+#include <MDR32F9Qx_comp.h>
+#include <MDR32F9Qx_ebc.h>
+#include <MDR32F9Qx_i2c.h>
+#include <MDR32F9Qx_led.h>
+#include <MDR32F9Qx_port.h>
+#include <MDR32F9Qx_ssp.h>
+#include <MDR32F9Qx_usb.h>
+#include <MDR32F9Qx_arinc429r.h>
+#include <MDR32F9Qx_bkp.h>
+#include <MDR32F9Qx_dac.h>
+#include <MDR32F9Qx_eeprom.h>
+#include <MDR32F9Qx_iwdg.h>
+#include <MDR32F9Qx_lib.h>
+#include <MDR32F9Qx_power.h>
+#include <MDR32F9Qx_timer.h>
+#include <MDR32F9Qx_wwdg.h>
+#include <MDR32F9Qx_arinc429t.h>
+#include <MDR32F9Qx_can.h>
+#include <MDR32F9Qx_dma.h>
+//#include <MDR32F9Qx_eth.h>
+#include <MDR32F9Qx_keypad.h>
+//#include <MDR32F9Qx_mil_std_1553.h>
+#include <MDR32F9Qx_rst_clk.h>
+#include <MDR32F9Qx_uart.h>
 
 /** Delay 500 milliseconds. */
 #define DELAY_500_MS	500

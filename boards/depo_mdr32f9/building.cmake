@@ -20,23 +20,25 @@ set(BOARD_TYPE_STATUS "SET")
 ## Подключение файло исходных кодов и заголовков
 set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/")
 
-set(MAIN_ASM_SOURCES    "${BRD_PATH}/source/startup_stm32f103xb.s")
+#set(MAIN_ASM_SOURCES    "${BRD_PATH}/source/startup_MDR32F9Qx.s")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/include"
 
-						"${BRD_PATH}/usb/include"
+#						"${BRD_PATH}/usb/include"
 
-						"${BRD_PATH}/usblib/include"
+#						"${BRD_PATH}/usblib/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${BRD_PATH}/source/startup_MDR32F9Qx.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
-						"${BRD_PATH}/source/stm32f1xx_it.c"
-						"${BRD_PATH}/source/system_stm32f1xx.c"
-						"${BRD_PATH}/source/config.c"
-						"${BRD_PATH}/source/console.c"
-						"${BRD_PATH}/source/scheduler.c"
+						"${BRD_PATH}/source/system_MDR32F9Qx.c"
+#						"${BRD_PATH}/source/stm32f1xx_it.c"
+#						"${BRD_PATH}/source/system_stm32f1xx.c"
+#						"${BRD_PATH}/source/config.c"
+#						"${BRD_PATH}/source/console.c"
+#						"${BRD_PATH}/source/scheduler.c"
 
 #						"${BRD_PATH}/usb/source/usb_desc.c"
 #						"${BRD_PATH}/usb/source/usb_endp.c"
@@ -54,19 +56,15 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
 		
-set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/st/stm32f1xx/include")
+set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include")
 
-set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/include")
+set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
 
-set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f1xx/source")
+set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
 
 set(DRIVER_SOURCES 		"${DRV_SOURCES}"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_i2c.c"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_gpio.c"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_usart.c"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_dma.c"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_tim.c"
-						"${DRV_SOURCES_PATH}/stm32f1xx_ll_utils.c"
+						"${DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
+						"${DRV_SOURCES_PATH}/MDR32F9Qx_port.c"
 				)
 
 #######################################################################
@@ -81,7 +79,7 @@ set(LINKER_FLAGS		"${LINKER_FLAGS}"
 						"-mcpu=cortex-m3"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
-#						"-nostdlib"
+						"-nostdlib"
 				)
 
 set(LINKER_LIBS			"-lc"
@@ -89,8 +87,7 @@ set(LINKER_LIBS			"-lc"
 						"-lnosys"
 				)
 		
-add_definitions("-DSTM32F103xB")
-add_definitions("-DUSE_FULL_LL_DRIVER")
+add_definitions("-DUSE_MDR1986VE9x")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
