@@ -18,9 +18,11 @@ set(MDR_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/i
 set(MDR_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
 
 set(MDR_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
-#set(MDR_DRV_SOURCES	"${MDR_DRV_SOURCES}"
-#						"${MDR_DRV_SOURCES_PATH}/fsl_clock.c"
-#	)
+
+set(MDR_DRV_SOURCES	"${MDR_DRV_SOURCES}"
+					"${MDR_DRV_SOURCES_PATH}/MDR32F9Qx_eeprom.c"
+					"${MDR_DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
+	)
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
