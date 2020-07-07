@@ -24,34 +24,12 @@ set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/include"
-
-#						"${BRD_PATH}/usb/include"
-
-#						"${BRD_PATH}/usblib/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_MDR32F9Qx.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
 						"${BRD_PATH}/source/system_MDR32F9Qx.c"
-#						"${BRD_PATH}/source/stm32f1xx_it.c"
-#						"${BRD_PATH}/source/system_stm32f1xx.c"
-#						"${BRD_PATH}/source/config.c"
-#						"${BRD_PATH}/source/console.c"
-#						"${BRD_PATH}/source/scheduler.c"
-
-#						"${BRD_PATH}/usb/source/usb_desc.c"
-#						"${BRD_PATH}/usb/source/usb_endp.c"
-#						"${BRD_PATH}/usb/source/usb_istr.c"
-#						"${BRD_PATH}/usb/source/usb_prop.c"
-#						"${BRD_PATH}/usb/source/usb_pwr.c"
-
-#						"${BRD_PATH}/usblib/source/usb_core.c"
-#						"${BRD_PATH}/usblib/source/usb_init.c"
-#						"${BRD_PATH}/usblib/source/usb_int.c"
-#						"${BRD_PATH}/usblib/source/usb_mem.c"
-#						"${BRD_PATH}/usblib/source/usb_regs.c"
-#						"${BRD_PATH}/usblib/source/usb_sil.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
