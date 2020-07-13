@@ -27,7 +27,7 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "hw_config.h"
+#include "../../include/_hw_config.h"
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"

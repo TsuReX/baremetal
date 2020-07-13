@@ -25,14 +25,19 @@
   ******************************************************************************
   */
 
-
-/* Includes ------------------------------------------------------------------*/
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_mem.h"
-#include "hw_config.h"
 #include "usb_istr.h"
 #include "usb_pwr.h"
+
+#define USART_RX_DATA_SIZE   2048
+
+uint8_t  USART_Rx_Buffer [USART_RX_DATA_SIZE];
+uint32_t USART_Rx_ptr_in = 0;
+uint32_t USART_Rx_ptr_out = 0;
+uint32_t USART_Rx_length  = 0;
+uint8_t  USB_Tx_State = 0;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -75,49 +80,50 @@ void EP3_OUT_Callback(void)
   
   /* Get the received data buffer and update the counter */
   USB_Rx_Cnt = USB_SIL_Read(EP3_OUT, USB_Rx_Buffer);
+  (void)USB_Rx_Cnt;
   
   /* USB data will be immediately processed, this allow next USB traffic being 
   NAKed till the end of the USART Xfer */
 	switch(USB_Rx_Buffer[0])
 	{
 		case 0x01:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x0100);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x0100);
 			break;
 		
 		case 0x02:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x0300);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x0300);
 			break;
 		
 		case 0x03:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x0700);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x0700);
 			break;
 		
 		case 0x04:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x0F00);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x0F00);
 			break;
 		
 		case 0x05:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x1F00);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x1F00);
 			break;
 		
 		case 0x06:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x3F00);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x3F00);
 			break;
 		
 		case 0x07:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0x7F00);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0x7F00);
 			break;
 		
 		case 0x08:
-			GPIO_ResetLeds();		
-			GPIO_Write(GPIOE, 0xFF00);
+//			GPIO_ResetLeds();
+//			GPIO_Write(GPIOE, 0xFF00);
 			break;
 	}
  
@@ -125,6 +131,63 @@ void EP3_OUT_Callback(void)
   SetEPRxValid(ENDP3);
 }
 
+/*******************************************************************************
+* Function Name  : Handle_USBAsynchXfer.
+* Description    : send data to USB.
+* Input          : None.
+* Return         : none.
+*******************************************************************************/
+void Handle_USBAsynchXfer (void)
+{
+
+  uint16_t USB_Tx_ptr;
+  uint16_t USB_Tx_length;
+
+  if(USB_Tx_State != 1)
+  {
+    if (USART_Rx_ptr_out == USART_RX_DATA_SIZE)
+    {
+      USART_Rx_ptr_out = 0;
+    }
+
+    if(USART_Rx_ptr_out == USART_Rx_ptr_in)
+    {
+      USB_Tx_State = 0;
+      return;
+    }
+
+    if(USART_Rx_ptr_out > USART_Rx_ptr_in) /* rollback */
+    {
+      USART_Rx_length = USART_RX_DATA_SIZE - USART_Rx_ptr_out;
+    }
+    else
+    {
+      USART_Rx_length = USART_Rx_ptr_in - USART_Rx_ptr_out;
+    }
+
+    if (USART_Rx_length > VIRTUAL_COM_PORT_DATA_SIZE)
+    {
+      USB_Tx_ptr = USART_Rx_ptr_out;
+      USB_Tx_length = VIRTUAL_COM_PORT_DATA_SIZE;
+
+      USART_Rx_ptr_out += VIRTUAL_COM_PORT_DATA_SIZE;
+      USART_Rx_length -= VIRTUAL_COM_PORT_DATA_SIZE;
+    }
+    else
+    {
+      USB_Tx_ptr = USART_Rx_ptr_out;
+      USB_Tx_length = USART_Rx_length;
+
+      USART_Rx_ptr_out += USART_Rx_length;
+      USART_Rx_length = 0;
+    }
+    USB_Tx_State = 1;
+    UserToPMABufferCopy(&USART_Rx_Buffer[USB_Tx_ptr], ENDP1_TXADDR, USB_Tx_length);
+    SetEPTxCount(ENDP1, USB_Tx_length);
+    SetEPTxValid(ENDP1);
+  }
+
+}
 
 /*******************************************************************************
 * Function Name  : SOF_Callback / INTR_SOFINTR_Callback

@@ -30,9 +30,13 @@
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_prop.h"
+
 #include "usb_desc.h"
 #include "usb_pwr.h"
-#include "hw_config.h"
+
+#define         ID1          (0x1FFFF7E8)
+#define         ID2          (0x1FFFF7EC)
+#define         ID3          (0x1FFFF7F0)
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -107,10 +111,68 @@ ONE_DESCRIPTOR String_Descriptor[4] =
     {(uint8_t*)Virtual_Com_Port_StringSerial, VIRTUAL_COM_PORT_SIZ_STRING_SERIAL}
   };
 
-/* Extern variables ----------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-/* Extern function prototypes ------------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+/*******************************************************************************
+* Function Name  : HexToChar.
+* Description    : Convert Hex 32Bits value into char.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len)
+{
+  uint8_t idx = 0;
+
+  for( idx = 0 ; idx < len ; idx ++)
+  {
+    if( ((value >> 28)) < 0xA )
+    {
+      pbuf[ 2* idx] = (value >> 28) + '0';
+    }
+    else
+    {
+      pbuf[2* idx] = (value >> 28) + 'A' - 10;
+    }
+
+    value = value << 4;
+
+    pbuf[ 2* idx + 1] = 0;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : Get_SerialNum.
+* Description    : Create the serial number string descriptor.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void Get_SerialNum(void)
+{
+  uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
+
+  Device_Serial0 = *(uint32_t*)ID1;
+  Device_Serial1 = *(uint32_t*)ID2;
+  Device_Serial2 = *(uint32_t*)ID3;
+
+  Device_Serial0 += Device_Serial2;
+
+  if (Device_Serial0 != 0)
+  {
+    IntToUnicode (Device_Serial0, &Virtual_Com_Port_StringSerial[2] , 8);
+    IntToUnicode (Device_Serial1, &Virtual_Com_Port_StringSerial[18], 4);
+  }
+}
+
+/*******************************************************************************
+* Function Name  :  USART_Config_Default.
+* Description    :  configure the EVAL_COM1 with default values.
+* Input          :  None.
+* Return         :  None.
+*******************************************************************************/
+void USART_Config_Default(void)
+{
+}
+
 /*******************************************************************************
 * Function Name  : Virtual_Com_Port_init.
 * Description    : Virtual COM Port Mouse init routine.
@@ -221,6 +283,19 @@ void Virtual_Com_Port_SetConfiguration(void)
 void Virtual_Com_Port_SetDeviceAddress (void)
 {
   bDeviceState = ADDRESSED;
+}
+
+/*******************************************************************************
+* Function Name  :  USART_Config.
+* Description    :  Configure the EVAL_COM1 according to the line coding structure.
+* Input          :  None.
+* Return         :  Configuration status
+                    TRUE : configuration done with success
+                    FALSE : configuration aborted.
+*******************************************************************************/
+bool USART_Config(void)
+{
+	return 0;
 }
 
 /*******************************************************************************

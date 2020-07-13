@@ -30,7 +30,6 @@
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_pwr.h"
-#include "hw_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -49,10 +48,15 @@ ResumeS;
 
 __IO uint32_t remotewakeupon=0;
 
-/* Extern variables ----------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
-/* Extern function prototypes ------------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+/*******************************************************************************
+* Function Name  : USB_Cable_Config
+* Description    : Software Connection/Disconnection of USB Cable
+* Input          : None.
+* Return         : Status
+*******************************************************************************/
+void USB_Cable_Config (FunctionalState NewState)
+{
+}
 
 /*******************************************************************************
 * Function Name  : PowerOn
@@ -169,14 +173,14 @@ void Suspend(void)
 	/* Clear PDDS and LPDS bits */
 	tmpreg &= ((uint32_t)0xFFFFFFFC);
 	/* Set LPDS bit according to PWR_Regulator value */
-	tmpreg |= PWR_Regulator_LowPower;
+	tmpreg |= PWR_CR_LPDS;
 	/* Store the new value */
 	PWR->CR = tmpreg;
 	/* Set SLEEPDEEP bit of Cortex System Control Register */
 #if defined (STM32F30X) || defined (STM32F37X)
         SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #else
-        SCB->SCR |= SCB_SCR_SLEEPDEEP;       
+        SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #endif
 	
 	/* enter system in STOP mode, only when wakeup flag in not set */
@@ -187,7 +191,7 @@ void Suspend(void)
 #if defined (STM32F30X) || defined (STM32F37X)
                 SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk); 
 #else
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP); 
+                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #endif
 	}
 	else
@@ -207,9 +211,33 @@ void Suspend(void)
 #if defined (STM32F30X) || defined (STM32F37X)		
                 SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #else
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP);
+                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #endif
     }
+}
+
+/*******************************************************************************
+* Function Name  : Leave_LowPowerMode
+* Description    : Restores system clocks and power while exiting suspend mode
+* Input          : None.
+* Return         : None.
+*******************************************************************************/
+void Leave_LowPowerMode(void)
+{
+  DEVICE_INFO *pInfo = &Device_Info;
+
+  /* Set the device state to the correct state */
+  if (pInfo->Current_Configuration != 0)
+  {
+    /* Device configured */
+    bDeviceState = CONFIGURED;
+  }
+  else
+  {
+    bDeviceState = ATTACHED;
+  }
+  /*Enable SystemCoreClock*/
+  SystemInit();
 }
 
 /*******************************************************************************
