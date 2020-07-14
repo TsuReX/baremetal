@@ -35,8 +35,8 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void CTR_LP(void);
-void CTR_HP(void);
+void lp_ctr_handle(void);
+void hp_ctr_handle(void);
 
 /* External variables --------------------------------------------------------*/
 

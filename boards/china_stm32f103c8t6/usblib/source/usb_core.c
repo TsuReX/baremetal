@@ -37,8 +37,8 @@
     vSetEPTxStatus(EP_TX_VALID); \
   }
 
-#define vSetEPRxStatus(st) (SaveRState = st)
-#define vSetEPTxStatus(st) (SaveTState = st)
+#define vSetEPRxStatus(st) (ep0_rx_state = st)
+#define vSetEPTxStatus(st) (ep0_tx_state = st)
 
 #define USB_StatusIn() Send0LengthData()
 #define USB_StatusOut() vSetEPRxStatus(EP_RX_VALID)

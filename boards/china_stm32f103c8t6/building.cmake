@@ -42,13 +42,13 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 						"${BOARD_SRC_PATH}/usb/source/usb_desc.c"
 						"${BOARD_SRC_PATH}/usb/source/usb_endp.c"
-						"${BOARD_SRC_PATH}/usb/source/usb_istr.c"
+						"${BOARD_SRC_PATH}/usb/source/usb_irq.c"
 						"${BOARD_SRC_PATH}/usb/source/usb_prop.c"
 						"${BOARD_SRC_PATH}/usb/source/usb_pwr.c"
 
+						"${BOARD_SRC_PATH}/usblib/source/usb_int.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_core.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_init.c"
-						"${BOARD_SRC_PATH}/usblib/source/usb_int.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_mem.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_regs.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_sil.c"
@@ -74,7 +74,7 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall -Werror")
 	
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
 	

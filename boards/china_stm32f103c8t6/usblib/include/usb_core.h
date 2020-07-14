@@ -254,8 +254,8 @@ extern  DEVICE  Device_Table;
 extern DEVICE_INFO Device_Info;
 
 /* cells saving status during interrupt servicing */
-extern __IO uint16_t SaveRState;
-extern __IO uint16_t SaveTState;
+extern __IO uint16_t ep0_rx_state;
+extern __IO uint16_t ep0_tx_state;
 
 #endif /* __USB_CORE_H */
 
