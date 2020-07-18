@@ -611,7 +611,7 @@ enum EP_BUF_NUM
 
 
 /* External variables --------------------------------------------------------*/
-extern __IO uint16_t wIstr;  /* ISTR register last read value */
+extern __IO uint16_t usb_irq_flags;  /* ISTR register last read value */
 
 /* Exported functions ------------------------------------------------------- */
 void SetCNTR(uint16_t /*wRegValue*/);

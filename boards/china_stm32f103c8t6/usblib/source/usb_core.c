@@ -560,7 +560,7 @@ Expect_Status_Out:
 void NoData_Setup0(void)
 {
   RESULT Result = USB_UNSUPPORT;
-  uint32_t RequestNo = pInformation->USBbRequest;
+  uint32_t RequestNo = pInformation->b_request;
   uint32_t ControlState;
 
   if (Type_Recipient == (STANDARD_REQUEST | DEVICE_RECIPIENT))
@@ -684,7 +684,7 @@ void Data_Setup0(void)
 {
   uint8_t *(*CopyRoutine)(uint16_t);
   RESULT Result;
-  uint32_t Request_No = pInformation->USBbRequest;
+  uint32_t Request_No = pInformation->b_request;
 
   uint32_t Related_Endpoint, Reserved;
   uint32_t wOffset, Status;
@@ -795,7 +795,7 @@ void Data_Setup0(void)
   }
   else
   {
-    Result = (*pProperty->Class_Data_Setup)(pInformation->USBbRequest);
+    Result = (*pProperty->Class_Data_Setup)(pInformation->b_request);
     if (Result == USB_NOT_READY)
     {
       pInformation->ControlState = PAUSE;
@@ -817,7 +817,7 @@ void Data_Setup0(void)
   }
 
 
-  if (ValBit(pInformation->USBbmRequestType, 7))
+  if (ValBit(pInformation->bm_request_type, 7))
   {
     /* Device ==> Host */
     __IO uint32_t wLength = pInformation->USBwLength;
@@ -859,42 +859,40 @@ void Data_Setup0(void)
 * Output         : None.
 * Return         : Post0_Process.
 *******************************************************************************/
-uint8_t Setup0_Process(void)
+uint8_t ep0_setup_process(void)
 {
 
-  union
-  {
-    uint8_t* b;
-    uint16_t* w;
-  } pBuf;
-  uint16_t offset = 1;
-  
-  pBuf.b = PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2); /* *2 for 32 bits addr */
+	union {
+		uint8_t		*b;
+		uint16_t	*w;
+	} pBuf;
 
-  if (pInformation->ControlState != PAUSE)
-  {
-    pInformation->USBbmRequestType = *pBuf.b++; /* bmRequestType */
-    pInformation->USBbRequest = *pBuf.b++; /* bRequest */
-    pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-    pInformation->USBwValue = ByteSwap(*pBuf.w++); /* wValue */
-    pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-    pInformation->USBwIndex  = ByteSwap(*pBuf.w++); /* wIndex */
-    pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-    pInformation->USBwLength = *pBuf.w; /* wLength */
-  }
+	uint16_t offset = 1;
 
-  pInformation->ControlState = SETTING_UP;
-  if (pInformation->USBwLength == 0)
-  {
-    /* Setup with no data stage */
-    NoData_Setup0();
-  }
-  else
-  {
-    /* Setup with data stage */
-    Data_Setup0();
-  }
-  return Post0_Process();
+	pBuf.b = PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2); /* *2 for 32 bits addr */
+
+	if (pInformation->ControlState != PAUSE) {
+		pInformation->bm_request_type = *pBuf.b++; /* bmRequestType */
+		pInformation->b_request = *pBuf.b++; /* bRequest */
+		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+		pInformation->USBwValue = ByteSwap(*pBuf.w++); /* wValue */
+		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+		pInformation->USBwIndex  = ByteSwap(*pBuf.w++); /* wIndex */
+		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+		pInformation->USBwLength = *pBuf.w; /* wLength */
+	}
+
+	pInformation->ControlState = SETTING_UP;
+
+	if (pInformation->USBwLength == 0) {
+
+		NoData_Setup0();
+	} else {
+
+		Data_Setup0();
+	}
+
+	return ep0_finish_processing();
 }
 
 /*******************************************************************************
@@ -904,37 +902,35 @@ uint8_t Setup0_Process(void)
 * Output         : None.
 * Return         : Post0_Process.
 *******************************************************************************/
-uint8_t In0_Process(void)
+uint8_t ep0_in_process(void)
 {
-  uint32_t ControlState = pInformation->ControlState;
+	uint32_t ControlState = pInformation->ControlState;
 
-  if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA))
-  {
-    DataStageIn();
-    /* ControlState may be changed outside the function */
-    ControlState = pInformation->ControlState;
-  }
+	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
 
-  else if (ControlState == WAIT_STATUS_IN)
-  {
-    if ((pInformation->USBbRequest == SET_ADDRESS) &&
-        (Type_Recipient == (STANDARD_REQUEST | DEVICE_RECIPIENT)))
-    {
-      SetDeviceAddress(pInformation->USBwValue0);
-      pUser_Standard_Requests->User_SetDeviceAddress();
-    }
-    (*pProperty->Process_Status_IN)();
-    ControlState = STALLED;
-  }
+		DataStageIn();
+		/* ControlState may be changed outside the function */
+		ControlState = pInformation->ControlState;
 
-  else
-  {
-    ControlState = STALLED;
-  }
+	} else if (ControlState == WAIT_STATUS_IN) {
 
-  pInformation->ControlState = ControlState;
+		if ((pInformation->b_request == SET_ADDRESS) &&
+			(Type_Recipient == (STANDARD_REQUEST | DEVICE_RECIPIENT))) {
 
-  return Post0_Process();
+			SetDeviceAddress(pInformation->USBwValue0);
+			pUser_Standard_Requests->User_SetDeviceAddress();
+		}
+
+		(*pProperty->Process_Status_IN)();
+		ControlState = STALLED;
+
+	} else {
+		ControlState = STALLED;
+	}
+
+	pInformation->ControlState = ControlState;
+
+	return ep0_finish_processing();
 }
 
 /*******************************************************************************
@@ -944,37 +940,31 @@ uint8_t In0_Process(void)
 * Output         : None.
 * Return         : Post0_Process.
 *******************************************************************************/
-uint8_t Out0_Process(void)
+uint8_t ep0_out_process(void)
 {
-  uint32_t ControlState = pInformation->ControlState;
+	uint32_t ControlState = pInformation->ControlState;
 
-  if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA))
-  {
-    /* host aborts the transfer before finish */
-    ControlState = STALLED;
-  }
-  else if ((ControlState == OUT_DATA) || (ControlState == LAST_OUT_DATA))
-  {
-    DataStageOut();
-    ControlState = pInformation->ControlState; /* may be changed outside the function */
-  }
+	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
+		/* host aborts the transfer before finish */
+		ControlState = STALLED;
 
-  else if (ControlState == WAIT_STATUS_OUT)
-  {
-    (*pProperty->Process_Status_OUT)();
-    ControlState = STALLED;
-  }
+	} else if ((ControlState == OUT_DATA) || (ControlState == LAST_OUT_DATA)) {
 
+		DataStageOut();
+		ControlState = pInformation->ControlState; /* may be changed outside the function */
 
-  /* Unexpect state, STALL the endpoint */
-  else
-  {
-    ControlState = STALLED;
-  }
+	} else if (ControlState == WAIT_STATUS_OUT) {
 
-  pInformation->ControlState = ControlState;
+		(*pProperty->Process_Status_OUT)();
+		ControlState = STALLED;
 
-  return Post0_Process();
+	} else {
+		ControlState = STALLED;
+	}
+
+	pInformation->ControlState = ControlState;
+
+	return ep0_finish_processing();
 }
 
 /*******************************************************************************
@@ -985,18 +975,16 @@ uint8_t Out0_Process(void)
 * Return         : - 0 if the control State is in PAUSE
 *                  - 1 if not.
 *******************************************************************************/
-uint8_t Post0_Process(void)
+uint8_t ep0_finish_processing(void)
 {
-   
-  SetEPRxCount(ENDP0, Device_Property.MaxPacketSize);
+	SetEPRxCount(ENDP0, Device_Property.MaxPacketSize);
 
-  if (pInformation->ControlState == STALLED)
-  {
-    vSetEPRxStatus(EP_RX_STALL);
-    vSetEPTxStatus(EP_TX_STALL);
-  }
+	if (pInformation->ControlState == STALLED) {
+		vSetEPRxStatus(EP_RX_STALL);
+		vSetEPTxStatus(EP_TX_STALL);
+	}
 
-  return (pInformation->ControlState == PAUSE);
+	return (pInformation->ControlState == PAUSE);
 }
 
 /*******************************************************************************
@@ -1008,15 +996,15 @@ uint8_t Post0_Process(void)
 *******************************************************************************/
 void SetDeviceAddress(uint8_t Val)
 {
-  uint32_t i;
-  uint32_t nEP = Device_Table.Total_Endpoint;
+	uint32_t i;
+	uint32_t nEP = Device_Table.Total_Endpoint;
 
-  /* set address in every used endpoint */
-  for (i = 0; i < nEP; i++)
-  {
-    _SetEPAddress((uint8_t)i, (uint8_t)i);
-  } /* for */
-  _SetDADDR(Val | DADDR_EF); /* set device address and enable function */ 
+	/* set address in every used endpoint */
+	for (i = 0; i < nEP; i++) {
+		_SetEPAddress((uint8_t)i, (uint8_t)i);
+	}
+
+	_SetDADDR(Val | DADDR_EF); /* set device address and enable function */
 }
 
 /*******************************************************************************

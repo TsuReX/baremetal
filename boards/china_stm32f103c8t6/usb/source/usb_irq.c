@@ -3,7 +3,7 @@
 #include <usb_prop.h>
 #include <usb_pwr.h>
 
-__IO uint16_t wIstr;  /* ISTR register last read value */
+__IO uint16_t usb_irq_flags;  /* ISTR register last read value */
 __IO uint8_t bIntPackSOF = 0;  /* SOFs received between 2 consecutive packets */
 __IO uint32_t esof_counter = 0; /* expected SOF counter */
 __IO uint32_t wCNTR	= 0;
@@ -13,17 +13,17 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 	uint32_t i=0;
 	__IO uint32_t EP[8];
 
-	wIstr = _GetISTR();
+	usb_irq_flags = _GetISTR();
 
 /***********************************************************************/
-	if (wIstr & ISTR_SOF & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_SOF & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_SOF);
 //		bIntPackSOF++;
 	}
 
 /***********************************************************************/
   
-	if (wIstr & ISTR_CTR & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_CTR & wInterrupt_Mask) {
 		/* servicing of the endpoint correct transfer interrupt */
 		/* clear of the CTR flag into the sub */
 		lp_ctr_handle();
@@ -31,33 +31,33 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_RESET & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_RESET & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_RESET);
 		Device_Property.Reset();
 	}
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_DOVR & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_DOVR & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_DOVR);
 	}
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_ERR & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_ERR & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_ERR);
 	}
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_WKUP & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_WKUP & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_WKUP);
 		Resume(RESUME_EXTERNAL);
 	}
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_SUSP & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_SUSP & wInterrupt_Mask) {
 
 		/* check if SUSPEND is possible */
 		if (fSuspendEnabled) {
@@ -72,7 +72,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 /***********************************************************************/
 
-	if (wIstr & ISTR_ESOF & wInterrupt_Mask) {
+	if (usb_irq_flags & ISTR_ESOF & wInterrupt_Mask) {
 		/* clear ESOF flag in ISTR */
 		_SetISTR((uint16_t)CLR_ESOF);
 
