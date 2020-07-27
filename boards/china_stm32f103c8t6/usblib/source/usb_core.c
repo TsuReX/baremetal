@@ -861,38 +861,72 @@ void Data_Setup0(void)
 *******************************************************************************/
 uint8_t ep0_setup_process(void)
 {
+	struct std_request {
+		uint8_t		bmRequestType;
+		uint8_t		bRequest;
+		uint16_t	wValue;
+		uint16_t	wIndex;
+		uint16_t	wLength;
+	};
 
-	union {
-		uint8_t		*b;
-		uint16_t	*w;
-	} pBuf;
-
-	uint16_t offset = 1;
-
-	pBuf.b = PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2); /* *2 for 32 bits addr */
+	struct std_request *prequest = (struct std_request *)(PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2));
 
 	if (pInformation->ControlState != PAUSE) {
-		pInformation->bm_request_type = *pBuf.b++; /* bmRequestType */
-		pInformation->b_request = *pBuf.b++; /* bRequest */
-		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-		pInformation->USBwValue = ByteSwap(*pBuf.w++); /* wValue */
-		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-		pInformation->USBwIndex  = ByteSwap(*pBuf.w++); /* wIndex */
-		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
-		pInformation->USBwLength = *pBuf.w; /* wLength */
+
+		pInformation->bm_request_type = prequest->bmRequestType;
+
+		pInformation->b_request = prequest->bRequest;
+
+		pInformation->USBwValue = ByteSwap(prequest->wValue);
+
+		pInformation->USBwIndex	= ByteSwap(prequest->wIndex);
+
+		pInformation->USBwLength = ByteSwap(prequest->wLength); /*TODO: USB check correctness of the swapping*/
 	}
 
 	pInformation->ControlState = SETTING_UP;
 
 	if (pInformation->USBwLength == 0) {
-
 		NoData_Setup0();
-	} else {
 
+	} else {
 		Data_Setup0();
 	}
 
 	return ep0_finish_processing();
+
+
+//	union {
+//		uint8_t		*b;
+//		uint16_t	*w;
+//	} pBuf;
+//
+//	uint16_t offset = 1;
+//
+//	pBuf.b = PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2); /* *2 for 32 bits addr */
+//
+//	if (pInformation->ControlState != PAUSE) {
+//		pInformation->bm_request_type = *pBuf.b++; /* bmRequestType */
+//		pInformation->b_request = *pBuf.b++; /* bRequest */
+//		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+//		pInformation->USBwValue = ByteSwap(*pBuf.w++); /* wValue */
+//		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+//		pInformation->USBwIndex  = ByteSwap(*pBuf.w++); /* wIndex */
+//		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
+//		pInformation->USBwLength = *pBuf.w; /* wLength */
+//	}
+//
+//	pInformation->ControlState = SETTING_UP;
+//
+//	if (pInformation->USBwLength == 0) {
+//
+//		NoData_Setup0();
+//	} else {
+//
+//		Data_Setup0();
+//	}
+//
+//	return ep0_finish_processing();
 }
 
 /*******************************************************************************
