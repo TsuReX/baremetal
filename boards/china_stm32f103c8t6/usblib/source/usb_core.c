@@ -54,8 +54,8 @@ bool Data_Mul_MaxPacketSize = FALSE;
 /* Private function prototypes -----------------------------------------------*/
 static void DataStageOut(void);
 static void DataStageIn(void);
-static void NoData_Setup0(void);
-static void Data_Setup0(void);
+static void setup_without_data_process(void);
+static void setup_with_data_process(void);
 /* Private functions ---------------------------------------------------------*/
 
 /*******************************************************************************
@@ -557,7 +557,7 @@ Expect_Status_Out:
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void NoData_Setup0(void)
+void setup_without_data_process(void)
 {
   RESULT Result = USB_UNSUPPORT;
   uint32_t RequestNo = pInformation->b_request;
@@ -680,7 +680,7 @@ exit_NoData_Setup0:
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Data_Setup0(void)
+void setup_with_data_process(void)
 {
   uint8_t *(*CopyRoutine)(uint16_t);
   RESULT Result;
@@ -887,10 +887,10 @@ uint8_t ep0_setup_process(void)
 	pInformation->ControlState = SETTING_UP;
 
 	if (pInformation->USBwLength == 0) {
-		NoData_Setup0();
+		setup_without_data_process();
 
 	} else {
-		Data_Setup0();
+		setup_with_data_process();
 	}
 
 	return ep0_finish_processing();
