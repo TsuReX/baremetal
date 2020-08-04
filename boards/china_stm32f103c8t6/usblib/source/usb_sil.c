@@ -69,7 +69,7 @@ uint32_t USB_SIL_Init(void)
 uint32_t USB_SIL_Write(uint8_t bEpAddr, uint8_t* pBufferPointer, uint32_t wBufferSize)
 {
   /* Use the memory interface function to write to the selected endpoint */
-  UserToPMABufferCopy(pBufferPointer, GetEPTxAddr(bEpAddr & 0x7F), wBufferSize);
+  copy_to_usb(pBufferPointer, GetEPTxAddr(bEpAddr & 0x7F), wBufferSize);
 
   /* Update the data length in the control register */
   SetEPTxCount((bEpAddr & 0x7F), wBufferSize);
@@ -94,7 +94,7 @@ uint32_t USB_SIL_Read(uint8_t bEpAddr, uint8_t* pBufferPointer)
   DataLength = GetEPRxCount(bEpAddr & 0x7F);
   
   /* Use the memory interface function to write to the selected endpoint */
-  PMAToUserBufferCopy(pBufferPointer, GetEPRxAddr(bEpAddr & 0x7F), DataLength);
+  copy_from_usb(pBufferPointer, GetEPRxAddr(bEpAddr & 0x7F), DataLength);
 
   /* Return the number of received data */
   return DataLength;

@@ -358,7 +358,7 @@ RESULT Virtual_Com_Port_Data_Setup(uint8_t RequestNo)
     return USB_UNSUPPORT;
   }
 
-  pInformation->ep0_ctrl_info.CopyData = CopyRoutine;
+  pInformation->ep0_ctrl_info.data_copy = CopyRoutine;
   pInformation->ep0_ctrl_info.data_buffer_offset = 0;
   (*CopyRoutine)(0);
   return USB_SUCCESS;

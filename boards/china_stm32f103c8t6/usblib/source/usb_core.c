@@ -401,11 +401,11 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 *******************************************************************************/
 void ep0_data_stage_out_process(void)
 {
-	ENDPOINT_INFO *ep0_ctrl_info = &pInformation->ep0_ctrl_info;
-	uint8_t *data_buffer;
-	size_t	single_transfer_size;
+	ENDPOINT_INFO	*ep0_ctrl_info = &pInformation->ep0_ctrl_info;
+	uint8_t 		*data_buffer;
+	size_t			single_transfer_size;
 
-	if (ep0_ctrl_info->CopyData && ep0_ctrl_info->remaining_data_size) {
+	if (ep0_ctrl_info->data_copy && ep0_ctrl_info->remaining_data_size) {
 
 		single_transfer_size = ep0_ctrl_info->single_transfer_size;
 
@@ -413,11 +413,12 @@ void ep0_data_stage_out_process(void)
 			single_transfer_size = ep0_ctrl_info->remaining_data_size;
 		}
 
-		data_buffer = (*ep0_ctrl_info->CopyData)(single_transfer_size);
+		data_buffer = (*ep0_ctrl_info->data_copy)(single_transfer_size);
+
 		ep0_ctrl_info->remaining_data_size -= single_transfer_size;
 		ep0_ctrl_info->data_buffer_offset += single_transfer_size;
 
-		PMAToUserBufferCopy(data_buffer, _GetEPRxAddr(ENDP0), single_transfer_size);
+		copy_from_usb(data_buffer, _GetEPRxAddr(ENDP0), single_transfer_size);
 	}
 
 	if (ep0_ctrl_info->remaining_data_size != 0) {
@@ -487,9 +488,9 @@ void ep0_data_stage_in_process(void)
 		single_transfer_size = ep0_ctrl_info->remaining_data_size;
 	}
 
-	data_buffer = (*ep0_ctrl_info->CopyData)(single_transfer_size);
+	data_buffer = (*ep0_ctrl_info->data_copy)(single_transfer_size);
 
-	UserToPMABufferCopy(data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
+	copy_to_usb(data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
 
 	_SetEPTxCount(ENDP0, single_transfer_size);
 
@@ -754,7 +755,7 @@ void setup_with_data_process(void)
 	if (CopyRoutine) {
 
 		pInformation->ep0_ctrl_info.data_buffer_offset = wOffset;
-		pInformation->ep0_ctrl_info.CopyData = CopyRoutine;
+		pInformation->ep0_ctrl_info.data_copy = CopyRoutine;
 		/* sb in the original the cast to word was directly */
 		/* now the cast is made step by step */
 		(*CopyRoutine)(0);
@@ -894,31 +895,31 @@ uint8_t ep0_setup_process(void)
 *******************************************************************************/
 uint8_t ep0_in_process(void)
 {
-	uint32_t ControlState = pInformation->control_state;
+	uint8_t control_state = pInformation->control_state;
 
-	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
+	if ((control_state == IN_DATA) || (control_state == LAST_IN_DATA)) {
 
 		ep0_data_stage_in_process();
 		/* ControlState may be changed outside the function */
-		ControlState = pInformation->control_state;
+		control_state = pInformation->control_state;
 
-	} else if (ControlState == WAIT_STATUS_IN) {
+	} else if (control_state == WAIT_STATUS_IN) {
 
 		if ((pInformation->b_request == SET_ADDRESS) &&
-			(Type_Recipient == (STANDARD_REQUEST | DEVICE_RECIPIENT))) {
+			(((pInformation->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == DEVICE_RECIPIENT))) {
 
 			SetDeviceAddress(pInformation->USBwValue0);
 			pUser_Standard_Requests->User_SetDeviceAddress();
 		}
 
 		(*pProperty->Process_Status_IN)();
-		ControlState = STALLED;
+		control_state = STALLED;
 
 	} else {
-		ControlState = STALLED;
+		control_state = STALLED;
 	}
 
-	pInformation->control_state = ControlState;
+	pInformation->control_state = control_state;
 
 	return ep0_finish_processing();
 }
@@ -932,27 +933,26 @@ uint8_t ep0_in_process(void)
 *******************************************************************************/
 uint8_t ep0_out_process(void)
 {
-	uint32_t ControlState = pInformation->control_state;
+	uint32_t control_state = pInformation->control_state;
 
-	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
-		/* host aborts the transfer before finish */
-		ControlState = STALLED;
-
-	} else if ((ControlState == OUT_DATA) || (ControlState == LAST_OUT_DATA)) {
+	if ((control_state == OUT_DATA) || (control_state == LAST_OUT_DATA)) {
 
 		ep0_data_stage_out_process();
-		ControlState = pInformation->control_state; /* may be changed outside the function */
 
-	} else if (ControlState == WAIT_STATUS_OUT) {
+		/* may be changed outside the function */
+		/* TODO: USB check how is it possible? */
+		control_state = pInformation->control_state;
 
-		(*pProperty->Process_Status_OUT)();
-		ControlState = STALLED;
+	} else if (control_state == WAIT_STATUS_OUT) {
+//		(*pProperty->Process_Status_OUT)();
+		/* TODO: USB Is some action needed here? */
+		control_state = STALLED;
 
 	} else {
-		ControlState = STALLED;
+		control_state = STALLED;
 	}
 
-	pInformation->control_state = ControlState;
+	pInformation->control_state = control_state;
 
 	return ep0_finish_processing();
 }

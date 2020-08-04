@@ -89,7 +89,7 @@ typedef struct _ENDPOINT_INFO {
 	uint16_t  remaining_data_size;
 	uint16_t  data_buffer_offset;
 	uint16_t  single_transfer_size;
-	uint8_t   *(*CopyData)(uint16_t Length);
+	uint8_t   *(*data_copy)(uint16_t Length);
 } ENDPOINT_INFO;
 
 /*-*-*-*-*-*-*-*-*-*-*-* Definitions for device level -*-*-*-*-*-*-*-*-*-*-*-*/

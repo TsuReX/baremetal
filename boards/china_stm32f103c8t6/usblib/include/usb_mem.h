@@ -35,8 +35,8 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void UserToPMABufferCopy(uint8_t *pbUsrBuf, uint16_t wPMABufAddr, uint16_t wNBytes);
-void PMAToUserBufferCopy(uint8_t *pbUsrBuf, uint16_t wPMABufAddr, uint16_t wNBytes);
+void copy_to_usb(uint8_t *src_buffer, uint16_t usb_buffer_addr, uint16_t data_size);
+void copy_from_usb(uint8_t *dst_buffer, uint16_t usb_buffer_addr, uint16_t data_size);
 
 /* External variables --------------------------------------------------------*/
 
