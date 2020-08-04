@@ -559,118 +559,129 @@ Expect_Status_Out:
 *******************************************************************************/
 void setup_without_data_process(void)
 {
-  RESULT Result = USB_UNSUPPORT;
-  uint32_t RequestNo = pInformation->b_request;
-  uint32_t ControlState;
+	RESULT		result = USB_UNSUPPORT;
+	uint32_t	control_state;
+	uint32_t	request_number = pInformation->b_request;
+	uint8_t		request_type = pInformation->bm_request_type & (REQUEST_TYPE | RECIPIENT);
 
-  if (Type_Recipient == (STANDARD_REQUEST | DEVICE_RECIPIENT))
-  {
-    /* Device Request*/
-    /* SET_CONFIGURATION*/
-    if (RequestNo == SET_CONFIGURATION)
-    {
-      Result = Standard_SetConfiguration();
-    }
+	/************************************************/
+	/************************************************/
 
-    /*SET ADDRESS*/
-    else if (RequestNo == SET_ADDRESS)
-    {
-      if ((pInformation->USBwValue0 > 127) || (pInformation->USBwValue1 != 0)
-          || (pInformation->USBwIndex != 0)
-          || (pInformation->Current_Configuration != 0))
-        /* Device Address should be 127 or less*/
-      {
-        ControlState = STALLED;
-        goto exit_NoData_Setup0;
-      }
-      else
-      {
-        Result = USB_SUCCESS;
-      }
-    }
-    /*SET FEATURE for Device*/
-    else if (RequestNo == SET_FEATURE)
-    {
-      if ((pInformation->USBwValue0 == DEVICE_REMOTE_WAKEUP) \
-          && (pInformation->USBwIndex == 0))
-      {
-        Result = Standard_SetDeviceFeature();
-      }
-      else
-      {
-        Result = USB_UNSUPPORT;
-      }
-    }
-    /*Clear FEATURE for Device */
-    else if (RequestNo == CLEAR_FEATURE)
-    {
-      if (pInformation->USBwValue0 == DEVICE_REMOTE_WAKEUP
-          && pInformation->USBwIndex == 0
-          && ValBit(pInformation->Current_Feature, 5))
-      {
-        Result = Standard_ClearFeature();
-      }
-      else
-      {
-        Result = USB_UNSUPPORT;
-      }
-    }
+	//if (request_type == (STANDARD_REQUEST | DEVICE_RECIPIENT)) {
+	if (request_type == DEVICE_RECIPIENT) {
+	/* Device Request*/
 
-  }
+		/************************************************/
+		/* SET_CONFIGURATION*/
+		if (request_number == SET_CONFIGURATION) {
+			result = Standard_SetConfiguration();
+		}
 
-  /* Interface Request*/
-  else if (Type_Recipient == (STANDARD_REQUEST | INTERFACE_RECIPIENT))
-  {
-    /*SET INTERFACE*/
-    if (RequestNo == SET_INTERFACE)
-    {
-      Result = Standard_SetInterface();
-    }
-  }
+		/************************************************/
+		/*SET ADDRESS*/
+		else if (request_number == SET_ADDRESS) {
 
-  /* EndPoint Request*/
-  else if (Type_Recipient == (STANDARD_REQUEST | ENDPOINT_RECIPIENT))
-  {
-    /*CLEAR FEATURE for EndPoint*/
-    if (RequestNo == CLEAR_FEATURE)
-    {
-      Result = Standard_ClearFeature();
-    }
-    /* SET FEATURE for EndPoint*/
-    else if (RequestNo == SET_FEATURE)
-    {
-      Result = Standard_SetEndPointFeature();
-    }
-  }
-  else
-  {
-    Result = USB_UNSUPPORT;
-  }
+			if ((pInformation->USBwValue0 > 127) ||
+				(pInformation->USBwValue1 != 0) ||
+				(pInformation->USBwIndex != 0) ||
+				(pInformation->Current_Configuration != 0)) {
 
+				/* Device Address should be 127 or less*/
+				control_state = STALLED;
+				pInformation->ControlState = control_state;
+				return;
 
-  if (Result != USB_SUCCESS)
-  {
-    Result = (*pProperty->Class_NoData_Setup)(RequestNo);
-    if (Result == USB_NOT_READY)
-    {
-      ControlState = PAUSE;
-      goto exit_NoData_Setup0;
-    }
-  }
+			} else {
+				result = USB_SUCCESS;
+			}
+		}
 
-  if (Result != USB_SUCCESS)
-  {
-    ControlState = STALLED;
-    goto exit_NoData_Setup0;
-  }
+		/************************************************/
+		/*SET FEATURE for Device*/
+		else if (request_number == SET_FEATURE) {
 
-  ControlState = WAIT_STATUS_IN;/* After no data stage SETUP */
+			if ((pInformation->USBwValue0 == DEVICE_REMOTE_WAKEUP) &&
+				(pInformation->USBwIndex == 0)) {
 
-  USB_StatusIn();
+				result = Standard_SetDeviceFeature();
 
-exit_NoData_Setup0:
-  pInformation->ControlState = ControlState;
-  return;
+			} else {
+				result = USB_UNSUPPORT;
+			}
+		}
+
+		/************************************************/
+		/*Clear FEATURE for Device */
+		else if (request_number == CLEAR_FEATURE) {
+
+			if (pInformation->USBwValue0 == DEVICE_REMOTE_WAKEUP &&
+				pInformation->USBwIndex == 0 &&
+				(pInformation->Current_Feature & (1 << 5))) {
+
+				result = Standard_ClearFeature();
+
+			} else {
+				result = USB_UNSUPPORT;
+			}
+		}
+	}
+
+	/************************************************/
+	/************************************************/
+	/* Interface Request*/
+	else if (request_type == INTERFACE_RECIPIENT) {
+
+		/************************************************/
+		/*SET INTERFACE*/
+		if (request_number == SET_INTERFACE) {
+			result = Standard_SetInterface();
+		}
+	}
+
+	/************************************************/
+	/************************************************/
+	/* EndPoint Request*/
+	else if (request_type == ENDPOINT_RECIPIENT) {
+
+		/************************************************/
+		/*CLEAR FEATURE for EndPoint*/
+		if (request_number == CLEAR_FEATURE) {
+			result = Standard_ClearFeature();
+		}
+		/************************************************/
+		/* SET FEATURE for EndPoint*/
+		else if (request_number == SET_FEATURE) {
+			result = Standard_SetEndPointFeature();
+		}
+	}
+
+	/************************************************/
+	/************************************************/
+	else {
+		result = USB_UNSUPPORT;
+	}
+
+	if (result != USB_SUCCESS) {
+		result = (*pProperty->Class_NoData_Setup)(request_number);
+
+		if (result == USB_NOT_READY) {
+			control_state = PAUSE;
+			pInformation->ControlState = control_state;
+			return;
+		}
+	}
+
+	if (result != USB_SUCCESS) {
+		control_state = STALLED;
+		pInformation->ControlState = control_state;
+		return;
+	}
+
+	/* After no data stage SETUP */
+	control_state = WAIT_STATUS_IN;
+	USB_StatusIn();
+
+	pInformation->ControlState = control_state;
 }
 
 /*******************************************************************************
