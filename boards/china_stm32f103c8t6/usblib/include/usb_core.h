@@ -86,9 +86,9 @@ typedef struct _ENDPOINT_INFO {
 	Usb_rLength is the data remain to be received,
 	Usb_rPointer is the Offset of data buffer
 	*/
-	uint16_t  Usb_wLength;
-	uint16_t  Usb_wOffset;
-	uint16_t  PacketSize;
+	uint16_t  remaining_data_size;
+	uint16_t  data_buffer_offset;
+	uint16_t  single_transfer_size;
 	uint8_t   *(*CopyData)(uint16_t Length);
 } ENDPOINT_INFO;
 
@@ -116,13 +116,13 @@ typedef struct _DEVICE_INFO {
 	uint16_t_uint8_t	w_index;			/* wIndex */
 	uint16_t_uint8_t	w_length;			/* wLength */
 
-	uint8_t				ControlState;				/* of type CONTROL_STATE */
+	uint8_t				control_state;				/* of type CONTROL_STATE */
 	uint8_t				Current_Feature;
 	uint8_t				Current_Configuration;		/* Selected configuration */
 	uint8_t				Current_Interface;			/* Selected interface of current configuration */
 	uint8_t				Current_AlternateSetting;	/* Selected Alternate Setting of current interface*/
 
-	ENDPOINT_INFO Ctrl_Info;
+	ENDPOINT_INFO		ep0_ctrl_info;
 
 } DEVICE_INFO;
 

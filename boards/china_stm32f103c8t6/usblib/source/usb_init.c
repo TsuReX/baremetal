@@ -28,7 +28,7 @@ void usb_init(void)
 	NVIC_EnableIRQ(USBWakeUp_IRQn);
 
 	pInformation = &Device_Info;
-	pInformation->ControlState = 2;
+	pInformation->control_state = 2;
 	pProperty = &Device_Property;
 	pUser_Standard_Requests = &User_Standard_Requests;
 	/* Initialize devices one by one */

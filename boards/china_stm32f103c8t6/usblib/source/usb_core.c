@@ -1,62 +1,21 @@
-/**
-  ******************************************************************************
-  * @file    usb_core.c
-  * @author  MCD Application Team
-  * @version V4.0.0
-  * @date    28-August-2012
-  * @brief   Standard protocol processing (USB v2.0)
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
-
-
-/* Includes ------------------------------------------------------------------*/
 #include "usb_lib.h"
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
+#include "stddef.h"
+
 #define ValBit(VAR,Place)    (VAR & (1 << Place))
 #define SetBit(VAR,Place)    (VAR |= (1 << Place))
 #define ClrBit(VAR,Place)    (VAR &= ((1 << Place) ^ 255))
-#define Send0LengthData() { _SetEPTxCount(ENDP0, 0); \
-    vSetEPTxStatus(EP_TX_VALID); \
-  }
-
-#define vSetEPRxStatus(st) (ep0_rx_state = st)
-#define vSetEPTxStatus(st) (ep0_tx_state = st)
-
-#define USB_StatusIn() Send0LengthData()
-#define USB_StatusOut() vSetEPRxStatus(EP_RX_VALID)
 
 #define StatusInfo0 StatusInfo.bw.bb1 /* Reverse bb0 & bb1 */
 #define StatusInfo1 StatusInfo.bw.bb0
 
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
 uint16_t_uint8_t StatusInfo;
 
-bool Data_Mul_MaxPacketSize = FALSE;
-/* Private function prototypes -----------------------------------------------*/
-static void DataStageOut(void);
-static void DataStageIn(void);
+bool multiple_max_packet_size = FALSE;
+
+static void ep0_data_stage_out_process(void);
+static void ep0_data_stage_in_process(void);
 static void setup_without_data_process(void);
 static void setup_with_data_process(void);
-/* Private functions ---------------------------------------------------------*/
 
 /*******************************************************************************
 * Function Name  : Standard_GetConfiguration.
@@ -70,7 +29,7 @@ uint8_t *Standard_GetConfiguration(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength =
+    pInformation->ep0_ctrl_info.remaining_data_size =
       sizeof(pInformation->Current_Configuration);
     return 0;
   }
@@ -116,7 +75,7 @@ uint8_t *Standard_GetInterface(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength =
+    pInformation->ep0_ctrl_info.remaining_data_size =
       sizeof(pInformation->Current_AlternateSetting);
     return 0;
   }
@@ -172,7 +131,7 @@ uint8_t *Standard_GetStatus(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength = 2;
+    pInformation->ep0_ctrl_info.remaining_data_size = 2;
     return 0;
   }
 
@@ -423,10 +382,10 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 {
   uint32_t  wOffset;
 
-  wOffset = pInformation->Ctrl_Info.Usb_wOffset;
+  wOffset = pInformation->ep0_ctrl_info.data_buffer_offset;
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength = pDesc->Descriptor_Size - wOffset;
+    pInformation->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
     return 0;
   }
 
@@ -440,54 +399,52 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void DataStageOut(void)
+void ep0_data_stage_out_process(void)
 {
-  ENDPOINT_INFO *pEPinfo = &pInformation->Ctrl_Info;
-  uint32_t save_rLength;
+	ENDPOINT_INFO *ep0_ctrl_info = &pInformation->ep0_ctrl_info;
+	uint8_t *data_buffer;
+	size_t	single_transfer_size;
 
-  save_rLength = pEPinfo->Usb_rLength;
+	if (ep0_ctrl_info->CopyData && ep0_ctrl_info->remaining_data_size) {
 
-  if (pEPinfo->CopyData && save_rLength)
-  {
-    uint8_t *Buffer;
-    uint32_t Length;
+		single_transfer_size = ep0_ctrl_info->single_transfer_size;
 
-    Length = pEPinfo->PacketSize;
-    if (Length > save_rLength)
-    {
-      Length = save_rLength;
-    }
+		if (single_transfer_size > ep0_ctrl_info->remaining_data_size) {
+			single_transfer_size = ep0_ctrl_info->remaining_data_size;
+		}
 
-    Buffer = (*pEPinfo->CopyData)(Length);
-    pEPinfo->Usb_rLength -= Length;
-    pEPinfo->Usb_rOffset += Length;
-    PMAToUserBufferCopy(Buffer, GetEPRxAddr(ENDP0), Length);
+		data_buffer = (*ep0_ctrl_info->CopyData)(single_transfer_size);
+		ep0_ctrl_info->remaining_data_size -= single_transfer_size;
+		ep0_ctrl_info->data_buffer_offset += single_transfer_size;
 
-  }
+		PMAToUserBufferCopy(data_buffer, _GetEPRxAddr(ENDP0), single_transfer_size);
+	}
 
-  if (pEPinfo->Usb_rLength != 0)
-  {
-    vSetEPRxStatus(EP_RX_VALID);/* re-enable for next data reception */
-    SetEPTxCount(ENDP0, 0);
-    vSetEPTxStatus(EP_TX_VALID);/* Expect the host to abort the data OUT stage */
-  }
-  /* Set the next State*/
-  if (pEPinfo->Usb_rLength >= pEPinfo->PacketSize)
-  {
-    pInformation->ControlState = OUT_DATA;
-  }
-  else
-  {
-    if (pEPinfo->Usb_rLength > 0)
-    {
-      pInformation->ControlState = LAST_OUT_DATA;
-    }
-    else if (pEPinfo->Usb_rLength == 0)
-    {
-      pInformation->ControlState = WAIT_STATUS_IN;
-      USB_StatusIn();
-    }
-  }
+	if (ep0_ctrl_info->remaining_data_size != 0) {
+		/* re-enable for next data reception */
+		ep0_rx_state = EP_RX_VALID;
+
+		_SetEPTxCount(ENDP0, 0);
+
+		/* Expect the host to abort the data OUT stage */
+		ep0_tx_state = EP_TX_VALID;
+	}
+
+	/* Set the next State*/
+	if (ep0_ctrl_info->remaining_data_size >= ep0_ctrl_info->single_transfer_size) {
+		pInformation->control_state = OUT_DATA;
+
+	} else {
+
+		if (ep0_ctrl_info->remaining_data_size > 0) {
+			pInformation->control_state = LAST_OUT_DATA;
+
+		} else if (ep0_ctrl_info->remaining_data_size == 0) {
+			pInformation->control_state = WAIT_STATUS_IN;
+			_SetEPTxCount(ENDP0, 0);
+			ep0_tx_state = EP_TX_VALID;
+		}
+	}
 }
 
 /*******************************************************************************
@@ -497,57 +454,52 @@ void DataStageOut(void)
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void DataStageIn(void)
+void ep0_data_stage_in_process(void)
 {
-  ENDPOINT_INFO *pEPinfo = &pInformation->Ctrl_Info;
-  uint32_t save_wLength = pEPinfo->Usb_wLength;
-  uint32_t ControlState = pInformation->ControlState;
+	ENDPOINT_INFO	*ep0_ctrl_info = &pInformation->ep0_ctrl_info;
+	uint8_t			*data_buffer;
+	size_t			single_transfer_size;
 
-  uint8_t *DataBuffer;
-  uint32_t Length;
+	if ((ep0_ctrl_info->remaining_data_size == 0) && (pInformation->control_state == LAST_IN_DATA)) {
 
-  if ((save_wLength == 0) && (ControlState == LAST_IN_DATA))
-  {
-    if(Data_Mul_MaxPacketSize == TRUE)
-    {
-      /* No more data to send and empty packet */
-      Send0LengthData();
-      ControlState = LAST_IN_DATA;
-      Data_Mul_MaxPacketSize = FALSE;
-    }
-    else 
-    {
-      /* No more data to send so STALL the TX Status*/
-      ControlState = WAIT_STATUS_OUT;
-      vSetEPTxStatus(EP_TX_STALL);
- 
-    }
-    
-    goto Expect_Status_Out;
-  }
+		if(multiple_max_packet_size == TRUE) {
+			/* No more data to send and empty packet */
+			_SetEPTxCount(ENDP0, 0);
+			ep0_tx_state = EP_TX_VALID;
 
-  Length = pEPinfo->PacketSize;
-  ControlState = (save_wLength <= Length) ? LAST_IN_DATA : IN_DATA;
+			pInformation->control_state = LAST_IN_DATA;
+			multiple_max_packet_size = FALSE;
 
-  if (Length > save_wLength)
-  {
-    Length = save_wLength;
-  }
+		} else  {
+			/* No more data to send so STALL the TX Status*/
+			pInformation->control_state = WAIT_STATUS_OUT;
+			ep0_tx_state = EP_TX_STALL;
+		}
 
-  DataBuffer = (*pEPinfo->CopyData)(Length);
-  
-  UserToPMABufferCopy(DataBuffer, GetEPTxAddr(ENDP0), Length);
+		return;
+	}
 
-  SetEPTxCount(ENDP0, Length);
+	single_transfer_size = ep0_ctrl_info->single_transfer_size;
 
-  pEPinfo->Usb_wLength -= Length;
-  pEPinfo->Usb_wOffset += Length;
-  vSetEPTxStatus(EP_TX_VALID);
+	pInformation->control_state = (ep0_ctrl_info->remaining_data_size <= single_transfer_size) ? LAST_IN_DATA : IN_DATA;
 
-  USB_StatusOut();/* Expect the host to abort the data IN stage */
+	if (single_transfer_size > ep0_ctrl_info->remaining_data_size) {
+		single_transfer_size = ep0_ctrl_info->remaining_data_size;
+	}
 
-Expect_Status_Out:
-  pInformation->ControlState = ControlState;
+	data_buffer = (*ep0_ctrl_info->CopyData)(single_transfer_size);
+
+	UserToPMABufferCopy(data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
+
+	_SetEPTxCount(ENDP0, single_transfer_size);
+
+	ep0_ctrl_info->remaining_data_size -= single_transfer_size;
+	ep0_ctrl_info->data_buffer_offset += single_transfer_size;
+
+	ep0_tx_state = EP_TX_VALID;
+
+	/* Expect the host to abort the data IN stage */
+	ep0_rx_state = EP_RX_VALID;
 }
 
 /*******************************************************************************
@@ -588,7 +540,7 @@ void setup_without_data_process(void)
 
 				/* Device Address should be 127 or less*/
 				control_state = STALLED;
-				pInformation->ControlState = control_state;
+				pInformation->control_state = control_state;
 				return;
 
 			} else {
@@ -666,22 +618,23 @@ void setup_without_data_process(void)
 
 		if (result == USB_NOT_READY) {
 			control_state = PAUSE;
-			pInformation->ControlState = control_state;
+			pInformation->control_state = control_state;
 			return;
 		}
 	}
 
 	if (result != USB_SUCCESS) {
 		control_state = STALLED;
-		pInformation->ControlState = control_state;
+		pInformation->control_state = control_state;
 		return;
 	}
 
 	/* After no data stage SETUP */
 	control_state = WAIT_STATUS_IN;
-	USB_StatusIn();
+	_SetEPTxCount(ENDP0, 0);
+	ep0_tx_state = EP_TX_VALID;
 
-	pInformation->ControlState = control_state;
+	pInformation->control_state = control_state;
 }
 
 /*******************************************************************************
@@ -800,8 +753,8 @@ void setup_with_data_process(void)
 
 	if (CopyRoutine) {
 
-		pInformation->Ctrl_Info.Usb_wOffset = wOffset;
-		pInformation->Ctrl_Info.CopyData = CopyRoutine;
+		pInformation->ep0_ctrl_info.data_buffer_offset = wOffset;
+		pInformation->ep0_ctrl_info.CopyData = CopyRoutine;
 		/* sb in the original the cast to word was directly */
 		/* now the cast is made step by step */
 		(*CopyRoutine)(0);
@@ -810,20 +763,20 @@ void setup_with_data_process(void)
 	} else {
 		Result = (*pProperty->Class_Data_Setup)(pInformation->b_request);
 		if (Result == USB_NOT_READY) {
-			pInformation->ControlState = PAUSE;
+			pInformation->control_state = PAUSE;
 			return;
 		}
 	}
 
-	if (pInformation->Ctrl_Info.Usb_wLength == 0xFFFF) {
+	if (pInformation->ep0_ctrl_info.remaining_data_size == 0xFFFF) {
 		/* Data is not ready, wait it */
-		pInformation->ControlState = PAUSE;
+		pInformation->control_state = PAUSE;
 		return;
 	}
 
-	if ((Result == USB_UNSUPPORT) || (pInformation->Ctrl_Info.Usb_wLength == 0)) {
+	if ((Result == USB_UNSUPPORT) || (pInformation->ep0_ctrl_info.remaining_data_size == 0)) {
 		/* Unsupported request */
-		pInformation->ControlState = STALLED;
+		pInformation->control_state = STALLED;
 		return;
 	}
 
@@ -832,25 +785,25 @@ void setup_with_data_process(void)
 		__IO uint32_t wLength = pInformation->USBwLength;
 
 		/* Restrict the data length to be the one host asks for */
-		if (pInformation->Ctrl_Info.Usb_wLength > wLength) {
-			pInformation->Ctrl_Info.Usb_wLength = wLength;
+		if (pInformation->ep0_ctrl_info.remaining_data_size > wLength) {
+			pInformation->ep0_ctrl_info.remaining_data_size = wLength;
 
-		} else if (pInformation->Ctrl_Info.Usb_wLength < pInformation->USBwLength) {
+		} else if (pInformation->ep0_ctrl_info.remaining_data_size < pInformation->USBwLength) {
 
-			if (pInformation->Ctrl_Info.Usb_wLength < pProperty->MaxPacketSize) {
-				Data_Mul_MaxPacketSize = FALSE;
+			if (pInformation->ep0_ctrl_info.remaining_data_size < pProperty->MaxPacketSize) {
+				multiple_max_packet_size = FALSE;
 
-			} else if ((pInformation->Ctrl_Info.Usb_wLength % pProperty->MaxPacketSize) == 0) {
-				Data_Mul_MaxPacketSize = TRUE;
+			} else if ((pInformation->ep0_ctrl_info.remaining_data_size % pProperty->MaxPacketSize) == 0) {
+				multiple_max_packet_size = TRUE;
 			}
 		}
 
-		pInformation->Ctrl_Info.PacketSize = pProperty->MaxPacketSize;
-		DataStageIn();
+		pInformation->ep0_ctrl_info.single_transfer_size = pProperty->MaxPacketSize;
+		ep0_data_stage_in_process();
 
 	} else {
-		pInformation->ControlState = OUT_DATA;
-		vSetEPRxStatus(EP_RX_VALID); /* enable for next data reception */
+		pInformation->control_state = OUT_DATA;
+		ep0_rx_state = EP_RX_VALID; /* enable for next data reception */
 	}
 
 }
@@ -874,7 +827,7 @@ uint8_t ep0_setup_process(void)
 
 	struct std_request *prequest = (struct std_request *)(PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2));
 
-	if (pInformation->ControlState != PAUSE) {
+	if (pInformation->control_state != PAUSE) {
 
 		pInformation->bm_request_type = prequest->bmRequestType;
 
@@ -887,7 +840,7 @@ uint8_t ep0_setup_process(void)
 		pInformation->USBwLength = ByteSwap(prequest->wLength); /*TODO: USB check correctness of the swapping*/
 	}
 
-	pInformation->ControlState = SETTING_UP;
+	pInformation->control_state = SETTING_UP;
 
 	if (pInformation->USBwLength == 0) {
 		setup_without_data_process();
@@ -908,7 +861,7 @@ uint8_t ep0_setup_process(void)
 //
 //	pBuf.b = PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2); /* *2 for 32 bits addr */
 //
-//	if (pInformation->ControlState != PAUSE) {
+//	if (pInformation->control_state != PAUSE) {
 //		pInformation->bm_request_type = *pBuf.b++; /* bmRequestType */
 //		pInformation->b_request = *pBuf.b++; /* bRequest */
 //		pBuf.w += offset;  /* word not accessed because of 32 bits addressing */
@@ -919,7 +872,7 @@ uint8_t ep0_setup_process(void)
 //		pInformation->USBwLength = *pBuf.w; /* wLength */
 //	}
 //
-//	pInformation->ControlState = SETTING_UP;
+//	pInformation->control_state = SETTING_UP;
 //
 //	if (pInformation->USBwLength == 0) {
 //
@@ -941,13 +894,13 @@ uint8_t ep0_setup_process(void)
 *******************************************************************************/
 uint8_t ep0_in_process(void)
 {
-	uint32_t ControlState = pInformation->ControlState;
+	uint32_t ControlState = pInformation->control_state;
 
 	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
 
-		DataStageIn();
+		ep0_data_stage_in_process();
 		/* ControlState may be changed outside the function */
-		ControlState = pInformation->ControlState;
+		ControlState = pInformation->control_state;
 
 	} else if (ControlState == WAIT_STATUS_IN) {
 
@@ -965,7 +918,7 @@ uint8_t ep0_in_process(void)
 		ControlState = STALLED;
 	}
 
-	pInformation->ControlState = ControlState;
+	pInformation->control_state = ControlState;
 
 	return ep0_finish_processing();
 }
@@ -979,7 +932,7 @@ uint8_t ep0_in_process(void)
 *******************************************************************************/
 uint8_t ep0_out_process(void)
 {
-	uint32_t ControlState = pInformation->ControlState;
+	uint32_t ControlState = pInformation->control_state;
 
 	if ((ControlState == IN_DATA) || (ControlState == LAST_IN_DATA)) {
 		/* host aborts the transfer before finish */
@@ -987,8 +940,8 @@ uint8_t ep0_out_process(void)
 
 	} else if ((ControlState == OUT_DATA) || (ControlState == LAST_OUT_DATA)) {
 
-		DataStageOut();
-		ControlState = pInformation->ControlState; /* may be changed outside the function */
+		ep0_data_stage_out_process();
+		ControlState = pInformation->control_state; /* may be changed outside the function */
 
 	} else if (ControlState == WAIT_STATUS_OUT) {
 
@@ -999,7 +952,7 @@ uint8_t ep0_out_process(void)
 		ControlState = STALLED;
 	}
 
-	pInformation->ControlState = ControlState;
+	pInformation->control_state = ControlState;
 
 	return ep0_finish_processing();
 }
@@ -1014,14 +967,14 @@ uint8_t ep0_out_process(void)
 *******************************************************************************/
 uint8_t ep0_finish_processing(void)
 {
-	SetEPRxCount(ENDP0, Device_Property.MaxPacketSize);
+	_SetEPRxCount(ENDP0, Device_Property.MaxPacketSize);
 
-	if (pInformation->ControlState == STALLED) {
-		vSetEPRxStatus(EP_RX_STALL);
-		vSetEPTxStatus(EP_TX_STALL);
+	if (pInformation->control_state == STALLED) {
+		ep0_rx_state = EP_RX_STALL;
+		ep0_tx_state = EP_TX_STALL;
 	}
 
-	return (pInformation->ControlState == PAUSE);
+	return (pInformation->control_state == PAUSE);
 }
 
 /*******************************************************************************

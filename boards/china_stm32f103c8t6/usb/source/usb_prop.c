@@ -358,8 +358,8 @@ RESULT Virtual_Com_Port_Data_Setup(uint8_t RequestNo)
     return USB_UNSUPPORT;
   }
 
-  pInformation->Ctrl_Info.CopyData = CopyRoutine;
-  pInformation->Ctrl_Info.Usb_wOffset = 0;
+  pInformation->ep0_ctrl_info.CopyData = CopyRoutine;
+  pInformation->ep0_ctrl_info.data_buffer_offset = 0;
   (*CopyRoutine)(0);
   return USB_SUCCESS;
 }
@@ -466,7 +466,7 @@ uint8_t *Virtual_Com_Port_GetLineCoding(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength = sizeof(linecoding);
+    pInformation->ep0_ctrl_info.remaining_data_size = sizeof(linecoding);
     return NULL;
   }
   return(uint8_t *)&linecoding;
@@ -483,7 +483,7 @@ uint8_t *Virtual_Com_Port_SetLineCoding(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->Ctrl_Info.Usb_wLength = sizeof(linecoding);
+    pInformation->ep0_ctrl_info.remaining_data_size = sizeof(linecoding);
     return NULL;
   }
   return(uint8_t *)&linecoding;
