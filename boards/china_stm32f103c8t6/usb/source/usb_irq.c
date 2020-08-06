@@ -33,7 +33,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 	if (usb_irq_flags & ISTR_RESET & wInterrupt_Mask) {
 		_SetISTR((uint16_t)CLR_RESET);
-		Device_Property.Reset();
+		property.Reset();
 	}
 
 /***********************************************************************/

@@ -1,115 +1,98 @@
-/**
-  ******************************************************************************
-  * @file    usb_prop.c
-  * @author  MCD Application Team
-  * @version V4.0.0
-  * @date    21-January-2013
-  * @brief   All processing related to Virtual Com Port Demo
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
-
-
-/* Includes ------------------------------------------------------------------*/
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_prop.h"
-
 #include "usb_desc.h"
 #include "usb_pwr.h"
 
-#define         ID1          (0x1FFFF7E8)
-#define         ID2          (0x1FFFF7EC)
-#define         ID3          (0x1FFFF7F0)
+#define ID1		(0x1FFFF7E8)
+#define ID2		(0x1FFFF7EC)
+#define ID3		(0x1FFFF7F0)
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-uint8_t Request = 0;
+uint32_t ProtocolValue;
+__IO uint8_t EXTI_Enable;
+__IO uint8_t Request = 0;
+uint8_t Report_Buf[wMaxPacketSize];
+uint8_t Buffer[RPT4_COUNT+1];
+uint8_t *HID_SetReport_Feature(uint16_t Length);
+ErrorStatus HSEStartUpStatus;
 
-LINE_CODING linecoding =
-  {
-    115200, /* baud rate*/
-    0x00,   /* stop bits-1*/
-    0x00,   /* parity - none*/
-    0x08    /* no. of bits 8*/
-  };
+DEVICE Device_Table = {
+	EP_NUM,
+	1
+};
 
-/* -------------------------------------------------------------------------- */
-/*  Structures initializations */
-/* -------------------------------------------------------------------------- */
+DEVICE_PROP property = {
+	HID_init,
+	HID_Reset,
+	HID_Status_In,
+	HID_Status_Out,
+	HID_Data_Setup,
+	HID_NoData_Setup,
+	HID_Get_Interface_Setting,
+	HID_GetDeviceDescriptor,
+	HID_GetConfigDescriptor,
+	HID_GetStringDescriptor,
+	0,
+	0x40 /*MAX PACKET SIZE*/
+};
 
-DEVICE Device_Table =
-  {
-    EP_NUM,
-    1
-  };
+USER_STANDARD_REQUESTS user_standard_requests = {
+	HID_GetConfiguration,
+	HID_SetConfiguration,
+	HID_GetInterface,
+	HID_SetInterface,
+	HID_GetStatus,
+	HID_ClearFeature,
+	HID_SetEndPointFeature,
+	HID_SetDeviceFeature,
+	HID_SetDeviceAddress
+};
 
-DEVICE_PROP Device_Property =
-  {
-    Virtual_Com_Port_init,
-    Virtual_Com_Port_Reset,
-    Virtual_Com_Port_Status_In,
-    Virtual_Com_Port_Status_Out,
-    Virtual_Com_Port_Data_Setup,
-    Virtual_Com_Port_NoData_Setup,
-    Virtual_Com_Port_Get_Interface_Setting,
-    Virtual_Com_Port_GetDeviceDescriptor,
-    Virtual_Com_Port_GetConfigDescriptor,
-    Virtual_Com_Port_GetStringDescriptor,
-    0,
-    0x40 /*MAX PACKET SIZE*/
-  };
+ONE_DESCRIPTOR Device_Descriptor = {
+	(uint8_t*)RHID_DeviceDescriptor,
+	RHID_SIZ_DEVICE_DESC
+};
 
-USER_STANDARD_REQUESTS User_Standard_Requests =
-  {
-    Virtual_Com_Port_GetConfiguration,
-    Virtual_Com_Port_SetConfiguration,
-    Virtual_Com_Port_GetInterface,
-    Virtual_Com_Port_SetInterface,
-    Virtual_Com_Port_GetStatus,
-    Virtual_Com_Port_ClearFeature,
-    Virtual_Com_Port_SetEndPointFeature,
-    Virtual_Com_Port_SetDeviceFeature,
-    Virtual_Com_Port_SetDeviceAddress
-  };
+ONE_DESCRIPTOR Config_Descriptor = {
+	(uint8_t*)RHID_ConfigDescriptor,
+	RHID_SIZ_CONFIG_DESC
+};
 
-ONE_DESCRIPTOR Device_Descriptor =
-  {
-    (uint8_t*)Virtual_Com_Port_DeviceDescriptor,
-    VIRTUAL_COM_PORT_SIZ_DEVICE_DESC
-  };
+ONE_DESCRIPTOR RHID_Report_Descriptor = {
+	(uint8_t *)RHID_ReportDescriptor,
+	RHID_SIZ_REPORT_DESC
+};
 
-ONE_DESCRIPTOR Config_Descriptor =
-  {
-    (uint8_t*)Virtual_Com_Port_ConfigDescriptor,
-    VIRTUAL_COM_PORT_SIZ_CONFIG_DESC
-  };
+ONE_DESCRIPTOR RHID_Hid_Descriptor = {
+	(uint8_t*)RHID_ConfigDescriptor + RHID_OFF_HID_DESC,
+	RHID_SIZ_HID_DESC
+};
 
-ONE_DESCRIPTOR String_Descriptor[4] =
-  {
-    {(uint8_t*)Virtual_Com_Port_StringLangID, VIRTUAL_COM_PORT_SIZ_STRING_LANGID},
-    {(uint8_t*)Virtual_Com_Port_StringVendor, VIRTUAL_COM_PORT_SIZ_STRING_VENDOR},
-    {(uint8_t*)Virtual_Com_Port_StringProduct, VIRTUAL_COM_PORT_SIZ_STRING_PRODUCT},
-    {(uint8_t*)Virtual_Com_Port_StringSerial, VIRTUAL_COM_PORT_SIZ_STRING_SERIAL}
-  };
+ONE_DESCRIPTOR String_Descriptor[4] = {
+	{(uint8_t*)RHID_StringLangID, RHID_SIZ_STRING_LANGID},
+	{(uint8_t*)RHID_StringVendor, RHID_SIZ_STRING_VENDOR},
+	{(uint8_t*)RHID_StringProduct, RHID_SIZ_STRING_PRODUCT},
+	{(uint8_t*)RHID_StringSerial, RHID_SIZ_STRING_SERIAL}
+};
+
+/*******************************************************************************
+* Function Name  : Enter_LowPowerMode.
+* Description    : Power-off system clocks and power while entering suspend mode.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void Enter_LowPowerMode(void)
+{
+  /* Set the device state to suspend */
+  bDeviceState = SUSPENDED;
+
+  /* Clear EXTI Line18 pending bit */
+//  EXTI_ClearITPendingBit(KEY_BUTTON_EXTI_LINE);
+
+  /* Request to enter STOP mode with regulator in low power mode */
+//  PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+}
 
 /*******************************************************************************
 * Function Name  : HexToChar.
@@ -139,13 +122,6 @@ static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len)
   }
 }
 
-/*******************************************************************************
-* Function Name  : Get_SerialNum.
-* Description    : Create the serial number string descriptor.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
 void Get_SerialNum(void)
 {
   uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
@@ -158,113 +134,82 @@ void Get_SerialNum(void)
 
   if (Device_Serial0 != 0)
   {
-    IntToUnicode (Device_Serial0, &Virtual_Com_Port_StringSerial[2] , 8);
-    IntToUnicode (Device_Serial1, &Virtual_Com_Port_StringSerial[18], 4);
+    IntToUnicode (Device_Serial0, &RHID_StringSerial[2] , 8);
+    IntToUnicode (Device_Serial1, &RHID_StringSerial[18], 4);
   }
 }
-
 /*******************************************************************************
-* Function Name  :  USART_Config_Default.
-* Description    :  configure the EVAL_COM1 with default values.
-* Input          :  None.
-* Return         :  None.
-*******************************************************************************/
-void USART_Config_Default(void)
-{
-}
-
-/*******************************************************************************
-* Function Name  : Virtual_Com_Port_init.
-* Description    : Virtual COM Port Mouse init routine.
+* Function Name  : HID_init.
+* Description    : HID init routine.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_init(void)
+void HID_init(void)
 {
 
   /* Update the serial number string descriptor with the data from the unique
   ID*/
   Get_SerialNum();
 
-  pInformation->Current_Configuration = 0;
-
+  usb_device_info->Current_Configuration = 0;
   /* Connect the device */
   PowerOn();
 
   /* Perform basic device initialization operations */
   USB_SIL_Init();
 
-  /* configure the USART to the default settings */
-  USART_Config_Default();
-
   bDeviceState = UNCONNECTED;
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_Reset
-* Description    : Virtual_Com_Port Mouse reset routine
+* Function Name  : HID_Reset.
+* Description    : HID reset routine.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_Reset(void)
+void HID_Reset(void)
 {
-  /* Set Virtual_Com_Port DEVICE as not configured */
-  pInformation->Current_Configuration = 0;
+  /* Set HID_DEVICE as not configured */
+  usb_device_info->Current_Configuration = 0;
+  usb_device_info->Current_Interface = 0;/*the default Interface*/
 
   /* Current Feature initialization */
-  pInformation->Current_Feature = Virtual_Com_Port_ConfigDescriptor[7];
-
-  /* Set Virtual_Com_Port DEVICE with the default Interface*/
-  pInformation->Current_Interface = 0;
-
+  usb_device_info->Current_Feature = RHID_ConfigDescriptor[7];
   SetBTABLE(BTABLE_ADDRESS);
-
   /* Initialize Endpoint 0 */
   SetEPType(ENDP0, EP_CONTROL);
   SetEPTxStatus(ENDP0, EP_TX_STALL);
   SetEPRxAddr(ENDP0, ENDP0_RXADDR);
   SetEPTxAddr(ENDP0, ENDP0_TXADDR);
   Clear_Status_Out(ENDP0);
-  SetEPRxCount(ENDP0, Device_Property.MaxPacketSize);
+  SetEPRxCount(ENDP0, property.MaxPacketSize);
   SetEPRxValid(ENDP0);
 
   /* Initialize Endpoint 1 */
-  SetEPType(ENDP1, EP_BULK);
+  SetEPType(ENDP1, EP_INTERRUPT);
   SetEPTxAddr(ENDP1, ENDP1_TXADDR);
+  SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+  SetEPTxCount(ENDP1, EP1TxCount);
+  SetEPRxCount(ENDP1, EP1RxCount);
+  SetEPRxStatus(ENDP1, EP_RX_VALID);
   SetEPTxStatus(ENDP1, EP_TX_NAK);
-  SetEPRxStatus(ENDP1, EP_RX_DIS);
-
-  /* Initialize Endpoint 2 */
-  SetEPType(ENDP2, EP_INTERRUPT);
-  SetEPTxAddr(ENDP2, ENDP2_TXADDR);
-  SetEPRxStatus(ENDP2, EP_RX_DIS);
-  SetEPTxStatus(ENDP2, EP_TX_NAK);
-
-  /* Initialize Endpoint 3 */
-  SetEPType(ENDP3, EP_BULK);
-  SetEPRxAddr(ENDP3, ENDP3_RXADDR);
-  SetEPRxCount(ENDP3, VIRTUAL_COM_PORT_DATA_SIZE);
-  SetEPRxStatus(ENDP3, EP_RX_VALID);
-  SetEPTxStatus(ENDP3, EP_TX_DIS);
 
   /* Set this device to response on default address */
   SetDeviceAddress(0);
-  
   bDeviceState = ATTACHED;
 }
-
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_SetConfiguration.
+* Function Name  : HID_SetConfiguration.
 * Description    : Update the device state to configured.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_SetConfiguration(void)
+void HID_SetConfiguration(void)
 {
-  DEVICE_INFO *pInfo = &Device_Info;
+  DEVICE_INFO *pInfo = &device_info;
 
   if (pInfo->Current_Configuration != 0)
   {
@@ -272,157 +217,204 @@ void Virtual_Com_Port_SetConfiguration(void)
     bDeviceState = CONFIGURED;
   }
 }
-
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_SetConfiguration.
+* Function Name  : HID_SetConfiguration.
 * Description    : Update the device state to addressed.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_SetDeviceAddress (void)
+void HID_SetDeviceAddress (void)
 {
   bDeviceState = ADDRESSED;
 }
-
 /*******************************************************************************
-* Function Name  :  USART_Config.
-* Description    :  Configure the EVAL_COM1 according to the line coding structure.
-* Input          :  None.
-* Return         :  Configuration status
-                    TRUE : configuration done with success
-                    FALSE : configuration aborted.
-*******************************************************************************/
-bool USART_Config(void)
-{
-	return 0;
-}
-
-/*******************************************************************************
-* Function Name  : Virtual_Com_Port_Status_In.
-* Description    : Virtual COM Port Status In Routine.
+* Function Name  : HID_Status_In.
+* Description    : HID status IN routine.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_Status_In(void)
+void HID_Status_In(void)
 {
-  if (Request == SET_LINE_CODING)
-  {
-    USART_Config();
-    Request = 0;
-  }
+//  BitAction Led_State;
+//
+//  if (Report_Buf[1] == 0)
+//  {
+//    Led_State = Bit_RESET;
+//  }
+//  else
+//  {
+//    Led_State = Bit_SET;
+//  }
+//
+//  switch (Report_Buf[0])
+//  {
+//    case 1: /* Led 1 */
+//     if (Led_State != Bit_RESET)
+//     {
+//       GPIO_SetBits(LED_PORT,LED1_PIN);
+//     }
+//     else
+//     {
+//       GPIO_ResetBits(LED_PORT,LED1_PIN);
+//     }
+//     break;
+//    case 2: /* Led 2 */
+//     if (Led_State != Bit_RESET)
+//     {
+//       GPIO_SetBits(LED_PORT,LED2_PIN);
+//     }
+//     else
+//     {
+//       GPIO_ResetBits(LED_PORT,LED2_PIN);
+//     }
+//      break;
+//    case 3: /* Led 1&2 */
+//       Buffer[4]=Report_Buf[1];
+//     break;
+//  }
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_Status_Out
-* Description    : Virtual COM Port Status OUT Routine.
+* Function Name  : HID_Status_Out
+* Description    : HID status OUT routine.
 * Input          : None.
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Virtual_Com_Port_Status_Out(void)
+void HID_Status_Out (void)
 {}
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_Data_Setup
-* Description    : handle the data class specific requests
+* Function Name  : HID_Data_Setup
+* Description    : Handle the data class specific requests.
 * Input          : Request Nb.
 * Output         : None.
 * Return         : USB_UNSUPPORT or USB_SUCCESS.
 *******************************************************************************/
-RESULT Virtual_Com_Port_Data_Setup(uint8_t RequestNo)
+RESULT HID_Data_Setup(uint8_t RequestNo)
 {
-  uint8_t    *(*CopyRoutine)(uint16_t);
+  uint8_t *(*CopyRoutine)(uint16_t);
 
   CopyRoutine = NULL;
+  if ((RequestNo == GET_DESCRIPTOR)
+      && ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == INTERFACE_RECIPIENT)
+      && (usb_device_info->USBwIndex0 == 0))
+  {
+    if (usb_device_info->USBwValue1 == REPORT_DESCRIPTOR)
+    {
+      CopyRoutine = HID_GetReportDescriptor;
+    }
+    else if (usb_device_info->USBwValue1 == HID_DESCRIPTOR_TYPE)
+    {
+      CopyRoutine = HID_GetHIDDescriptor;
+    }
 
-  if (RequestNo == GET_LINE_CODING)
+  } /* End of GET_DESCRIPTOR */
+
+  /*** GET_PROTOCOL, GET_REPORT, SET_REPORT ***/
+  else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT))  == (CLASS_REQUEST | INTERFACE_RECIPIENT)) )
   {
-    if (Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+    switch( RequestNo )
     {
-      CopyRoutine = Virtual_Com_Port_GetLineCoding;
+    case GET_PROTOCOL:
+      CopyRoutine = HID_GetProtocolValue;
+      break;
+    case SET_REPORT:
+      CopyRoutine = HID_SetReport_Feature;
+      Request = SET_REPORT;
+      break;
+    default:
+      break;
     }
-  }
-  else if (RequestNo == SET_LINE_CODING)
-  {
-    if (Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
-    {
-      CopyRoutine = Virtual_Com_Port_SetLineCoding;
-    }
-    Request = SET_LINE_CODING;
   }
 
   if (CopyRoutine == NULL)
   {
     return USB_UNSUPPORT;
   }
-
-  pInformation->ep0_ctrl_info.data_copy = CopyRoutine;
-  pInformation->ep0_ctrl_info.data_buffer_offset = 0;
+  usb_device_info->ep0_ctrl_info.data_copy = CopyRoutine;
+  usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
   (*CopyRoutine)(0);
   return USB_SUCCESS;
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_NoData_Setup.
-* Description    : handle the no data class specific requests.
+* Function Name  : HID_SetReport_Feature
+* Description    : Set Feature request handling
+* Input          : Length.
+* Output         : None.
+* Return         : Buffer
+*******************************************************************************/
+uint8_t *HID_SetReport_Feature(uint16_t Length)
+{
+  if (Length == 0)
+  {
+    usb_device_info->ep0_ctrl_info.remaining_data_size = wMaxPacketSize;
+    return NULL;
+  }
+  else
+  {
+    return Report_Buf;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : HID_NoData_Setup
+* Description    : handle the no data class specific requests
 * Input          : Request Nb.
 * Output         : None.
 * Return         : USB_UNSUPPORT or USB_SUCCESS.
 *******************************************************************************/
-RESULT Virtual_Com_Port_NoData_Setup(uint8_t RequestNo)
+RESULT HID_NoData_Setup(uint8_t RequestNo)
 {
-
-  if (Type_Recipient == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+  if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (CLASS_REQUEST | INTERFACE_RECIPIENT))
+      && (RequestNo == SET_PROTOCOL))
   {
-    if (RequestNo == SET_COMM_FEATURE)
-    {
-      return USB_SUCCESS;
-    }
-    else if (RequestNo == SET_CONTROL_LINE_STATE)
-    {
-      return USB_SUCCESS;
-    }
+    return HID_SetProtocol();
   }
 
-  return USB_UNSUPPORT;
+  else
+  {
+    return USB_UNSUPPORT;
+  }
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_GetDeviceDescriptor.
+* Function Name  : HID_GetDeviceDescriptor.
 * Description    : Gets the device descriptor.
-* Input          : Length.
+* Input          : Length
 * Output         : None.
 * Return         : The address of the device descriptor.
 *******************************************************************************/
-uint8_t *Virtual_Com_Port_GetDeviceDescriptor(uint16_t Length)
+uint8_t *HID_GetDeviceDescriptor(uint16_t Length)
 {
   return Standard_GetDescriptorData(Length, &Device_Descriptor);
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_GetConfigDescriptor.
-* Description    : get the configuration descriptor.
-* Input          : Length.
+* Function Name  : HID_GetConfigDescriptor.
+* Description    : Gets the configuration descriptor.
+* Input          : Length
 * Output         : None.
 * Return         : The address of the configuration descriptor.
 *******************************************************************************/
-uint8_t *Virtual_Com_Port_GetConfigDescriptor(uint16_t Length)
+uint8_t *HID_GetConfigDescriptor(uint16_t Length)
 {
   return Standard_GetDescriptorData(Length, &Config_Descriptor);
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_GetStringDescriptor
+* Function Name  : HID_GetStringDescriptor
 * Description    : Gets the string descriptors according to the needed index
-* Input          : Length.
+* Input          : Length
 * Output         : None.
 * Return         : The address of the string descriptors.
 *******************************************************************************/
-uint8_t *Virtual_Com_Port_GetStringDescriptor(uint16_t Length)
+uint8_t *HID_GetStringDescriptor(uint16_t Length)
 {
-  uint8_t wValue0 = pInformation->USBwValue0;
+  uint8_t wValue0 = usb_device_info->USBwValue0;
   if (wValue0 > 4)
   {
     return NULL;
@@ -434,21 +426,45 @@ uint8_t *Virtual_Com_Port_GetStringDescriptor(uint16_t Length)
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_Get_Interface_Setting.
-* Description    : test the interface and the alternate setting according to the
-*                  supported one.
-* Input1         : uint8_t: Interface : interface number.
-* Input2         : uint8_t: AlternateSetting : Alternate Setting number.
+* Function Name  : HID_GetReportDescriptor.
+* Description    : Gets the HID report descriptor.
+* Input          : Length
 * Output         : None.
-* Return         : The address of the string descriptors.
+* Return         : The address of the configuration descriptor.
 *******************************************************************************/
-RESULT Virtual_Com_Port_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
+uint8_t *HID_GetReportDescriptor(uint16_t Length)
+{
+  return Standard_GetDescriptorData(Length, &RHID_Report_Descriptor);
+}
+
+/*******************************************************************************
+* Function Name  : HID_GetHIDDescriptor.
+* Description    : Gets the HID descriptor.
+* Input          : Length
+* Output         : None.
+* Return         : The address of the configuration descriptor.
+*******************************************************************************/
+uint8_t *HID_GetHIDDescriptor(uint16_t Length)
+{
+  return Standard_GetDescriptorData(Length, &RHID_Hid_Descriptor);
+}
+
+/*******************************************************************************
+* Function Name  : HID_Get_Interface_Setting.
+* Description    : tests the interface and the alternate setting according to the
+*                  supported one.
+* Input          : - Interface : interface number.
+*                  - AlternateSetting : Alternate Setting number.
+* Output         : None.
+* Return         : USB_SUCCESS or USB_UNSUPPORT.
+*******************************************************************************/
+RESULT HID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
 {
   if (AlternateSetting > 0)
   {
     return USB_UNSUPPORT;
   }
-  else if (Interface > 1)
+  else if (Interface > 0)
   {
     return USB_UNSUPPORT;
   }
@@ -456,38 +472,35 @@ RESULT Virtual_Com_Port_Get_Interface_Setting(uint8_t Interface, uint8_t Alterna
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_GetLineCoding.
-* Description    : send the linecoding structure to the PC host.
-* Input          : Length.
+* Function Name  : HID_SetProtocol
+* Description    : HID Set Protocol request routine.
+* Input          : None.
 * Output         : None.
-* Return         : Linecoding structure base address.
+* Return         : USB SUCCESS.
 *******************************************************************************/
-uint8_t *Virtual_Com_Port_GetLineCoding(uint16_t Length)
+RESULT HID_SetProtocol(void)
 {
-  if (Length == 0)
-  {
-    pInformation->ep0_ctrl_info.remaining_data_size = sizeof(linecoding);
-    return NULL;
-  }
-  return(uint8_t *)&linecoding;
+  uint8_t wValue0 = usb_device_info->USBwValue0;
+  ProtocolValue = wValue0;
+  return USB_SUCCESS;
 }
 
 /*******************************************************************************
-* Function Name  : Virtual_Com_Port_SetLineCoding.
-* Description    : Set the linecoding structure fields.
+* Function Name  : HID_GetProtocolValue
+* Description    : get the protocol value
 * Input          : Length.
 * Output         : None.
-* Return         : Linecoding structure base address.
+* Return         : address of the protocol value.
 *******************************************************************************/
-uint8_t *Virtual_Com_Port_SetLineCoding(uint16_t Length)
+uint8_t *HID_GetProtocolValue(uint16_t Length)
 {
   if (Length == 0)
   {
-    pInformation->ep0_ctrl_info.remaining_data_size = sizeof(linecoding);
+    usb_device_info->ep0_ctrl_info.remaining_data_size = 1;
     return NULL;
   }
-  return(uint8_t *)&linecoding;
+  else
+  {
+    return (uint8_t *)(&ProtocolValue);
+  }
 }
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

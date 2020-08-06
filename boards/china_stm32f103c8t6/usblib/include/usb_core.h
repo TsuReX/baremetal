@@ -197,9 +197,6 @@ typedef struct _USER_STANDARD_REQUESTS {
   void (*User_SetDeviceAddress)(void);       /* Set Device Address */
 } USER_STANDARD_REQUESTS;
 
-/* Exported constants --------------------------------------------------------*/
-#define Type_Recipient (pInformation->bm_request_type & (REQUEST_TYPE | RECIPIENT))
-
 #define Usb_rLength Usb_wLength
 #define Usb_rOffset Usb_wOffset
 
@@ -234,10 +231,10 @@ RESULT Standard_ClearFeature(void);
 void SetDeviceAddress(uint8_t);
 void NOP_Process(void);
 
-extern	DEVICE_PROP Device_Property;
-extern	USER_STANDARD_REQUESTS User_Standard_Requests;
+extern	DEVICE_PROP property;
+extern	USER_STANDARD_REQUESTS user_standard_requests;
 extern	DEVICE  Device_Table;
-extern	DEVICE_INFO Device_Info;
+extern	DEVICE_INFO device_info;
 
 /* cells saving status during interrupt servicing */
 extern __IO uint16_t ep0_rx_state;

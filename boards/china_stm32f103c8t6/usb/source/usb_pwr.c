@@ -224,7 +224,7 @@ void Suspend(void)
 *******************************************************************************/
 void Leave_LowPowerMode(void)
 {
-  DEVICE_INFO *pInfo = &Device_Info;
+  DEVICE_INFO *pInfo = &device_info;
 
   /* Set the device state to the correct state */
   if (pInfo->Current_Configuration != 0)
