@@ -33,7 +33,7 @@ void usb_init(void)
 	usb_device_info = &device_info;
 	usb_device_info->control_state = IN_DATA;
 	usb_device_property = &property;
-	usb_standard_requests = &user_standard_requests;
+	usb_standard_requests = &standard_requests;
 	/* Initialize devices one by one */
-	usb_device_property->Init();
+	usb_device_property->init();
 }

@@ -615,7 +615,7 @@ void setup_without_data_process(void)
 	}
 
 	if (result != USB_SUCCESS) {
-		result = (*usb_device_property->Class_NoData_Setup)(request_number);
+		result = (*usb_device_property->class_setup_without_data_process)(request_number);
 
 		if (result == USB_NOT_READY) {
 			control_state = PAUSE;
@@ -762,7 +762,7 @@ void setup_with_data_process(void)
 		Result = USB_SUCCESS;
 
 	} else {
-		Result = (*usb_device_property->Class_Data_Setup)(usb_device_info->b_request);
+		Result = (*usb_device_property->class_setup_with_data_process)(usb_device_info->b_request);
 		if (Result == USB_NOT_READY) {
 			usb_device_info->control_state = PAUSE;
 			return;
@@ -912,7 +912,7 @@ uint8_t ep0_in_process(void)
 			usb_standard_requests->User_SetDeviceAddress();
 		}
 
-		(*usb_device_property->Process_Status_IN)();
+		(*usb_device_property->status_in_process)();
 		control_state = STALLED;
 
 	} else {

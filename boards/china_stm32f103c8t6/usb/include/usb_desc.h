@@ -35,12 +35,12 @@
 #define RPT4_COUNT 0x04 //STM32->PC
 
 /* Exported functions ------------------------------------------------------- */
-extern const uint8_t RHID_DeviceDescriptor[RHID_SIZ_DEVICE_DESC];
-extern const uint8_t RHID_ConfigDescriptor[RHID_SIZ_CONFIG_DESC];
-extern const uint8_t RHID_ReportDescriptor[RHID_SIZ_REPORT_DESC];
-extern const uint8_t RHID_StringLangID[RHID_SIZ_STRING_LANGID];
-extern const uint8_t RHID_StringVendor[RHID_SIZ_STRING_VENDOR];
-extern const uint8_t RHID_StringProduct[RHID_SIZ_STRING_PRODUCT];
-extern uint8_t RHID_StringSerial[RHID_SIZ_STRING_SERIAL];
+extern const uint8_t rhid_device_descriptor[RHID_SIZ_DEVICE_DESC];
+extern const uint8_t rhid_configuration_descriptor[RHID_SIZ_CONFIG_DESC];
+extern const uint8_t rhid_report_descriptor[RHID_SIZ_REPORT_DESC];
+extern const uint8_t rhid_string_lang_id[RHID_SIZ_STRING_LANGID];
+extern const uint8_t rhid_string_vendor[RHID_SIZ_STRING_VENDOR];
+extern const uint8_t rhid_string_product[RHID_SIZ_STRING_PRODUCT];
+extern uint8_t rhid_string_serial[RHID_SIZ_STRING_SERIAL];
 
 #endif /* __USB_DESC_H */

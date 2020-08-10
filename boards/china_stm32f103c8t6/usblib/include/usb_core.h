@@ -127,12 +127,12 @@ typedef struct _DEVICE_INFO {
 } DEVICE_INFO;
 
 typedef struct _DEVICE_PROP {
-	void (*Init)(void);        /* Initialize the device */
-	void (*Reset)(void);       /* Reset routine of this device */
+	void (*init)(void);        /* Initialize the device */
+	void (*reset)(void);       /* Reset routine of this device */
 
 	/* Device dependent process after the status stage */
-	void (*Process_Status_IN)(void);
-	void (*Process_Status_OUT)(void);
+	void (*status_in_process)(void);
+	void (*status_out_process)(void);
 
 	/* Procedure of process on setup stage of a class specified request with data stage */
 	/* All class specified requests with data stage are processed in Class_Data_Setup
@@ -150,7 +150,7 @@ typedef struct _DEVICE_PROP {
 	Since GET_CONFIGURATION & GET_INTERFACE are highly related to
 	the individual classes, they will be checked and processed here.
 	*/
-	RESULT (*Class_Data_Setup)(uint8_t RequestNo);
+	RESULT (*class_setup_with_data_process)(uint8_t RequestNo);
 
 	/* Procedure of process on setup stage of a class specified request without data stage */
 	/* All class specified requests without data stage are processed in Class_NoData_Setup
@@ -161,7 +161,7 @@ typedef struct _DEVICE_PROP {
 	Since SET_CONFIGURATION & SET_INTERFACE are highly related to
 	the individual classes, they will be checked and processed here.
 	*/
-	RESULT (*Class_NoData_Setup)(uint8_t RequestNo);
+	RESULT (*class_setup_without_data_process)(uint8_t RequestNo);
 
 	/*Class_Get_Interface_Setting
 	This function is used by the file usb_core.c to test if the selected Interface
@@ -177,24 +177,20 @@ typedef struct _DEVICE_PROP {
 	uint8_t* (*GetConfigDescriptor)(uint16_t Length);
 	uint8_t* (*GetStringDescriptor)(uint16_t Length);
 
-	/* This field is not used in current library version. It is kept only for
-	compatibility with previous versions */
-	void* RxEP_buffer;
-
 	uint8_t MaxPacketSize;
 
 } DEVICE_PROP;
 
 typedef struct _USER_STANDARD_REQUESTS {
-  void (*User_GetConfiguration)(void);       /* Get Configuration */
-  void (*User_SetConfiguration)(void);       /* Set Configuration */
-  void (*User_GetInterface)(void);           /* Get Interface */
-  void (*User_SetInterface)(void);           /* Set Interface */
-  void (*User_GetStatus)(void);              /* Get Status */
-  void (*User_ClearFeature)(void);           /* Clear Feature */
-  void (*User_SetEndPointFeature)(void);     /* Set Endpoint Feature */
-  void (*User_SetDeviceFeature)(void);       /* Set Device Feature */
-  void (*User_SetDeviceAddress)(void);       /* Set Device Address */
+	void (*User_GetConfiguration)(void);       /* Get Configuration */
+	void (*User_SetConfiguration)(void);       /* Set Configuration */
+	void (*User_GetInterface)(void);           /* Get Interface */
+	void (*User_SetInterface)(void);           /* Set Interface */
+	void (*User_GetStatus)(void);              /* Get Status */
+	void (*User_ClearFeature)(void);           /* Clear Feature */
+	void (*User_SetEndPointFeature)(void);     /* Set Endpoint Feature */
+	void (*User_SetDeviceFeature)(void);       /* Set Device Feature */
+	void (*User_SetDeviceAddress)(void);       /* Set Device Address */
 } USER_STANDARD_REQUESTS;
 
 #define Usb_rLength Usb_wLength
@@ -232,7 +228,7 @@ void SetDeviceAddress(uint8_t);
 void NOP_Process(void);
 
 extern	DEVICE_PROP property;
-extern	USER_STANDARD_REQUESTS user_standard_requests;
+extern	USER_STANDARD_REQUESTS standard_requests;
 extern	DEVICE  Device_Table;
 extern	DEVICE_INFO device_info;
 

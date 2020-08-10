@@ -26,53 +26,52 @@ DEVICE_PROP property = {
 	HID_Reset,
 	HID_Status_In,
 	HID_Status_Out,
-	HID_Data_Setup,
-	HID_NoData_Setup,
+	hid_setup_with_data_process,
+	hid_setup_without_data_process,
 	HID_Get_Interface_Setting,
 	HID_GetDeviceDescriptor,
 	HID_GetConfigDescriptor,
 	HID_GetStringDescriptor,
-	0,
 	0x40 /*MAX PACKET SIZE*/
 };
 
-USER_STANDARD_REQUESTS user_standard_requests = {
-	HID_GetConfiguration,
+USER_STANDARD_REQUESTS standard_requests = {
+	NOP_HID_GetConfiguration,
 	HID_SetConfiguration,
-	HID_GetInterface,
-	HID_SetInterface,
-	HID_GetStatus,
-	HID_ClearFeature,
-	HID_SetEndPointFeature,
-	HID_SetDeviceFeature,
+	NOP_HID_GetInterface,
+	NOP_HID_SetInterface,
+	NOP_HID_GetStatus,
+	NOP_HID_ClearFeature,
+	NOP_HID_SetEndPointFeature,
+	NOP_HID_SetDeviceFeature,
 	HID_SetDeviceAddress
 };
 
 ONE_DESCRIPTOR Device_Descriptor = {
-	(uint8_t*)RHID_DeviceDescriptor,
+	(uint8_t*)rhid_device_descriptor,
 	RHID_SIZ_DEVICE_DESC
 };
 
 ONE_DESCRIPTOR Config_Descriptor = {
-	(uint8_t*)RHID_ConfigDescriptor,
+	(uint8_t*)rhid_configuration_descriptor,
 	RHID_SIZ_CONFIG_DESC
 };
 
 ONE_DESCRIPTOR RHID_Report_Descriptor = {
-	(uint8_t *)RHID_ReportDescriptor,
+	(uint8_t *)rhid_report_descriptor,
 	RHID_SIZ_REPORT_DESC
 };
 
 ONE_DESCRIPTOR RHID_Hid_Descriptor = {
-	(uint8_t*)RHID_ConfigDescriptor + RHID_OFF_HID_DESC,
+	(uint8_t*)rhid_configuration_descriptor + RHID_OFF_HID_DESC,
 	RHID_SIZ_HID_DESC
 };
 
 ONE_DESCRIPTOR String_Descriptor[4] = {
-	{(uint8_t*)RHID_StringLangID, RHID_SIZ_STRING_LANGID},
-	{(uint8_t*)RHID_StringVendor, RHID_SIZ_STRING_VENDOR},
-	{(uint8_t*)RHID_StringProduct, RHID_SIZ_STRING_PRODUCT},
-	{(uint8_t*)RHID_StringSerial, RHID_SIZ_STRING_SERIAL}
+	{(uint8_t*)rhid_string_lang_id, RHID_SIZ_STRING_LANGID},
+	{(uint8_t*)rhid_string_vendor, RHID_SIZ_STRING_VENDOR},
+	{(uint8_t*)rhid_string_product, RHID_SIZ_STRING_PRODUCT},
+	{(uint8_t*)rhid_string_serial, RHID_SIZ_STRING_SERIAL}
 };
 
 /*******************************************************************************
@@ -84,14 +83,14 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 *******************************************************************************/
 void Enter_LowPowerMode(void)
 {
-  /* Set the device state to suspend */
-  bDeviceState = SUSPENDED;
+	/* Set the device state to suspend */
+	bDeviceState = SUSPENDED;
 
-  /* Clear EXTI Line18 pending bit */
-//  EXTI_ClearITPendingBit(KEY_BUTTON_EXTI_LINE);
+	/* Clear EXTI Line18 pending bit */
+	//  EXTI_ClearITPendingBit(KEY_BUTTON_EXTI_LINE);
 
-  /* Request to enter STOP mode with regulator in low power mode */
-//  PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+	/* Request to enter STOP mode with regulator in low power mode */
+	//  PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
 }
 
 /*******************************************************************************
@@ -105,38 +104,34 @@ static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len)
 {
   uint8_t idx = 0;
 
-  for( idx = 0 ; idx < len ; idx ++)
-  {
-    if( ((value >> 28)) < 0xA )
-    {
-      pbuf[ 2* idx] = (value >> 28) + '0';
-    }
-    else
-    {
-      pbuf[2* idx] = (value >> 28) + 'A' - 10;
-    }
+	for (idx = 0 ; idx < len ; idx ++) {
 
-    value = value << 4;
+		if( ((value >> 28)) < 0xA ) {
+			pbuf[2 * idx] = (value >> 28) + '0';
 
-    pbuf[ 2* idx + 1] = 0;
-  }
+		} else {
+			pbuf[2 * idx] = (value >> 28) + 'A' - 10;
+		}
+
+		value = value << 4;
+		pbuf[2 * idx + 1] = 0;
+	}
 }
 
 void Get_SerialNum(void)
 {
-  uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
+	uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
 
-  Device_Serial0 = *(uint32_t*)ID1;
-  Device_Serial1 = *(uint32_t*)ID2;
-  Device_Serial2 = *(uint32_t*)ID3;
+	Device_Serial0 = *(uint32_t*)ID1;
+	Device_Serial1 = *(uint32_t*)ID2;
+	Device_Serial2 = *(uint32_t*)ID3;
 
-  Device_Serial0 += Device_Serial2;
+	Device_Serial0 += Device_Serial2;
 
-  if (Device_Serial0 != 0)
-  {
-    IntToUnicode (Device_Serial0, &RHID_StringSerial[2] , 8);
-    IntToUnicode (Device_Serial1, &RHID_StringSerial[18], 4);
-  }
+	if (Device_Serial0 != 0) {
+		IntToUnicode (Device_Serial0, &rhid_string_serial[2] , 8);
+		IntToUnicode (Device_Serial1, &rhid_string_serial[18], 4);
+	}
 }
 /*******************************************************************************
 * Function Name  : HID_init.
@@ -148,18 +143,18 @@ void Get_SerialNum(void)
 void HID_init(void)
 {
 
-  /* Update the serial number string descriptor with the data from the unique
-  ID*/
-  Get_SerialNum();
+	/* Update the serial number string descriptor with the data from the unique
+	ID*/
+	Get_SerialNum();
 
-  usb_device_info->Current_Configuration = 0;
-  /* Connect the device */
-  PowerOn();
+	usb_device_info->Current_Configuration = 0;
+	/* Connect the device */
+	PowerOn();
 
-  /* Perform basic device initialization operations */
-  USB_SIL_Init();
+	/* Perform basic device initialization operations */
+	USB_SIL_Init();
 
-  bDeviceState = UNCONNECTED;
+	bDeviceState = UNCONNECTED;
 }
 
 /*******************************************************************************
@@ -171,34 +166,34 @@ void HID_init(void)
 *******************************************************************************/
 void HID_Reset(void)
 {
-  /* Set HID_DEVICE as not configured */
-  usb_device_info->Current_Configuration = 0;
-  usb_device_info->Current_Interface = 0;/*the default Interface*/
+	/* Set HID_DEVICE as not configured */
+	usb_device_info->Current_Configuration = 0;
+	usb_device_info->Current_Interface = 0;/*the default Interface*/
 
-  /* Current Feature initialization */
-  usb_device_info->Current_Feature = RHID_ConfigDescriptor[7];
-  SetBTABLE(BTABLE_ADDRESS);
-  /* Initialize Endpoint 0 */
-  SetEPType(ENDP0, EP_CONTROL);
-  SetEPTxStatus(ENDP0, EP_TX_STALL);
-  SetEPRxAddr(ENDP0, ENDP0_RXADDR);
-  SetEPTxAddr(ENDP0, ENDP0_TXADDR);
-  Clear_Status_Out(ENDP0);
-  SetEPRxCount(ENDP0, property.MaxPacketSize);
-  SetEPRxValid(ENDP0);
+	/* Current Feature initialization */
+	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
+	SetBTABLE(BTABLE_ADDRESS);
+	/* Initialize Endpoint 0 */
+	SetEPType(ENDP0, EP_CONTROL);
+	SetEPTxStatus(ENDP0, EP_TX_STALL);
+	SetEPRxAddr(ENDP0, ENDP0_RXADDR);
+	SetEPTxAddr(ENDP0, ENDP0_TXADDR);
+	Clear_Status_Out(ENDP0);
+	SetEPRxCount(ENDP0, property.MaxPacketSize);
+	SetEPRxValid(ENDP0);
 
-  /* Initialize Endpoint 1 */
-  SetEPType(ENDP1, EP_INTERRUPT);
-  SetEPTxAddr(ENDP1, ENDP1_TXADDR);
-  SetEPRxAddr(ENDP1, ENDP1_RXADDR);
-  SetEPTxCount(ENDP1, EP1TxCount);
-  SetEPRxCount(ENDP1, EP1RxCount);
-  SetEPRxStatus(ENDP1, EP_RX_VALID);
-  SetEPTxStatus(ENDP1, EP_TX_NAK);
+	/* Initialize Endpoint 1 */
+	SetEPType(ENDP1, EP_INTERRUPT);
+	SetEPTxAddr(ENDP1, ENDP1_TXADDR);
+	SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+	SetEPTxCount(ENDP1, EP1TxCount);
+	SetEPRxCount(ENDP1, EP1RxCount);
+	SetEPRxStatus(ENDP1, EP_RX_VALID);
+	SetEPTxStatus(ENDP1, EP_TX_NAK);
 
-  /* Set this device to response on default address */
-  SetDeviceAddress(0);
-  bDeviceState = ATTACHED;
+	/* Set this device to response on default address */
+	SetDeviceAddress(0);
+	bDeviceState = ATTACHED;
 }
 /*******************************************************************************
 * Function Name  : HID_SetConfiguration.
@@ -209,13 +204,12 @@ void HID_Reset(void)
 *******************************************************************************/
 void HID_SetConfiguration(void)
 {
-  DEVICE_INFO *pInfo = &device_info;
+	DEVICE_INFO *pInfo = &device_info;
 
-  if (pInfo->Current_Configuration != 0)
-  {
-    /* Device configured */
-    bDeviceState = CONFIGURED;
-  }
+	if (pInfo->Current_Configuration != 0) {
+		/* Device configured */
+		bDeviceState = CONFIGURED;
+	}
 }
 /*******************************************************************************
 * Function Name  : HID_SetConfiguration.
@@ -226,7 +220,7 @@ void HID_SetConfiguration(void)
 *******************************************************************************/
 void HID_SetDeviceAddress (void)
 {
-  bDeviceState = ADDRESSED;
+	bDeviceState = ADDRESSED;
 }
 /*******************************************************************************
 * Function Name  : HID_Status_In.
@@ -293,51 +287,68 @@ void HID_Status_Out (void)
 * Output         : None.
 * Return         : USB_UNSUPPORT or USB_SUCCESS.
 *******************************************************************************/
-RESULT HID_Data_Setup(uint8_t RequestNo)
+RESULT hid_setup_with_data_process(uint8_t RequestNo)
 {
-  uint8_t *(*CopyRoutine)(uint16_t);
+	uint8_t *(*CopyRoutine)(uint16_t);
 
-  CopyRoutine = NULL;
-  if ((RequestNo == GET_DESCRIPTOR)
-      && ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == INTERFACE_RECIPIENT)
-      && (usb_device_info->USBwIndex0 == 0))
-  {
-    if (usb_device_info->USBwValue1 == REPORT_DESCRIPTOR)
-    {
-      CopyRoutine = HID_GetReportDescriptor;
-    }
-    else if (usb_device_info->USBwValue1 == HID_DESCRIPTOR_TYPE)
-    {
-      CopyRoutine = HID_GetHIDDescriptor;
-    }
+	CopyRoutine = NULL;
+	if ((RequestNo == GET_DESCRIPTOR) &&
+		((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == INTERFACE_RECIPIENT) &&
+		(usb_device_info->USBwIndex0 == 0)) {
 
-  } /* End of GET_DESCRIPTOR */
+		if (usb_device_info->USBwValue1 == REPORT_DESCRIPTOR) {
+			CopyRoutine = HID_GetReportDescriptor;
 
-  /*** GET_PROTOCOL, GET_REPORT, SET_REPORT ***/
-  else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT))  == (CLASS_REQUEST | INTERFACE_RECIPIENT)) )
-  {
-    switch( RequestNo )
-    {
-    case GET_PROTOCOL:
-      CopyRoutine = HID_GetProtocolValue;
-      break;
-    case SET_REPORT:
-      CopyRoutine = HID_SetReport_Feature;
-      Request = SET_REPORT;
-      break;
-    default:
-      break;
-    }
-  }
+		} else if (usb_device_info->USBwValue1 == HID_DESCRIPTOR_TYPE) {
+			CopyRoutine = HID_GetHIDDescriptor;
+		}
 
-  if (CopyRoutine == NULL)
-  {
-    return USB_UNSUPPORT;
-  }
-  usb_device_info->ep0_ctrl_info.data_copy = CopyRoutine;
-  usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
-  (*CopyRoutine)(0);
-  return USB_SUCCESS;
+	}
+	/*** GET_PROTOCOL, GET_REPORT, SET_REPORT ***/
+	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT))  == (CLASS_REQUEST | INTERFACE_RECIPIENT)) ) {
+		switch( RequestNo ) {
+			case GET_PROTOCOL:
+				CopyRoutine = HID_GetProtocolValue;
+				break;
+
+			case SET_REPORT:
+				CopyRoutine = HID_SetReport_Feature;
+				Request = SET_REPORT;
+				break;
+			default:
+				break;
+		}
+	}
+
+	if (CopyRoutine == NULL) {
+		return USB_UNSUPPORT;
+	}
+
+	usb_device_info->ep0_ctrl_info.data_copy = CopyRoutine;
+	usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
+
+	(*CopyRoutine)(0);
+
+	return USB_SUCCESS;
+}
+
+
+/*******************************************************************************
+* Function Name  : HID_NoData_Setup
+* Description    : handle the no data class specific requests
+* Input          : Request Nb.
+* Output         : None.
+* Return         : USB_UNSUPPORT or USB_SUCCESS.
+*******************************************************************************/
+RESULT hid_setup_without_data_process(uint8_t RequestNo)
+{
+	if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (CLASS_REQUEST | INTERFACE_RECIPIENT)) &&
+		(RequestNo == SET_PROTOCOL)) {
+
+		return HID_SetProtocol();
+	} else {
+		return USB_UNSUPPORT;
+	}
 }
 
 /*******************************************************************************
@@ -349,36 +360,13 @@ RESULT HID_Data_Setup(uint8_t RequestNo)
 *******************************************************************************/
 uint8_t *HID_SetReport_Feature(uint16_t Length)
 {
-  if (Length == 0)
-  {
-    usb_device_info->ep0_ctrl_info.remaining_data_size = wMaxPacketSize;
-    return NULL;
-  }
-  else
-  {
-    return Report_Buf;
-  }
-}
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = wMaxPacketSize;
+		return NULL;
 
-/*******************************************************************************
-* Function Name  : HID_NoData_Setup
-* Description    : handle the no data class specific requests
-* Input          : Request Nb.
-* Output         : None.
-* Return         : USB_UNSUPPORT or USB_SUCCESS.
-*******************************************************************************/
-RESULT HID_NoData_Setup(uint8_t RequestNo)
-{
-  if (((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (CLASS_REQUEST | INTERFACE_RECIPIENT))
-      && (RequestNo == SET_PROTOCOL))
-  {
-    return HID_SetProtocol();
-  }
-
-  else
-  {
-    return USB_UNSUPPORT;
-  }
+	} else {
+		return Report_Buf;
+	}
 }
 
 /*******************************************************************************
@@ -390,7 +378,7 @@ RESULT HID_NoData_Setup(uint8_t RequestNo)
 *******************************************************************************/
 uint8_t *HID_GetDeviceDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &Device_Descriptor);
+	return Standard_GetDescriptorData(Length, &Device_Descriptor);
 }
 
 /*******************************************************************************
@@ -402,7 +390,7 @@ uint8_t *HID_GetDeviceDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetConfigDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &Config_Descriptor);
+	return Standard_GetDescriptorData(Length, &Config_Descriptor);
 }
 
 /*******************************************************************************
@@ -414,15 +402,13 @@ uint8_t *HID_GetConfigDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetStringDescriptor(uint16_t Length)
 {
-  uint8_t wValue0 = usb_device_info->USBwValue0;
-  if (wValue0 > 4)
-  {
-    return NULL;
-  }
-  else
-  {
-    return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
-  }
+	uint8_t wValue0 = usb_device_info->USBwValue0;
+	if (wValue0 > 4) {
+		return NULL;
+
+	} else {
+		return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
+	}
 }
 
 /*******************************************************************************
@@ -434,7 +420,7 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetReportDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &RHID_Report_Descriptor);
+	return Standard_GetDescriptorData(Length, &RHID_Report_Descriptor);
 }
 
 /*******************************************************************************
@@ -446,7 +432,7 @@ uint8_t *HID_GetReportDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetHIDDescriptor(uint16_t Length)
 {
-  return Standard_GetDescriptorData(Length, &RHID_Hid_Descriptor);
+	return Standard_GetDescriptorData(Length, &RHID_Hid_Descriptor);
 }
 
 /*******************************************************************************
@@ -460,15 +446,14 @@ uint8_t *HID_GetHIDDescriptor(uint16_t Length)
 *******************************************************************************/
 RESULT HID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
 {
-  if (AlternateSetting > 0)
-  {
-    return USB_UNSUPPORT;
-  }
-  else if (Interface > 0)
-  {
-    return USB_UNSUPPORT;
-  }
-  return USB_SUCCESS;
+	if (AlternateSetting > 0) {
+		return USB_UNSUPPORT;
+
+	} else if (Interface > 0) {
+		return USB_UNSUPPORT;
+	}
+
+	return USB_SUCCESS;
 }
 
 /*******************************************************************************
@@ -480,9 +465,10 @@ RESULT HID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
 *******************************************************************************/
 RESULT HID_SetProtocol(void)
 {
-  uint8_t wValue0 = usb_device_info->USBwValue0;
-  ProtocolValue = wValue0;
-  return USB_SUCCESS;
+	uint8_t wValue0 = usb_device_info->USBwValue0;
+	ProtocolValue = wValue0;
+
+	return USB_SUCCESS;
 }
 
 /*******************************************************************************
@@ -494,13 +480,11 @@ RESULT HID_SetProtocol(void)
 *******************************************************************************/
 uint8_t *HID_GetProtocolValue(uint16_t Length)
 {
-  if (Length == 0)
-  {
-    usb_device_info->ep0_ctrl_info.remaining_data_size = 1;
-    return NULL;
-  }
-  else
-  {
-    return (uint8_t *)(&ProtocolValue);
-  }
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = 1;
+		return NULL;
+
+	} else {
+		return (uint8_t *)(&ProtocolValue);
+	}
 }
