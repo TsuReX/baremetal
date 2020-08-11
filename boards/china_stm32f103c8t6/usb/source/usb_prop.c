@@ -305,7 +305,7 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 
 	}
 	/*** GET_PROTOCOL, GET_REPORT, SET_REPORT ***/
-	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT))  == (CLASS_REQUEST | INTERFACE_RECIPIENT)) ) {
+	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT))  == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) ) {
 		switch( RequestNo ) {
 			case GET_PROTOCOL:
 				CopyRoutine = HID_GetProtocolValue;
@@ -342,7 +342,7 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 *******************************************************************************/
 RESULT hid_setup_without_data_process(uint8_t RequestNo)
 {
-	if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (CLASS_REQUEST | INTERFACE_RECIPIENT)) &&
+	if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) &&
 		(RequestNo == SET_PROTOCOL)) {
 
 		return HID_SetProtocol();
