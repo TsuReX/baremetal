@@ -138,7 +138,7 @@ uint8_t *Standard_GetStatus(uint16_t Length)
   /* Reset Status Information */
   StatusInfo.w = 0;
 
-  if ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (STANDARD_REQUEST | DEVICE_RECIPIENT))
+  if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST | DEVICE_RECIPIENT))
   {
     /*Get Device Status */
     uint8_t Feature = usb_device_info->Current_Feature;
@@ -164,12 +164,12 @@ uint8_t *Standard_GetStatus(uint16_t Length)
     }
   }
   /*Interface Status*/
-  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (STANDARD_REQUEST | INTERFACE_RECIPIENT))
+  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST | INTERFACE_RECIPIENT))
   {
     return (uint8_t *)&StatusInfo;
   }
   /*Get EndPoint Status*/
-  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (STANDARD_REQUEST | ENDPOINT_RECIPIENT))
+  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST | ENDPOINT_RECIPIENT))
   {
     uint8_t Related_Endpoint;
     uint8_t wIndex0 = usb_device_info->USBwIndex0;
@@ -211,7 +211,7 @@ uint8_t *Standard_GetStatus(uint16_t Length)
 *******************************************************************************/
 RESULT Standard_ClearFeature(void)
 {
-  uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT));
+  uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
   uint32_t     Status;
 
 
@@ -515,7 +515,7 @@ void setup_without_data_process(void)
 	RESULT		result = USB_UNSUPPORT;
 	uint32_t	control_state;
 	uint32_t	request_number = usb_device_info->b_request;
-	uint8_t		request_type = usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT);
+	uint8_t		request_type = usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT);
 
 	/************************************************/
 	/************************************************/
@@ -638,6 +638,97 @@ void setup_without_data_process(void)
 	usb_device_info->control_state = control_state;
 }
 
+uint32_t standard_request_process()
+{
+	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
+	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+
+	switch (request_recipient) {
+
+		case DEVICE_RECIPIENT_TYPE:
+
+			break;
+
+		case INTERFACE_RECIPIENT_TYPE:
+
+			break;
+
+		case ENDPOINT_RECIPIENT_TYPE:
+
+			break;
+
+		default:
+			break;
+	}
+
+	return 0;
+}
+
+uint32_t class_request_process()
+{
+	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
+	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+	uint8_t	request_number = usb_device_info->b_request;
+
+	switch (request_recipient) {
+
+		case DEVICE_RECIPIENT_TYPE:
+
+			switch (request_number) {
+
+				case GET_STATUS:
+
+					break;
+
+				case GET_DESCRIPTOR:
+
+					break;
+
+				case GET_CONFIGURATION:
+
+					break;
+
+				default:
+					break;
+			}
+
+			break;
+
+		case INTERFACE_RECIPIENT_TYPE:
+			switch (request_number) {
+
+				case GET_STATUS:
+
+					break;
+
+				case GET_INTERFACE:
+
+					break;
+
+				default:
+					break;
+			}
+			break;
+
+		case ENDPOINT_RECIPIENT_TYPE:
+			switch (request_number) {
+
+				case GET_STATUS:
+
+					break;
+
+				default:
+					break;
+			}
+			break;
+
+		default:
+			break;
+	}
+
+	return 0;
+}
+
 /*******************************************************************************
 * Function Name  : Data_Setup0.
 * Description    : Proceed the processing of setup request with data stage.
@@ -650,12 +741,33 @@ void setup_with_data_process(void)
 	uint8_t 	*(*CopyRoutine)(uint16_t) = NULL;
 	RESULT		Result;
 	uint8_t		request_number = usb_device_info->b_request;
-	uint8_t		request_type = usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT);
+	uint8_t		request_type = usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT);
 
-	uint32_t	Related_Endpoint;
+
+	uint32_t	related_endpoint;
 	uint32_t	Reserved;
 	uint32_t	wOffset = 0;
 	uint32_t	Status;
+
+	uint8_t		request_type = usb_device_info->bm_request_type & REQUEST_TYPE;
+
+	switch (request_type) {
+
+		case STANDARD_REQUEST_TYPE:
+			standard_request_process();
+			break;
+
+		case CLASS_REQUEST_TYPE:
+			class_request_process();
+			break;
+
+		case VENDOR_REQUEST_TYPE:
+
+			break;
+
+		default: /*RESERVED_REQUEST_TYPE*/
+			break;
+	}
 
 	/************************************************/
 	/************************************************/
@@ -695,7 +807,7 @@ void setup_with_data_process(void)
 
 		/************************************************/
 		/* GET STATUS for Interface*/
-		else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == (STANDARD_REQUEST | INTERFACE_RECIPIENT)) {
+		else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST | INTERFACE_RECIPIENT)) {
 
 			if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->USBwIndex0, 0) == USB_SUCCESS) &&
 				(usb_device_info->Current_Configuration != 0)) {
@@ -708,19 +820,19 @@ void setup_with_data_process(void)
 		/* GET STATUS for EndPoint*/
 		else if (request_type == ENDPOINT_RECIPIENT) {
 
-			Related_Endpoint = (usb_device_info->USBwIndex0 & 0x0f);
+			related_endpoint = (usb_device_info->USBwIndex0 & 0x0f);
 			Reserved = usb_device_info->USBwIndex0 & 0x70;
 
 			if (ValBit(usb_device_info->USBwIndex0, 7)) {
 				/*Get Status of endpoint & stall the request if the related_ENdpoint
 				 * is Disabled */
-				Status = _GetEPTxStatus(Related_Endpoint);
+				Status = _GetEPTxStatus(related_endpoint);
 
 			} else {
-				Status = _GetEPRxStatus(Related_Endpoint);
+				Status = _GetEPRxStatus(related_endpoint);
 			}
 
-			if ((Related_Endpoint < Device_Table.Total_Endpoint) && (Reserved == 0) && (Status != 0)) {
+			if ((related_endpoint < Device_Table.Total_Endpoint) && (Reserved == 0) && (Status != 0)) {
 				CopyRoutine = Standard_GetStatus;
 			}
 		}
@@ -906,7 +1018,7 @@ uint8_t ep0_in_process(void)
 	} else if (control_state == WAIT_STATUS_IN) {
 
 		if ((usb_device_info->b_request == SET_ADDRESS) &&
-			(((usb_device_info->bm_request_type & (REQUEST_TYPE | RECIPIENT)) == DEVICE_RECIPIENT))) {
+			(((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == DEVICE_RECIPIENT))) {
 
 			SetDeviceAddress(usb_device_info->USBwValue0);
 			usb_standard_requests->User_SetDeviceAddress();
