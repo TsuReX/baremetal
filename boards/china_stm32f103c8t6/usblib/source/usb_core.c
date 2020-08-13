@@ -11,6 +11,9 @@
 uint16_t_uint8_t StatusInfo;
 
 bool multiple_max_packet_size = FALSE;
+extern DEVICE_INFO *usb_device_info;
+extern USER_STANDARD_REQUESTS  *usb_standard_requests;
+extern DEVICE_PROP *usb_device_property;
 
 static void ep0_data_stage_out_process(void);
 static void ep0_data_stage_in_process(void);

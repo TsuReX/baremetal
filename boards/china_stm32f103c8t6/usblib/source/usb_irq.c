@@ -1,50 +1,51 @@
-/**
-  ******************************************************************************
-  * @file    usb_pwr.c
-  * @author  MCD Application Team
-  * @version V4.0.0
-  * @date    21-January-2013
-  * @brief   Connection/disconnection & power management
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2013 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
+#include <usb_endp.h>
+#include <usb_lib.h>
+#include <usb_prop.h>
+#include <usb_lib.h>
+#include <usb_endp.h>
 
 
-/* Includes ------------------------------------------------------------------*/
-#include "usb_lib.h"
-#include "usb_conf.h"
-#include "usb_pwr.h"
+__IO uint16_t usb_irq_flags;  /* ISTR register last read value */
+__IO uint8_t bIntPackSOF = 0;  /* SOFs received between 2 consecutive packets */
+__IO uint32_t esof_counter = 0; /* expected SOF counter */
+__IO uint32_t wCNTR	= 0;
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
+__IO uint16_t ep0_rx_state;
+__IO uint16_t ep0_tx_state;
+
+/*  The number of current endpoint, it will be used to specify an endpoint */
+extern uint8_t	ep_index;
+extern uint16_t	wInterrupt_Mask;
 __IO uint32_t bDeviceState = UNCONNECTED; /* USB device status */
 __IO bool fSuspendEnabled = TRUE;  /* true when suspend is possible */
 __IO uint32_t EP[8];
+extern uint16_t	wInterrupt_Mask;
 
-struct
-{
-  __IO RESUME_STATE eState;
-  __IO uint8_t bESOFcnt;
-}
-ResumeS;
+void (*ep_in[7])(void) = {
+	ep_in_handle,
+	ep_in_handle,
+	ep_in_handle,
+	ep_in_handle,
+	ep_in_handle,
+	ep_in_handle,
+	ep_in_handle,
+};
+
+void (*ep_out[7])(void) = {
+	ep_out_handle,
+	ep_out_handle,
+	ep_out_handle,
+	ep_out_handle,
+	ep_out_handle,
+	ep_out_handle,
+	ep_out_handle,
+};
+
+
+struct {
+	__IO RESUME_STATE eState;
+	__IO uint8_t bESOFcnt;
+} ResumeS;
 
 __IO uint32_t remotewakeupon=0;
 
@@ -84,7 +85,7 @@ RESULT PowerOn(void)
   /*** Set interrupt mask ***/
   wInterrupt_Mask = CNTR_RESETM | CNTR_SUSPM | CNTR_WKUPM;
   _SetCNTR(wInterrupt_Mask);
-  
+
   return USB_SUCCESS;
 }
 
@@ -126,46 +127,46 @@ void Suspend(void)
   __IO uint32_t savePWR_CR=0;
 	/* suspend preparation */
 	/* ... */
-	
+
 	/*Store CNTR value */
-	wCNTR = _GetCNTR();  
+	wCNTR = _GetCNTR();
 
     /* This a sequence to apply a force RESET to handle a robustness case */
-    
+
 	/*Store endpoints registers status */
     for (i=0;i<8;i++) EP[i] = _GetENDPOINT(i);
-	
+
 	/* unmask RESET flag */
 	wCNTR|=CNTR_RESETM;
 	_SetCNTR(wCNTR);
-	
+
 	/*apply FRES */
 	wCNTR|=CNTR_FRES;
 	_SetCNTR(wCNTR);
-	
+
 	/*clear FRES*/
 	wCNTR&=~CNTR_FRES;
 	_SetCNTR(wCNTR);
-	
+
 	/*poll for RESET flag in ISTR*/
 	while((_GetISTR()&ISTR_RESET) == 0);
-	
+
 	/* clear RESET flag in ISTR */
 	_SetISTR((uint16_t)CLR_RESET);
-	
+
 	/*restore Enpoints*/
 	for (i=0;i<8;i++)
 	_SetENDPOINT(i, EP[i]);
-	
+
 	/* Now it is safe to enter macrocell in suspend mode */
 	wCNTR |= CNTR_FSUSP;
 	_SetCNTR(wCNTR);
-	
+
 	/* force low-power mode in the macrocell */
 	wCNTR = _GetCNTR();
 	wCNTR |= CNTR_LPMODE;
 	_SetCNTR(wCNTR);
-	
+
 	/*prepare entry in low power mode (STOP mode)*/
 	/* Select the regulator state in STOP mode*/
 	savePWR_CR = PWR->CR;
@@ -182,14 +183,14 @@ void Suspend(void)
 #else
         SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 #endif
-	
+
 	/* enter system in STOP mode, only when wakeup flag in not set */
 	if((_GetISTR()&ISTR_WKUP)==0)
 	{
 		__WFI();
 		/* Reset SLEEPDEEP bit of Cortex System Control Register */
 #if defined (STM32F30X) || defined (STM32F37X)
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk); 
+                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #else
                 SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #endif
@@ -202,13 +203,13 @@ void Suspend(void)
         wCNTR = _GetCNTR();
         wCNTR&=~CNTR_FSUSP;
         _SetCNTR(wCNTR);
-		
-		/*restore sleep mode configuration */ 
+
+		/*restore sleep mode configuration */
 		/* restore Power regulator config in sleep mode*/
 		PWR->CR = savePWR_CR;
-		
+
 		/* Reset SLEEPDEEP bit of Cortex System Control Register */
-#if defined (STM32F30X) || defined (STM32F37X)		
+#if defined (STM32F30X) || defined (STM32F37X)
                 SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #else
                 SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
@@ -250,7 +251,7 @@ void Leave_LowPowerMode(void)
 void Resume_Init(void)
 {
   uint16_t wCNTR;
-  
+
   /* ------------------ ONLY WITH BUS-POWERED DEVICES ---------------------- */
   /* restart the clocks */
   /* ...  */
@@ -258,8 +259,8 @@ void Resume_Init(void)
   /* CNTR_LPMODE = 0 */
   wCNTR = _GetCNTR();
   wCNTR &= (~CNTR_LPMODE);
-  _SetCNTR(wCNTR);    
-  
+  _SetCNTR(wCNTR);
+
   /* restore full power */
   /* ... on connected devices */
   Leave_LowPowerMode();
@@ -268,7 +269,7 @@ void Resume_Init(void)
   _SetCNTR(IMR_MSK);
 
   /* reverse suspend preparation */
-  /* ... */ 
+  /* ... */
 
 }
 
@@ -324,7 +325,7 @@ void Resume(RESUME_STATE eResumeSetVal)
       ResumeS.eState = RESUME_ON;
       ResumeS.bESOFcnt = 10;
       break;
-    case RESUME_ON:    
+    case RESUME_ON:
       ResumeS.bESOFcnt--;
       if (ResumeS.bESOFcnt == 0)
       {
@@ -343,4 +344,220 @@ void Resume(RESUME_STATE eResumeSetVal)
   }
 }
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+void ep0_handle(void)
+{
+	__IO uint16_t usb_ep0_register = 0;
+
+	ep0_rx_state = _GetENDPOINT(ENDP0);
+	ep0_tx_state = ep0_rx_state & EPTX_STAT;
+	ep0_rx_state &=  EPRX_STAT;
+
+	_SetEPRxTxStatus(ENDP0, EP_RX_NAK, EP_TX_NAK);
+
+	if ((usb_irq_flags & ISTR_DIR) == 0) {
+
+		_ClearEP_CTR_TX(ENDP0);
+
+		ep0_in_process();
+
+	}  else {
+
+		usb_ep0_register = _GetENDPOINT(ENDP0);
+
+		if ((usb_ep0_register & EP_SETUP) != 0) {
+
+			_ClearEP_CTR_RX(ENDP0);
+
+			ep0_setup_process();
+
+		} else if ((usb_ep0_register & EP_CTR_RX) != 0) {
+
+			_ClearEP_CTR_RX(ENDP0);
+
+			ep0_out_process();
+		}
+	}
+
+	_SetEPRxTxStatus(ENDP0, ep0_rx_state, ep0_tx_state);
+}
+
+void ep_handle(void)
+{
+	__IO uint16_t usb_ep_register = 0;
+
+	usb_ep_register = _GetENDPOINT(ep_index);
+
+	if ((usb_ep_register & EP_CTR_RX) != 0) {
+
+		_ClearEP_CTR_RX(ep_index);
+
+		(*ep_out[ep_index - 1])();
+	}
+
+	if ((usb_ep_register & EP_CTR_TX) != 0) {
+
+		_ClearEP_CTR_TX(ep_index);
+
+		(*ep_in[ep_index - 1])();
+	}
+}
+
+void lp_ctr_handle( void)
+{
+	while (((usb_irq_flags = _GetISTR()) & ISTR_CTR) != 0) {
+		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
+
+		if (ep_index == 0) {
+			ep0_handle();
+
+		} else {
+			ep_handle(/*TODO: add index argument, remove index var from the global space.*/);
+		}
+	}
+}
+
+void hp_ctr_handle(void)
+{
+	uint32_t usb_ep_register = 0;
+
+	usb_irq_flags = _GetISTR();
+
+	while ((usb_irq_flags & ISTR_CTR) != 0) {
+
+		_SetISTR((uint16_t)CLR_CTR);
+
+		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
+
+		usb_ep_register = _GetENDPOINT(ep_index);
+
+		if ((usb_ep_register & EP_CTR_RX) != 0) {
+
+			_ClearEP_CTR_RX(ep_index);
+
+			(*ep_out[ep_index-1])();
+
+		} else if ((usb_ep_register & EP_CTR_TX) != 0) {
+
+			_ClearEP_CTR_TX(ep_index);
+
+			(*ep_in[ep_index - 1])();
+		}
+	}
+}
+
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+	uint32_t i=0;
+	__IO uint32_t EP[8];
+
+	usb_irq_flags = _GetISTR();
+
+/***********************************************************************/
+	if (usb_irq_flags & ISTR_SOF & wInterrupt_Mask) {
+		_SetISTR((uint16_t)CLR_SOF);
+//		bIntPackSOF++;
+	}
+
+/***********************************************************************/
+  
+	if (usb_irq_flags & ISTR_CTR & wInterrupt_Mask) {
+		/* servicing of the endpoint correct transfer interrupt */
+		/* clear of the CTR flag into the sub */
+		lp_ctr_handle();
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_RESET & wInterrupt_Mask) {
+		_SetISTR((uint16_t)CLR_RESET);
+		property.reset();
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_DOVR & wInterrupt_Mask) {
+		_SetISTR((uint16_t)CLR_DOVR);
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_ERR & wInterrupt_Mask) {
+		_SetISTR((uint16_t)CLR_ERR);
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_WKUP & wInterrupt_Mask) {
+		_SetISTR((uint16_t)CLR_WKUP);
+		Resume(RESUME_EXTERNAL);
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_SUSP & wInterrupt_Mask) {
+
+		/* check if SUSPEND is possible */
+		if (fSuspendEnabled) {
+			Suspend();
+		} else {
+			/* if not possible then resume after xx ms */
+			Resume(RESUME_LATER);
+		}
+		/* clear of the ISTR bit must be done after setting of CNTR_FSUSP */
+		_SetISTR((uint16_t)CLR_SUSP);
+	}
+
+/***********************************************************************/
+
+	if (usb_irq_flags & ISTR_ESOF & wInterrupt_Mask) {
+		/* clear ESOF flag in ISTR */
+		_SetISTR((uint16_t)CLR_ESOF);
+
+		if ((_GetFNR() & FNR_RXDP) != 0) {
+			/* increment ESOF counter */
+			esof_counter++;
+
+			/* test if we enter in ESOF more than 3 times with FSUSP =0 and RXDP =1=>> possible missing SUSP flag*/
+			if ((esof_counter > 3) && ((_GetCNTR() & CNTR_FSUSP) == 0)) {
+				/* this a sequence to apply a force RESET*/
+				/*Store CNTR value */
+				wCNTR = _GetCNTR();
+
+				/*Store endpoints registers status */
+				for (i = 0; i < 8; i++) {
+					EP[i] = _GetENDPOINT(i);
+				}
+
+				/*apply FRES */
+				wCNTR |= CNTR_FRES;
+				_SetCNTR(wCNTR);
+
+				/*clear FRES*/
+				wCNTR &= ~CNTR_FRES;
+				_SetCNTR(wCNTR);
+
+				/*poll for RESET flag in ISTR*/
+				while ((_GetISTR() & ISTR_RESET) == 0);
+
+				/* clear RESET flag in ISTR */
+				_SetISTR((uint16_t)CLR_RESET);
+
+				/*restore Enpoints*/
+				for (i = 0; i < 8; i++) {
+					_SetENDPOINT(i, EP[i]);
+				}
+				esof_counter = 0;
+			}
+		} else { /* if ((_GetFNR() & FNR_RXDP)!=0) */
+			esof_counter = 0;
+		}
+		/* resume handling timing is made with ESOFs */
+		Resume(RESUME_ESOF); /* request without change of the machine state */
+	}
+}
+
+void USBWakeUp_IRQHandler(void)
+{
+//	EXTI_ClearITPendingBit(EXTI_Line18);
+	/* TODO: USB implement pending flag clearing */
+}

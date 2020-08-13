@@ -2,11 +2,13 @@
 #include "usb_conf.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
-#include "usb_pwr.h"
+#include <usb_core.h>
 
 #define ID1		(0x1FFFF7E8)
 #define ID2		(0x1FFFF7EC)
 #define ID3		(0x1FFFF7F0)
+
+extern DEVICE_INFO *usb_device_info;
 
 uint32_t ProtocolValue;
 __IO uint8_t EXTI_Enable;
