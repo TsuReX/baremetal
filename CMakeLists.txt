@@ -56,6 +56,8 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
 	
+	set(PROJ_NAME stm32f103c8t6_usb)
+	
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
 	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})

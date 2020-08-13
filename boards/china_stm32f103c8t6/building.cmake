@@ -91,19 +91,45 @@ add_definitions("-DUSE_FULL_LL_DRIVER")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
+#add_custom_target("flash" DEPENDS ${PROJ_NAME})
+
+# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
+# Смотреть FLASHER_TYPE в README.md
+
+# Определение команд для цели flash
+#add_custom_command(	TARGET "flash"
+#					POST_BUILD
+#					COMMAND openocd
+#					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
+#							reset halt$<SEMICOLON>
+#							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
+#							reset$<SEMICOLON>
+#							exit\")
+							
+#######################################################################
+#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_stlinkv2.cfg")
+set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_jlink.cfg")
+# Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
-#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_stlinkv2.cfg")
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_jlink.cfg")
 
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
-							reset halt$<SEMICOLON>
-							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-							reset$<SEMICOLON>
-							exit\")
+					ARGS	-f ${OOCD_CONFIG} -c \"do flash\")
+
+#######################################################################
+# Определение дополнительной цели для выполнения операции отладки
+add_custom_target("debug" DEPENDS ${PROJ_NAME})
+
+# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
+
+# Определение команд для цели flash
+add_custom_command(	TARGET "debug"
+					POST_BUILD
+					COMMAND openocd
+					ARGS	-f ${OOCD_CONFIG} -c \"do debug\")
+							
