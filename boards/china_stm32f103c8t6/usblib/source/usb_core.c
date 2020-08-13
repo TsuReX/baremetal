@@ -50,11 +50,11 @@ uint8_t *Standard_GetConfiguration(uint16_t Length)
 RESULT Standard_SetConfiguration(void)
 {
 
-  if ((usb_device_info->USBwValue0 <=
-      Device_Table.Total_Configuration) && (usb_device_info->USBwValue1 == 0)
-      && (usb_device_info->USBwIndex == 0)) /*call Back usb spec 2.0*/
+  if (((usb_device_info->w_value & 0xFF) <=
+      Device_Table.Total_Configuration) && ((usb_device_info->w_value >> 8) == 0)
+      && (usb_device_info->w_index == 0)) /*call Back usb spec 2.0*/
   {
-    usb_device_info->Current_Configuration = usb_device_info->USBwValue0;
+    usb_device_info->Current_Configuration = usb_device_info->w_value & 0xFF;
     usb_standard_requests->User_SetConfiguration();
     return USB_SUCCESS;
   }
@@ -98,20 +98,21 @@ RESULT Standard_SetInterface(void)
   RESULT Re;
   /*Test if the specified Interface and Alternate Setting are supported by
     the application Firmware*/
-  Re = (*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->USBwIndex0, usb_device_info->USBwValue0);
+  Re = (*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, usb_device_info->w_value & 0xFF);
 
   if (usb_device_info->Current_Configuration != 0)
   {
-    if ((Re != USB_SUCCESS) || (usb_device_info->USBwIndex1 != 0)
-        || (usb_device_info->USBwValue1 != 0))
+    if ((Re != USB_SUCCESS) ||
+    	((usb_device_info->w_index >> 8) != 0) ||
+		((usb_device_info->w_value >> 8) != 0))
     {
       return  USB_UNSUPPORT;
     }
     else if (Re == USB_SUCCESS)
     {
       usb_standard_requests->User_SetInterface();
-      usb_device_info->Current_Interface = usb_device_info->USBwIndex0;
-      usb_device_info->Current_AlternateSetting = usb_device_info->USBwValue0;
+      usb_device_info->Current_Interface = usb_device_info->w_index & 0xFF;
+      usb_device_info->Current_AlternateSetting = usb_device_info->w_value & 0xFF;
       return USB_SUCCESS;
     }
 
@@ -173,7 +174,7 @@ uint8_t *Standard_GetStatus(uint16_t Length)
   else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT))
   {
     uint8_t Related_Endpoint;
-    uint8_t wIndex0 = usb_device_info->USBwIndex0;
+    uint8_t wIndex0 = usb_device_info->w_index & 0xFF;
 
     Related_Endpoint = (wIndex0 & 0x0f);
     if (ValBit(wIndex0, 7))
@@ -228,18 +229,18 @@ RESULT Standard_ClearFeature(void)
     uint32_t wIndex0;
     uint32_t rEP;
 
-    if ((usb_device_info->USBwValue != ENDPOINT_STALL)
-        || (usb_device_info->USBwIndex1 != 0))
+    if ((usb_device_info->w_value != ENDPOINT_STALL)
+        || ((usb_device_info->w_index >> 8) != 0))
     {
       return USB_UNSUPPORT;
     }
 
     pDev = &Device_Table;
-    wIndex0 = usb_device_info->USBwIndex0;
+    wIndex0 = usb_device_info->w_index & 0xFF;
     rEP = wIndex0 & ~0x80;
     Related_Endpoint = ENDP0 + rEP;
 
-    if (ValBit(usb_device_info->USBwIndex0, 7))
+    if (ValBit(usb_device_info->w_index & 0xFF, 7))
     {
       /*Get Status of endpoint & stall the request if the related_ENdpoint
       is Disabled*/
@@ -306,11 +307,11 @@ RESULT Standard_SetEndPointFeature(void)
   uint32_t    rEP;
   uint32_t    Status;
 
-  wIndex0 = usb_device_info->USBwIndex0;
+  wIndex0 = usb_device_info->w_index & 0xFF;
   rEP = wIndex0 & ~0x80;
   Related_Endpoint = ENDP0 + rEP;
 
-  if (ValBit(usb_device_info->USBwIndex0, 7))
+  if (ValBit(usb_device_info->w_index & 0xFF, 7))
   {
     /* get Status of endpoint & stall the request if the related_ENdpoint
     is Disabled*/
@@ -322,7 +323,7 @@ RESULT Standard_SetEndPointFeature(void)
   }
 
   if (Related_Endpoint >= Device_Table.Total_Endpoint
-      || usb_device_info->USBwValue != 0 || Status == 0
+      || usb_device_info->w_value != 0 || Status == 0
       || usb_device_info->Current_Configuration == 0)
   {
     return USB_UNSUPPORT;
@@ -562,7 +563,7 @@ void setup_without_data_process(void)
 //		/*SET ADDRESS*/
 //		else if (request_number == SET_ADDRESS) {
 //
-//			if ((usb_device_info->USBwValue0 > 127) ||
+//			if ((usb_device_info->w_value & 0xFF > 127) ||
 //				(usb_device_info->USBwValue1 != 0) ||
 //				(usb_device_info->USBwIndex != 0) ||
 //				(usb_device_info->Current_Configuration != 0)) {
@@ -581,7 +582,7 @@ void setup_without_data_process(void)
 //		/*SET FEATURE for Device*/
 //		else if (request_number == SET_FEATURE) {
 //
-//			if ((usb_device_info->USBwValue0 == DEVICE_REMOTE_WAKEUP) &&
+//			if ((usb_device_info->w_value & 0xFF == DEVICE_REMOTE_WAKEUP) &&
 //				(usb_device_info->USBwIndex == 0)) {
 //
 //				result = Standard_SetDeviceFeature();
@@ -595,7 +596,7 @@ void setup_without_data_process(void)
 //		/*Clear FEATURE for Device */
 //		else if (request_number == CLEAR_FEATURE) {
 //
-//			if (usb_device_info->USBwValue0 == DEVICE_REMOTE_WAKEUP &&
+//			if (usb_device_info->w_value & 0xFF == DEVICE_REMOTE_WAKEUP &&
 //				usb_device_info->USBwIndex == 0 &&
 //				(usb_device_info->Current_Feature & (1 << 5))) {
 //
@@ -711,13 +712,13 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-					if (usb_device_info->USBwIndex == 0) {
+					if (usb_device_info->w_index == 0) {
 						copy_routine = Standard_GetStatus;
 					}
 					break;
 
 				case GET_DESCRIPTOR:
-					wValue1 = usb_device_info->USBwValue1;
+					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == DEVICE_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetDeviceDescriptor;
 
@@ -741,9 +742,9 @@ void standard_request_process()
 					break;
 
 				case SET_ADDRESS:
-					if ((usb_device_info->USBwValue0 > 127) ||
-						(usb_device_info->USBwValue1 != 0) ||
-						(usb_device_info->USBwIndex != 0) ||
+					if (((usb_device_info->w_value & 0xFF) > 127) ||
+						((usb_device_info->w_value >> 8) != 0) ||
+						(usb_device_info->w_index != 0) ||
 						(usb_device_info->Current_Configuration != 0)) {
 
 						usb_device_info->control_state = STALLED;
@@ -752,8 +753,8 @@ void standard_request_process()
 					break;
 
 				case SET_FEATURE:
-					if ((usb_device_info->USBwValue0 == DEVICE_REMOTE_WAKEUP) &&
-						(usb_device_info->USBwIndex == 0)) {
+					if (((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP) &&
+						(usb_device_info->w_index == 0)) {
 
 						if (Standard_SetDeviceFeature() != USB_SUCCESS) {
 							usb_device_info->control_state = STALLED;
@@ -767,8 +768,8 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-					if (usb_device_info->USBwValue0 == DEVICE_REMOTE_WAKEUP &&
-						usb_device_info->USBwIndex == 0 &&
+					if ((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP &&
+						usb_device_info->w_index == 0 &&
 						(usb_device_info->Current_Feature & (1 << 5))) {
 
 						if (Standard_ClearFeature() != USB_SUCCESS) {
@@ -792,7 +793,7 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-					if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->USBwIndex0, 0) == USB_SUCCESS) &&
+					if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, 0) == USB_SUCCESS) &&
 						(usb_device_info->Current_Configuration != 0)) {
 
 						copy_routine = Standard_GetStatus;
@@ -801,10 +802,10 @@ void standard_request_process()
 
 				case GET_INTERFACE:
 					if ((usb_device_info->Current_Configuration != 0) &&
-						(usb_device_info->USBwValue == 0) &&
-						(usb_device_info->USBwIndex1 == 0) &&
-						(usb_device_info->USBwLength == 0x0001) &&
-						((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->USBwIndex0, 0) == USB_SUCCESS)) {
+						(usb_device_info->w_value == 0) &&
+						((usb_device_info->w_index >> 8) == 0) &&
+						(usb_device_info->w_length == 0x0001) &&
+						((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, 0) == USB_SUCCESS)) {
 
 						copy_routine = Standard_GetInterface;
 					}
@@ -825,10 +826,10 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-					related_endpoint = (usb_device_info->USBwIndex0 & 0x0f);
-					reserved = usb_device_info->USBwIndex0 & 0x70;
+					related_endpoint = (usb_device_info->w_index & 0xFF & 0x0f);
+					reserved = usb_device_info->w_index & 0xFF & 0x70;
 
-					if (ValBit(usb_device_info->USBwIndex0, 7)) {
+					if (ValBit(usb_device_info->w_index & 0xFF, 7)) {
 						/*Get status of endpoint & stall the request if the related_ENdpoint
 						 * is Disabled */
 						status = _GetEPTxStatus(related_endpoint);
@@ -866,7 +867,7 @@ void standard_request_process()
 	}
 
 	/* Setup without data stage. */
-	if (usb_device_info->w_length.w == 0) {
+	if (usb_device_info->w_length == 0) {
 
 		_SetEPTxCount(ENDP0, 0);
 		ep0_tx_state = EP_TX_VALID;
@@ -896,9 +897,9 @@ void standard_request_process()
 		if (request_direction == TO_HOST_DIRECTION_TYPE) {
 
 			/* Restrict the data length to be the one host asks for */
-			if (usb_device_info->ep0_ctrl_info.remaining_data_size > usb_device_info->USBwLength) {
+			if (usb_device_info->ep0_ctrl_info.remaining_data_size > usb_device_info->w_length) {
 				/* TODO: USB Check a correctness of the construction below. */
-				usb_device_info->ep0_ctrl_info.remaining_data_size = usb_device_info->USBwLength;
+				usb_device_info->ep0_ctrl_info.remaining_data_size = usb_device_info->w_length;
 			}
 
 			if (usb_device_info->ep0_ctrl_info.remaining_data_size < usb_device_property->MaxPacketSize) {
@@ -1133,25 +1134,23 @@ uint8_t ep0_setup_process(void)
 		uint16_t	w_length;
 	};
 
-	/* TODO: USB Remake request forming algorithm. */
-	struct std_request *prequest = (struct std_request *)(PMAAddr + (uint8_t *)(_GetEPRxAddr(ENDP0) * 2));
+	struct std_request prequest;
+
+	/* TODO: USB check correctness of the swapping*/
+	copy_from_usb((uint8_t*)&prequest, _GetEPRxAddr(ENDP0), sizeof(struct std_request));
 
 	if (usb_device_info->control_state != PAUSE) {
 
-		usb_device_info->bm_request_type = prequest->bm_request_type;
-
-		usb_device_info->b_request = prequest->b_request;
-
-		usb_device_info->USBwValue = ByteSwap(prequest->w_value);
-
-		usb_device_info->USBwIndex	= ByteSwap(prequest->w_index);
-
-		usb_device_info->USBwLength = ByteSwap(prequest->w_length); /*TODO: USB check correctness of the swapping*/
+		usb_device_info->bm_request_type = prequest.bm_request_type;
+		usb_device_info->b_request = prequest.b_request;
+		usb_device_info->w_value = prequest.w_value;
+		usb_device_info->w_index = prequest.w_index;
+		usb_device_info->w_length = prequest.w_length;
 	}
 
 	usb_device_info->control_state = SETTING_UP;
 
-	if (usb_device_info->USBwLength == 0) {
+	if (usb_device_info->w_length == 0) {
 		setup_without_data_process();
 
 	} else {
@@ -1216,7 +1215,7 @@ uint8_t ep0_in_process(void)
 		if ((usb_device_info->b_request == SET_ADDRESS) &&
 			(((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == DEVICE_RECIPIENT))) {
 
-			SetDeviceAddress(usb_device_info->USBwValue0);
+			SetDeviceAddress(usb_device_info->w_value & 0xFF);
 			usb_standard_requests->User_SetDeviceAddress();
 		}
 

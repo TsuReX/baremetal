@@ -294,12 +294,12 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 	CopyRoutine = NULL;
 	if ((RequestNo == GET_DESCRIPTOR) &&
 		((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == INTERFACE_RECIPIENT) &&
-		(usb_device_info->USBwIndex0 == 0)) {
+		((usb_device_info->w_index & 0xFF) == 0)) {
 
-		if (usb_device_info->USBwValue1 == REPORT_DESCRIPTOR) {
+		if ((usb_device_info->w_value >> 8) == REPORT_DESCRIPTOR) {
 			CopyRoutine = HID_GetReportDescriptor;
 
-		} else if (usb_device_info->USBwValue1 == HID_DESCRIPTOR_TYPE) {
+		} else if ((usb_device_info->w_value >> 8) == HID_DESCRIPTOR_TYPE) {
 			CopyRoutine = HID_GetHIDDescriptor;
 		}
 
@@ -402,7 +402,7 @@ uint8_t *HID_GetConfigDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetStringDescriptor(uint16_t Length)
 {
-	uint8_t wValue0 = usb_device_info->USBwValue0;
+	uint8_t wValue0 = (usb_device_info->w_value & 0xFF);
 	if (wValue0 > 4) {
 		return NULL;
 
@@ -465,7 +465,7 @@ RESULT HID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting)
 *******************************************************************************/
 RESULT HID_SetProtocol(void)
 {
-	uint8_t wValue0 = usb_device_info->USBwValue0;
+	uint8_t wValue0 = (usb_device_info->w_value & 0xFF);
 	ProtocolValue = wValue0;
 
 	return USB_SUCCESS;

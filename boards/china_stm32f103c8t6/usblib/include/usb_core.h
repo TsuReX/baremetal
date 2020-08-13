@@ -110,11 +110,11 @@ typedef union {
 } uint16_t_uint8_t;
 
 typedef struct _DEVICE_INFO {
-	uint8_t				bm_request_type;	/* bmRequestType */
-	uint8_t				b_request;			/* bRequest */
-	uint16_t_uint8_t	w_value;			/* wValue */
-	uint16_t_uint8_t	w_index;			/* wIndex */
-	uint16_t_uint8_t	w_length;			/* wLength */
+	uint8_t		bm_request_type;	/* bmRequestType */
+	uint8_t		b_request;			/* bRequest */
+	uint16_t	w_value;			/* wValue */
+	uint16_t	w_index;			/* wIndex */
+	uint16_t	w_length;			/* wLength */
 
 	uint8_t				control_state;				/* of type CONTROL_STATE */
 	uint8_t				Current_Feature;
@@ -193,18 +193,18 @@ typedef struct _USER_STANDARD_REQUESTS {
 	void (*User_SetDeviceAddress)(void);       /* Set Device Address */
 } USER_STANDARD_REQUESTS;
 
-#define Usb_rLength Usb_wLength
-#define Usb_rOffset Usb_wOffset
-
-#define USBwValue		w_value.w
-#define USBwValue0		w_value.bw.bb0
-#define USBwValue1		w_value.bw.bb1
-#define USBwIndex		w_index.w
-#define USBwIndex0		w_index.bw.bb0
-#define USBwIndex1		w_index.bw.bb1
-#define USBwLength		w_length.w
-#define USBwLength0		w_length.bw.bb0
-#define USBwLength1		w_length.bw.bb1
+//#define Usb_rLength Usb_wLength
+//#define Usb_rOffset Usb_wOffset
+//
+//#define USBwValue		w_value.w
+//#define USBwValue0		w_value.bw.bb0
+//#define USBwValue1		w_value.bw.bb1
+//#define USBwIndex		w_index.w
+//#define USBwIndex0		w_index.bw.bb0
+//#define USBwIndex1		w_index.bw.bb1
+//#define USBwLength		w_length.w
+//#define USBwLength0		w_length.bw.bb0
+//#define USBwLength1		w_length.bw.bb1
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
