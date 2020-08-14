@@ -54,6 +54,17 @@ void usb_init(void)
 	usb_device_property = &property;
 	usb_standard_requests = &standard_requests;
 	/* Initialize devices one by one */
+
+//	  EXTI_ClearITPendingBit(EXTI_Line18);
+//	  EXTI_InitStructure.EXTI_Line = EXTI_Line18;
+//	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+//	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+//	  EXTI_Init(&EXTI_InitStructure);
+
+	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_18);
+	LL_EXTI_DisableRisingTrig_0_31(LL_EXTI_LINE_18);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_18);
+
 	usb_device_property->init();
 }
 /**
@@ -77,15 +88,15 @@ int main(void)
 
 	/*gpio_setup_it();*/
 
-//	usb_init();
+	usb_init();
 
 	uint32_t i = 0;
 	while (1) {
-		LL_mDelay(DELAY_500_MS * 2 * 2);
+		LL_mDelay(DELAY_500_MS * 2);
 		print("Main thread iteration %ld\r\n", i++);
 		/*ina3221_print_voltage_current();*/
 //		LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
-//		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 //		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_14);
 //		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_15);
 	}

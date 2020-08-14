@@ -4,6 +4,8 @@
 #include <usb_lib.h>
 #include <usb_endp.h>
 
+#include <console.h>
+
 
 __IO uint16_t usb_irq_flags;  /* ISTR register last read value */
 __IO uint8_t bIntPackSOF = 0;  /* SOFs received between 2 consecutive packets */
@@ -68,6 +70,7 @@ void USB_Cable_Config (FunctionalState NewState)
 *******************************************************************************/
 RESULT PowerOn(void)
 {
+	d_print("%s()\r\n",  __func__);
   uint16_t wRegVal;
 
   /*** cable plugged-in ? ***/
@@ -78,12 +81,12 @@ RESULT PowerOn(void)
   _SetCNTR(wRegVal);
 
   /*** CNTR_FRES = 0 ***/
-  wInterrupt_Mask = 0;
-  _SetCNTR(wInterrupt_Mask);
+//  wInterrupt_Mask = 0;
+//  _SetCNTR(wInterrupt_Mask);
   /*** Clear pending interrupts ***/
   _SetISTR(0);
   /*** Set interrupt mask ***/
-  wInterrupt_Mask = CNTR_RESETM | CNTR_SUSPM | CNTR_WKUPM;
+  wInterrupt_Mask = CNTR_RESETM | CNTR_SUSPM | CNTR_WKUPM | CNTR_PDWN;
   _SetCNTR(wInterrupt_Mask);
 
   return USB_SUCCESS;
@@ -98,6 +101,7 @@ RESULT PowerOn(void)
 *******************************************************************************/
 RESULT PowerOff()
 {
+	d_print("%s()\r\n",  __func__);
   /* disable all interrupts and force USB reset */
   _SetCNTR(CNTR_FRES);
   /* clear interrupt status register */
@@ -121,42 +125,45 @@ RESULT PowerOff()
 *******************************************************************************/
 void Suspend(void)
 {
+	d_print("%s()\r\n",  __func__);
 	uint32_t i =0;
 	uint16_t wCNTR;
 	uint32_t tmpreg = 0;
-  __IO uint32_t savePWR_CR=0;
+	__IO uint32_t savePWR_CR=0;
 	/* suspend preparation */
 	/* ... */
 
 	/*Store CNTR value */
 	wCNTR = _GetCNTR();
 
-    /* This a sequence to apply a force RESET to handle a robustness case */
+	/* This a sequence to apply a force RESET to handle a robustness case */
 
 	/*Store endpoints registers status */
-    for (i=0;i<8;i++) EP[i] = _GetENDPOINT(i);
+	for (i = 0; i < 8; i++)
+		EP[i] = _GetENDPOINT(i);
 
 	/* unmask RESET flag */
-	wCNTR|=CNTR_RESETM;
+	wCNTR |= CNTR_RESETM;
 	_SetCNTR(wCNTR);
 
 	/*apply FRES */
-	wCNTR|=CNTR_FRES;
+	wCNTR |= CNTR_FRES;
 	_SetCNTR(wCNTR);
 
 	/*clear FRES*/
-	wCNTR&=~CNTR_FRES;
+	wCNTR &= ~CNTR_FRES;
 	_SetCNTR(wCNTR);
 
 	/*poll for RESET flag in ISTR*/
 	while((_GetISTR()&ISTR_RESET) == 0);
 
+	d_print("%s() 2\r\n",  __func__);
 	/* clear RESET flag in ISTR */
 	_SetISTR((uint16_t)CLR_RESET);
 
 	/*restore Enpoints*/
-	for (i=0;i<8;i++)
-	_SetENDPOINT(i, EP[i]);
+	for (i = 0; i < 8; i++)
+		_SetENDPOINT(i, EP[i]);
 
 	/* Now it is safe to enter macrocell in suspend mode */
 	wCNTR |= CNTR_FSUSP;
@@ -185,23 +192,20 @@ void Suspend(void)
 #endif
 
 	/* enter system in STOP mode, only when wakeup flag in not set */
-	if((_GetISTR()&ISTR_WKUP)==0)
-	{
+	if((_GetISTR()&ISTR_WKUP)==0) {
 		__WFI();
 		/* Reset SLEEPDEEP bit of Cortex System Control Register */
 #if defined (STM32F30X) || defined (STM32F37X)
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
+		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #else
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
+		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #endif
-	}
-	else
-	{
+	} else {
 		/* Clear Wakeup flag */
 		_SetISTR(CLR_WKUP);
 		/* clear FSUSP to abort entry in suspend mode  */
         wCNTR = _GetCNTR();
-        wCNTR&=~CNTR_FSUSP;
+        wCNTR &= ~CNTR_FSUSP;
         _SetCNTR(wCNTR);
 
 		/*restore sleep mode configuration */
@@ -210,9 +214,9 @@ void Suspend(void)
 
 		/* Reset SLEEPDEEP bit of Cortex System Control Register */
 #if defined (STM32F30X) || defined (STM32F37X)
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
+		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #else
-                SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
+		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
 #endif
     }
 }
@@ -225,6 +229,7 @@ void Suspend(void)
 *******************************************************************************/
 void Leave_LowPowerMode(void)
 {
+	d_print("%s()\r\n",  __func__);
   DEVICE_INFO *pInfo = &device_info;
 
   /* Set the device state to the correct state */
@@ -250,6 +255,7 @@ void Leave_LowPowerMode(void)
 *******************************************************************************/
 void Resume_Init(void)
 {
+	d_print("%s()\r\n",  __func__);
   uint16_t wCNTR;
 
   /* ------------------ ONLY WITH BUS-POWERED DEVICES ---------------------- */
@@ -287,65 +293,72 @@ void Resume_Init(void)
 *******************************************************************************/
 void Resume(RESUME_STATE eResumeSetVal)
 {
-  uint16_t wCNTR;
+	d_print("%s()\r\n",  __func__);
+	uint16_t wCNTR;
 
-  if (eResumeSetVal != RESUME_ESOF)
-    ResumeS.eState = eResumeSetVal;
-  switch (ResumeS.eState)
-  {
-    case RESUME_EXTERNAL:
-      if (remotewakeupon ==0)
-      {
-        Resume_Init();
-        ResumeS.eState = RESUME_OFF;
-      }
-      else /* RESUME detected during the RemoteWAkeup signalling => keep RemoteWakeup handling*/
-      {
-        ResumeS.eState = RESUME_ON;
-      }
-      break;
-    case RESUME_INTERNAL:
-      Resume_Init();
-      ResumeS.eState = RESUME_START;
-      remotewakeupon = 1;
-      break;
-    case RESUME_LATER:
-      ResumeS.bESOFcnt = 2;
-      ResumeS.eState = RESUME_WAIT;
-      break;
-    case RESUME_WAIT:
-      ResumeS.bESOFcnt--;
-      if (ResumeS.bESOFcnt == 0)
-        ResumeS.eState = RESUME_START;
-      break;
-    case RESUME_START:
-      wCNTR = _GetCNTR();
-      wCNTR |= CNTR_RESUME;
-      _SetCNTR(wCNTR);
-      ResumeS.eState = RESUME_ON;
-      ResumeS.bESOFcnt = 10;
-      break;
-    case RESUME_ON:
-      ResumeS.bESOFcnt--;
-      if (ResumeS.bESOFcnt == 0)
-      {
-        wCNTR = _GetCNTR();
-        wCNTR &= (~CNTR_RESUME);
-        _SetCNTR(wCNTR);
-        ResumeS.eState = RESUME_OFF;
-        remotewakeupon = 0;
-      }
-      break;
-    case RESUME_OFF:
-    case RESUME_ESOF:
-    default:
-      ResumeS.eState = RESUME_OFF;
-      break;
-  }
+	if (eResumeSetVal != RESUME_ESOF)
+		ResumeS.eState = eResumeSetVal;
+
+	switch (ResumeS.eState) {
+
+		case RESUME_EXTERNAL:
+			if (remotewakeupon ==0) {
+				Resume_Init();
+				ResumeS.eState = RESUME_OFF;
+			} else {/* RESUME detected during the RemoteWAkeup signalling => keep RemoteWakeup handling*/
+				ResumeS.eState = RESUME_ON;
+			}
+			break;
+
+		case RESUME_INTERNAL:
+			Resume_Init();
+			ResumeS.eState = RESUME_START;
+			remotewakeupon = 1;
+			break;
+
+		case RESUME_LATER:
+			ResumeS.bESOFcnt = 2;
+			ResumeS.eState = RESUME_WAIT;
+			break;
+
+		case RESUME_WAIT:
+			ResumeS.bESOFcnt--;
+			if (ResumeS.bESOFcnt == 0)
+				ResumeS.eState = RESUME_START;
+			break;
+
+		case RESUME_START:
+			wCNTR = _GetCNTR();
+			wCNTR |= CNTR_RESUME;
+			_SetCNTR(wCNTR);
+			ResumeS.eState = RESUME_ON;
+			ResumeS.bESOFcnt = 10;
+			break;
+
+		case RESUME_ON:
+			ResumeS.bESOFcnt--;
+			if (ResumeS.bESOFcnt == 0) {
+				wCNTR = _GetCNTR();
+				wCNTR &= (~CNTR_RESUME);
+				_SetCNTR(wCNTR);
+				ResumeS.eState = RESUME_OFF;
+				remotewakeupon = 0;
+			}
+			break;
+
+		case RESUME_OFF:
+
+		case RESUME_ESOF:
+
+		default:
+			ResumeS.eState = RESUME_OFF;
+			break;
+	}
 }
 
 void ep0_handle(void)
 {
+	d_print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep0_register = 0;
 
 	ep0_rx_state = _GetENDPOINT(ENDP0);
@@ -383,6 +396,7 @@ void ep0_handle(void)
 
 void ep_handle(void)
 {
+	d_print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -404,6 +418,7 @@ void ep_handle(void)
 
 void lp_ctr_handle( void)
 {
+	d_print("%s()\r\n",  __func__);
 	while (((usb_irq_flags = _GetISTR()) & ISTR_CTR) != 0) {
 		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
 
@@ -418,6 +433,7 @@ void lp_ctr_handle( void)
 
 void hp_ctr_handle(void)
 {
+	d_print("%s()\r\n",  __func__);
 	uint32_t usb_ep_register = 0;
 
 	usb_irq_flags = _GetISTR();
@@ -447,6 +463,7 @@ void hp_ctr_handle(void)
 
 void USB_LP_CAN1_RX0_IRQHandler(void)
 {
+	d_print("%s()\r\n",  __func__);
 	uint32_t i=0;
 	__IO uint32_t EP[8];
 
@@ -558,6 +575,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 void USBWakeUp_IRQHandler(void)
 {
+	d_print("%s()\r\n",  __func__);
 //	EXTI_ClearITPendingBit(EXTI_Line18);
 	/* TODO: USB implement pending flag clearing */
 }
