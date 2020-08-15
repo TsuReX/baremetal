@@ -12,5 +12,5 @@ void ep_out_handle(void)
 
 
 	/* Enable the receive of data on EP3 */
-	SetEPRxValid(ENDP3);
+	_SetEPRxValid(ENDP3);
 }

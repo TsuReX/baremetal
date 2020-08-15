@@ -3,6 +3,7 @@
 #include "usb_prop.h"
 #include "usb_desc.h"
 #include <usb_core.h>
+#include <usb_regs.h>
 
 #define ID1		(0x1FFFF7E8)
 #define ID2		(0x1FFFF7EC)
@@ -332,8 +333,8 @@ RESULT Standard_ClearFeature(void)
       /* IN endpoint */
       if (_GetTxStallStatus(Related_Endpoint ))
       {
-        ClearDTOG_TX(Related_Endpoint);
-        SetEPTxStatus(Related_Endpoint, EP_TX_VALID);
+        _ClearDTOG_TX(Related_Endpoint);
+        _SetEPTxStatus(Related_Endpoint, EP_TX_VALID);
       }
     }
     else
@@ -344,12 +345,12 @@ RESULT Standard_ClearFeature(void)
         if (Related_Endpoint == ENDP0)
         {
           /* After clear the STALL, enable the default endpoint receiver */
-          SetEPRxCount(Related_Endpoint, property.MaxPacketSize);
+          _SetEPRxCount(Related_Endpoint, property.MaxPacketSize);
           _SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
         }
         else
         {
-          ClearDTOG_RX(Related_Endpoint);
+          _ClearDTOG_RX(Related_Endpoint);
           _SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
         }
       }
@@ -561,24 +562,24 @@ void HID_Reset(void)
 
 	/* Current Feature initialization */
 	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
-	SetBTABLE(BTABLE_ADDRESS);
+	_SetBTABLE(BTABLE_ADDRESS);
 	/* Initialize Endpoint 0 */
-	SetEPType(ENDP0, EP_CONTROL);
-	SetEPTxStatus(ENDP0, EP_TX_STALL);
-	SetEPRxAddr(ENDP0, ENDP0_RXADDR);
-	SetEPTxAddr(ENDP0, ENDP0_TXADDR);
-	Clear_Status_Out(ENDP0);
-	SetEPRxCount(ENDP0, property.MaxPacketSize);
-	SetEPRxValid(ENDP0);
+	_SetEPType(ENDP0, EP_CONTROL);
+	_SetEPTxStatus(ENDP0, EP_TX_STALL);
+	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
+	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
+	_ClearEP_KIND(ENDP0);
+	_SetEPRxCount(ENDP0, property.MaxPacketSize);
+	_SetEPRxValid(ENDP0);
 
 	/* Initialize Endpoint 1 */
-	SetEPType(ENDP1, EP_INTERRUPT);
-	SetEPTxAddr(ENDP1, ENDP1_TXADDR);
-	SetEPRxAddr(ENDP1, ENDP1_RXADDR);
-	SetEPTxCount(ENDP1, EP1TxCount);
-	SetEPRxCount(ENDP1, EP1RxCount);
-	SetEPRxStatus(ENDP1, EP_RX_VALID);
-	SetEPTxStatus(ENDP1, EP_TX_NAK);
+	_SetEPType(ENDP1, EP_INTERRUPT);
+	_SetEPTxAddr(ENDP1, ENDP1_TXADDR);
+	_SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+	_SetEPTxCount(ENDP1, EP1TxCount);
+	_SetEPRxCount(ENDP1, EP1RxCount);
+	_SetEPRxStatus(ENDP1, EP_RX_VALID);
+	_SetEPTxStatus(ENDP1, EP_TX_NAK);
 
 	/* Set this device to response on default address */
 	SetDeviceAddress(0);
