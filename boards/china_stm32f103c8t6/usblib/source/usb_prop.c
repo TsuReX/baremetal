@@ -1,11 +1,9 @@
 #include "usb_prop.h"
 #include "usb_core.h"
 #include "usb_desc.h"
+#include "console.h"
 
 #include <stddef.h>
-//#include "usb_lib.h"
-//#include "usb_conf.h"
-//#include "usb_regs.h"
 
 #define ID1		(0x1FFFF7E8)
 #define ID2		(0x1FFFF7EC)
@@ -39,8 +37,8 @@ DEVICE Device_Table = {
 };
 
 DEVICE_PROP property = {
-	HID_init,
-	HID_Reset,
+	hid_init,
+	hid_reset,
 	HID_Status_In,
 	HID_Status_Out,
 	hid_setup_with_data_process,
@@ -90,6 +88,68 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 	{(uint8_t*)rhid_string_product, RHID_SIZ_STRING_PRODUCT},
 	{(uint8_t*)rhid_string_serial, RHID_SIZ_STRING_SERIAL}
 };
+
+/*******************************************************************************
+* Function Name  : HID_init.
+* Description    : HID init routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void hid_init(void)
+{
+	d_print("%s()\r\n",  __func__);
+//	Get_SerialNum();
+
+	usb_device_info->Current_Configuration = 0;
+
+	_SetISTR(0);
+	_SetCNTR(CNTR_FRES);
+	_SetCNTR(CNTR_CTRM | /*CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | */ CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM);
+
+	bDeviceState = UNCONNECTED;
+}
+
+/*******************************************************************************
+* Function Name  : HID_Reset.
+* Description    : HID reset routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void hid_reset(void)
+{
+	d_print("%s()\r\n",  __func__);
+	/* Set HID_DEVICE as not configured */
+	usb_device_info->Current_Configuration = 0;
+	usb_device_info->Current_Interface = 0;/*the default Interface*/
+
+	/* Current Feature initialization */
+	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
+	_SetBTABLE(BTABLE_ADDRESS);
+	/* Initialize Endpoint 0 */
+	_SetEPType(ENDP0, EP_CONTROL);
+	_SetEPTxStatus(ENDP0, EP_TX_STALL);
+	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
+	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
+	_ClearEP_KIND(ENDP0);
+	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
+	_SetEPRxValid(ENDP0);
+
+	/* Initialize Endpoint 1 */
+	_SetEPType(ENDP1, EP_INTERRUPT);
+	_SetEPTxAddr(ENDP1, ENDP1_TXADDR);
+	_SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+	_SetEPTxCount(ENDP1, EP1TxCount);
+	_SetEPRxCount(ENDP1, EP1RxCount);
+	_SetEPRxStatus(ENDP1, EP_RX_VALID);
+	_SetEPTxStatus(ENDP1, EP_TX_NAK);
+
+	/* Set this device to response on default address */
+	SetDeviceAddress(0);
+	bDeviceState = ATTACHED;
+}
+
 /*******************************************************************************
 * Function Name  : Standard_GetConfiguration.
 * Description    : Return the current configuration variable address.
@@ -526,68 +586,7 @@ void Get_SerialNum(void)
 		IntToUnicode (Device_Serial1, &rhid_string_serial[18], 4);
 	}
 }
-/*******************************************************************************
-* Function Name  : HID_init.
-* Description    : HID init routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void HID_init(void)
-{
-	Get_SerialNum();
 
-	usb_device_info->Current_Configuration = 0;
-
-	_SetCNTR(CNTR_FRES);
-	LL_mDelay(1);
-	PowerOn();
-
-	_SetISTR(0);
-
-	_SetCNTR(CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM /*| CNTR_FRES | CNTR_PDWN*/);
-
-	bDeviceState = UNCONNECTED;
-}
-
-/*******************************************************************************
-* Function Name  : HID_Reset.
-* Description    : HID reset routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void HID_Reset(void)
-{
-	/* Set HID_DEVICE as not configured */
-	usb_device_info->Current_Configuration = 0;
-	usb_device_info->Current_Interface = 0;/*the default Interface*/
-
-	/* Current Feature initialization */
-	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
-	_SetBTABLE(BTABLE_ADDRESS);
-	/* Initialize Endpoint 0 */
-	_SetEPType(ENDP0, EP_CONTROL);
-	_SetEPTxStatus(ENDP0, EP_TX_STALL);
-	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
-	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
-	_ClearEP_KIND(ENDP0);
-	_SetEPRxCount(ENDP0, property.MaxPacketSize);
-	_SetEPRxValid(ENDP0);
-
-	/* Initialize Endpoint 1 */
-	_SetEPType(ENDP1, EP_INTERRUPT);
-	_SetEPTxAddr(ENDP1, ENDP1_TXADDR);
-	_SetEPRxAddr(ENDP1, ENDP1_RXADDR);
-	_SetEPTxCount(ENDP1, EP1TxCount);
-	_SetEPRxCount(ENDP1, EP1RxCount);
-	_SetEPRxStatus(ENDP1, EP_RX_VALID);
-	_SetEPTxStatus(ENDP1, EP_TX_NAK);
-
-	/* Set this device to response on default address */
-	SetDeviceAddress(0);
-	bDeviceState = ATTACHED;
-}
 /*******************************************************************************
 * Function Name  : HID_SetConfiguration.
 * Description    : Update the device state to configured.

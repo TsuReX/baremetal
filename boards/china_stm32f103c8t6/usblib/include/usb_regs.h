@@ -337,10 +337,8 @@ enum EP_BUF_NUM {
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-#define _SetEP_KIND(bEpNum)    (_SetENDPOINT(bEpNum, \
-                                (EP_CTR_RX|EP_CTR_TX|((_GetENDPOINT(bEpNum) | EP_KIND) & EPREG_MASK))))
-#define _ClearEP_KIND(bEpNum)  (_SetENDPOINT(bEpNum, \
-                                (EP_CTR_RX|EP_CTR_TX|(_GetENDPOINT(bEpNum) & EPKIND_MASK))))
+#define _SetEP_KIND(bEpNum)    (_SetENDPOINT(bEpNum, (EP_CTR_RX|EP_CTR_TX|((_GetENDPOINT(bEpNum) | EP_KIND) & EPREG_MASK))))
+#define _ClearEP_KIND(bEpNum)  (_SetENDPOINT(bEpNum, (EP_CTR_RX|EP_CTR_TX|(_GetENDPOINT(bEpNum) & EPKIND_MASK))))
 
 /*******************************************************************************
 * Macro Name     : Set_Status_Out / Clear_Status_Out.

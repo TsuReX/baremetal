@@ -58,7 +58,7 @@ WEAK void USART2_IRQHandler(void);
 WEAK void USART3_IRQHandler(void);
 WEAK void EXTI15_10_IRQHandler(void);
 WEAK void RTC_Alarm_IRQHandler(void);
-WEAK void USBWakeUp_IRQHandler(void);
+WEAK void usbwakeup_handle(void);
 
 extern int main(void);
 
@@ -139,7 +139,7 @@ void (* const isr_vector_table[])(void) = {
 	USART3_IRQHandler,
 	EXTI15_10_IRQHandler,
 	RTC_Alarm_IRQHandler,
-	USBWakeUp_IRQHandler,
+	usbwakeup_handle,
 	0,
 	0,
 	0,
@@ -421,7 +421,7 @@ WEAK void RTC_Alarm_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void USBWakeUp_IRQHandler(void)
+WEAK void usbwakeup_handle(void)
 {	while(1) {}
 }
 

@@ -14,7 +14,7 @@ __IO uint16_t ep0_tx_state;
 
 extern uint8_t	ep_index;
 __IO uint32_t	bDeviceState = UNCONNECTED; /* USB device status */
-__IO bool		fSuspendEnabled = TRUE;  /* true when suspend is possible */
+bool			fSuspendEnabled = FALSE;  /* true when suspend is possible */
 uint32_t		endpoints[8];
 
 void (*ep_in[EP_COUNT])(void) = {
@@ -280,9 +280,7 @@ void resume(RESUME_STATE eResumeSetVal)
 			break;
 
 		case RESUME_OFF:
-
 		case RESUME_ESOF:
-
 		default:
 			ResumeS.eState = RESUME_OFF;
 			break;
@@ -394,54 +392,87 @@ void hp_ctr_handle(void)
 	}
 }
 
-void usb_lp_can1_rx0_handle(void)
+static void esof_handle()
 {
-	d_print("\r\n%s()\r\n",  __func__);
 	uint32_t ep_ind = 0;
 	uint32_t endpoints[EP_COUNT];
+	uint16_t w_fnr = _GetFNR();
 
+	d_print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
+
+	if ((w_fnr & FNR_RXDP) != 0) {
+		/* increment ESOF counter */
+		esof_counter++;
+
+		/* test if we enter in ESOF more than 3 times with FSUSP =0 and RXDP =1=>> possible missing SUSP flag*/
+		if ((esof_counter > 3) && ((_GetCNTR() & CNTR_FSUSP) == 0)) {
+			/* this a sequence to apply a force RESET*/
+			/*Store CNTR value */
+			wCNTR = _GetCNTR();
+
+			/*Store endpoints registers status */
+			for (ep_ind = 0; ep_ind < 8; ep_ind++) {
+				endpoints[ep_ind] = _GetENDPOINT(ep_ind);
+			}
+
+			/*apply FRES */
+			wCNTR |= CNTR_FRES;
+			_SetCNTR(wCNTR);
+
+			/*clear FRES*/
+			wCNTR &= ~CNTR_FRES;
+			_SetCNTR(wCNTR);
+
+			/*poll for RESET flag in ISTR*/
+			while ((_GetISTR() & ISTR_RESET) == 0);
+
+			/* clear RESET flag in ISTR */
+			_SetISTR((uint16_t)CLR_RESET);
+
+			/*restore Enpoints*/
+			for (ep_ind = 0; ep_ind < 8; ep_ind++) {
+				_SetENDPOINT(ep_ind, endpoints[ep_ind]);
+			}
+			esof_counter = 0;
+		}
+	} else { /* if ((_GetFNR() & FNR_RXDP)!=0) */
+		esof_counter = 0;
+	}
+	/* resume handling timing is made with ESOFs */
+	resume(RESUME_ESOF); /* request without change of the machine state */
+}
+
+void usb_lp_can1_rx0_handle(void)
+{
 	usb_irq_flags = _GetISTR();
-	d_print("Before ISTR: 0x%04X\r\n",  usb_irq_flags);
 
-/***********************************************************************/
+//	d_print("\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
+
 	if (usb_irq_flags & ISTR_SOF) {
 		_SetISTR(CLR_SOF);
-
 	}
 
-/***********************************************************************/
-  
 	if (usb_irq_flags & ISTR_CTR) {
 		lp_ctr_handle();
 	}
-
-/***********************************************************************/
 
 	if (usb_irq_flags & ISTR_RESET) {
 		_SetISTR(CLR_RESET);
 		property.reset();
 	}
 
-/***********************************************************************/
-
 	if (usb_irq_flags & ISTR_DOVR) {
 		_SetISTR(CLR_DOVR);
 	}
-
-/***********************************************************************/
 
 	if (usb_irq_flags & ISTR_ERR) {
 		_SetISTR(CLR_ERR);
 	}
 
-/***********************************************************************/
-
 	if (usb_irq_flags & ISTR_WKUP) {
 		_SetISTR(CLR_WKUP);
 		resume(RESUME_EXTERNAL);
 	}
-
-/***********************************************************************/
 
 	if (usb_irq_flags & ISTR_SUSP) {
 
@@ -456,59 +487,16 @@ void usb_lp_can1_rx0_handle(void)
 		_SetISTR(CLR_SUSP);
 	}
 
-/***********************************************************************/
-
 	if (usb_irq_flags & ISTR_ESOF) {
 		/* clear ESOF flag in ISTR */
 		_SetISTR(CLR_ESOF);
-
-		if ((_GetFNR() & FNR_RXDP) != 0) {
-			/* increment ESOF counter */
-			esof_counter++;
-
-			/* test if we enter in ESOF more than 3 times with FSUSP =0 and RXDP =1=>> possible missing SUSP flag*/
-			if ((esof_counter > 3) && ((_GetCNTR() & CNTR_FSUSP) == 0)) {
-				/* this a sequence to apply a force RESET*/
-				/*Store CNTR value */
-				wCNTR = _GetCNTR();
-
-				/*Store endpoints registers status */
-				for (ep_ind = 0; ep_ind < 8; ep_ind++) {
-					endpoints[ep_ind] = _GetENDPOINT(ep_ind);
-				}
-
-				/*apply FRES */
-				wCNTR |= CNTR_FRES;
-				_SetCNTR(wCNTR);
-
-				/*clear FRES*/
-				wCNTR &= ~CNTR_FRES;
-				_SetCNTR(wCNTR);
-
-				/*poll for RESET flag in ISTR*/
-				while ((_GetISTR() & ISTR_RESET) == 0);
-
-				/* clear RESET flag in ISTR */
-				_SetISTR((uint16_t)CLR_RESET);
-
-				/*restore Enpoints*/
-				for (ep_ind = 0; ep_ind < 8; ep_ind++) {
-					_SetENDPOINT(ep_ind, endpoints[ep_ind]);
-				}
-				esof_counter = 0;
-			}
-		} else { /* if ((_GetFNR() & FNR_RXDP)!=0) */
-			esof_counter = 0;
-		}
-		/* resume handling timing is made with ESOFs */
-		resume(RESUME_ESOF); /* request without change of the machine state */
+		esof_handle();
 	}
 
-	usb_irq_flags = _GetISTR();
-	d_print("After ISTR: 0x%04X\r\n",  usb_irq_flags);
+//	d_print("%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());
 }
 
-void USBWakeUp_IRQHandler(void)
+void usbwakeup_handle(void)
 {
 	d_print("%s()\r\n",  __func__);
 	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_18);

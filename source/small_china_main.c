@@ -28,10 +28,10 @@ USER_STANDARD_REQUESTS  *usb_standard_requests;
 
 void usb_init(void)
 {
-	NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0);
+	NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 2);
 	NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 
-	NVIC_SetPriority(USBWakeUp_IRQn, 0);
+	NVIC_SetPriority(USBWakeUp_IRQn, 1);
 	NVIC_EnableIRQ(USBWakeUp_IRQn);
 
 	usb_device_info = &device_info;
