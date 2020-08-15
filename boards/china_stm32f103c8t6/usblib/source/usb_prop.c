@@ -1,9 +1,11 @@
-#include "usb_lib.h"
-#include "usb_conf.h"
 #include "usb_prop.h"
+#include "usb_core.h"
 #include "usb_desc.h"
-#include <usb_core.h>
-#include <usb_regs.h>
+
+#include <stddef.h>
+//#include "usb_lib.h"
+//#include "usb_conf.h"
+//#include "usb_regs.h"
 
 #define ID1		(0x1FFFF7E8)
 #define ID2		(0x1FFFF7EC)
@@ -14,7 +16,7 @@ extern DEVICE_INFO *usb_device_info;
 uint32_t ProtocolValue;
 __IO uint8_t EXTI_Enable;
 __IO uint8_t Request = 0;
-uint8_t Report_Buf[wMaxPacketSize];
+uint8_t Report_Buf[EP0_MAX_PACKET_SIZE];
 uint8_t Buffer[RPT4_COUNT+1];
 uint8_t *HID_SetReport_Feature(uint16_t Length);
 ErrorStatus HSEStartUpStatus;
@@ -23,16 +25,16 @@ ErrorStatus HSEStartUpStatus;
 #define SetBit(VAR,Place)    (VAR |= (1 << Place))
 #define ClrBit(VAR,Place)    (VAR &= ((1 << Place) ^ 255))
 
-uint16_t_uint8_t StatusInfo;
-#define StatusInfo0 StatusInfo.bw.bb1 /* Reverse bb0 & bb1 */
-#define StatusInfo1 StatusInfo.bw.bb0
+//uint16_t_uint8_t StatusInfo;
+//#define StatusInfo0 StatusInfo.bw.bb1 /* Reverse bb0 & bb1 */
+//#define StatusInfo1 StatusInfo.bw.bb0
 
 extern DEVICE_INFO *usb_device_info;
 extern USER_STANDARD_REQUESTS  *usb_standard_requests;
 extern DEVICE_PROP *usb_device_property;
 
 DEVICE Device_Table = {
-	EP_NUM,
+	EP_COUNT,
 	1
 };
 
@@ -201,76 +203,77 @@ RESULT Standard_SetInterface(void)
 *******************************************************************************/
 uint8_t *Standard_GetStatus(uint16_t Length)
 {
-  if (Length == 0)
-  {
-    usb_device_info->ep0_ctrl_info.remaining_data_size = 2;
-    return 0;
-  }
-
-  /* Reset Status Information */
-  StatusInfo.w = 0;
-
-  if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT))
-  {
-    /*Get Device Status */
-    uint8_t Feature = usb_device_info->Current_Feature;
-
-    /* Remote Wakeup enabled */
-    if (ValBit(Feature, 5))
-    {
-      SetBit(StatusInfo0, 1);
-    }
-    else
-    {
-      ClrBit(StatusInfo0, 1);
-    }
-
-    /* Bus-powered */
-    if (ValBit(Feature, 6))
-    {
-      SetBit(StatusInfo0, 0);
-    }
-    else /* Self-powered */
-    {
-      ClrBit(StatusInfo0, 0);
-    }
-  }
-  /*Interface Status*/
-  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | INTERFACE_RECIPIENT))
-  {
-    return (uint8_t *)&StatusInfo;
-  }
-  /*Get EndPoint Status*/
-  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT))
-  {
-    uint8_t Related_Endpoint;
-    uint8_t wIndex0 = usb_device_info->w_index & 0xFF;
-
-    Related_Endpoint = (wIndex0 & 0x0f);
-    if (ValBit(wIndex0, 7))
-    {
-      /* IN endpoint */
-      if (_GetTxStallStatus(Related_Endpoint))
-      {
-        SetBit(StatusInfo0, 0); /* IN Endpoint stalled */
-      }
-    }
-    else
-    {
-      /* OUT endpoint */
-      if (_GetRxStallStatus(Related_Endpoint))
-      {
-        SetBit(StatusInfo0, 0); /* OUT Endpoint stalled */
-      }
-    }
-
-  }
-  else
-  {
-    return NULL;
-  }
-  usb_standard_requests->User_GetStatus();
-  return (uint8_t *)&StatusInfo;
+//  if (Length == 0)
+//  {
+//    usb_device_info->ep0_ctrl_info.remaining_data_size = 2;
+//    return 0;
+//  }
+//
+//  /* Reset Status Information */
+//  StatusInfo.w = 0;
+//
+//  if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT))
+//  {
+//    /*Get Device Status */
+//    uint8_t Feature = usb_device_info->Current_Feature;
+//
+//    /* Remote Wakeup enabled */
+//    if (ValBit(Feature, 5))
+//    {
+//      SetBit(StatusInfo0, 1);
+//    }
+//    else
+//    {
+//      ClrBit(StatusInfo0, 1);
+//    }
+//
+//    /* Bus-powered */
+//    if (ValBit(Feature, 6))
+//    {
+//      SetBit(StatusInfo0, 0);
+//    }
+//    else /* Self-powered */
+//    {
+//      ClrBit(StatusInfo0, 0);
+//    }
+//  }
+//  /*Interface Status*/
+//  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | INTERFACE_RECIPIENT))
+//  {
+//    return (uint8_t *)&StatusInfo;
+//  }
+//  /*Get EndPoint Status*/
+//  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT))
+//  {
+//    uint8_t Related_Endpoint;
+//    uint8_t wIndex0 = usb_device_info->w_index & 0xFF;
+//
+//    Related_Endpoint = (wIndex0 & 0x0f);
+//    if (ValBit(wIndex0, 7))
+//    {
+//      /* IN endpoint */
+//      if (_GetTxStallStatus(Related_Endpoint))
+//      {
+//        SetBit(StatusInfo0, 0); /* IN Endpoint stalled */
+//      }
+//    }
+//    else
+//    {
+//      /* OUT endpoint */
+//      if (_GetRxStallStatus(Related_Endpoint))
+//      {
+//        SetBit(StatusInfo0, 0); /* OUT Endpoint stalled */
+//      }
+//    }
+//
+//  }
+//  else
+//  {
+//    return NULL;
+//  }
+//  usb_standard_requests->User_GetStatus();
+//  return (uint8_t *)&StatusInfo;
+	return 0;
 }
 
 /*******************************************************************************
@@ -532,17 +535,17 @@ void Get_SerialNum(void)
 *******************************************************************************/
 void HID_init(void)
 {
-
-	/* Update the serial number string descriptor with the data from the unique
-	ID*/
 	Get_SerialNum();
 
 	usb_device_info->Current_Configuration = 0;
-	/* Connect the device */
+
+	_SetCNTR(CNTR_FRES);
+	LL_mDelay(1);
 	PowerOn();
 
-	/* Perform basic device initialization operations */
-	USB_SIL_Init();
+	_SetISTR(0);
+
+	_SetCNTR(CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM /*| CNTR_FRES | CNTR_PDWN*/);
 
 	bDeviceState = UNCONNECTED;
 }
@@ -751,7 +754,7 @@ RESULT hid_setup_without_data_process(uint8_t RequestNo)
 uint8_t *HID_SetReport_Feature(uint16_t Length)
 {
 	if (Length == 0) {
-		usb_device_info->ep0_ctrl_info.remaining_data_size = wMaxPacketSize;
+		usb_device_info->ep0_ctrl_info.remaining_data_size = EP0_MAX_PACKET_SIZE;
 		return NULL;
 
 	} else {

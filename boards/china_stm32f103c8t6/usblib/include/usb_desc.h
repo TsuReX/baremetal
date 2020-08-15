@@ -27,8 +27,8 @@
 #define DEVICE_VER_L 0x00
 
 //HID Maximum packet size in bytes
-#define wMaxPacketSize  0x40
-#define EP1TxCount wMaxPacketSize
+#define EP0_MAX_PACKET_SIZE  0x40
+#define EP1TxCount EP0_MAX_PACKET_SIZE
 #define EP1RxCount 2
 
 #define RPT3_COUNT 0x01 //PC->STM32

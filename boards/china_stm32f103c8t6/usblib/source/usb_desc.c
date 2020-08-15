@@ -77,7 +77,7 @@ const uint8_t rhid_configuration_descriptor[RHID_SIZ_CONFIG_DESC] = {
 
 	0x81,          // bEndpointAddress: ����� �������� ����� � ����������� 1(IN)
 	0x03,          // bmAttributes: ��� �������� ����� - Interrupt endpoint
-	wMaxPacketSize, 0x00,    // wMaxPacketSize:  Bytes max
+	EP0_MAX_PACKET_SIZE, 0x00,    // wMaxPacketSize:  Bytes max
 	0x20,          // bInterval: Polling Interval (32 ms)
 
 	0x07,	/* bLength: Endpoint Descriptor size */
@@ -86,7 +86,7 @@ const uint8_t rhid_configuration_descriptor[RHID_SIZ_CONFIG_DESC] = {
 	0x01,	/* bEndpointAddress: */
 	/*	Endpoint Address (OUT) */
 	0x03,	/* bmAttributes: Interrupt endpoint */
-	wMaxPacketSize,	/* wMaxPacketSize:  Bytes max  */
+	EP0_MAX_PACKET_SIZE,	/* wMaxPacketSize:  Bytes max  */
 	0x00,
 	0x20,	/* bInterval: Polling Interval (32 ms) */
 }; /* RHID_ConfigDescriptor */

@@ -1,51 +1,20 @@
-/**
-  ******************************************************************************
-  * @file    usb_regs.h
-  * @author  MCD Application Team
-  * @version V4.0.0
-  * @date    28-August-2012
-  * @brief   Interface prototype functions to USB cell registers
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
-
-
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USB_REGS_H
 #define __USB_REGS_H
 
-/* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-typedef enum _EP_DBUF_DIR
-{
-  /* double buffered endpoint direction */
-  EP_DBUF_ERR,
-  EP_DBUF_OUT,
-  EP_DBUF_IN
+#include "drivers.h"
+
+typedef enum _EP_DBUF_DIR {
+	/* double buffered endpoint direction */
+	EP_DBUF_ERR,
+	EP_DBUF_OUT,
+	EP_DBUF_IN
 }EP_DBUF_DIR;
 
 /* endpoint buffer number */
-enum EP_BUF_NUM
-{
-  EP_NOBUF,
-  EP_BUF0,
-  EP_BUF1
+enum EP_BUF_NUM {
+	EP_NOBUF,
+	EP_BUF0,
+	EP_BUF1
 };
 
 /* Exported constants --------------------------------------------------------*/

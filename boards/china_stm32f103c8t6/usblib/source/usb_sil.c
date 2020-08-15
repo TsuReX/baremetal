@@ -11,13 +11,9 @@ extern uint16_t	wInterrupt_Mask;
 *******************************************************************************/
 uint32_t USB_SIL_Init(void)
 {
-  /* USB interrupts initialization */
-  /* clear pending interrupts */
-  _SetISTR(0);
-  wInterrupt_Mask = IMR_MSK;
-  /* set interrupts mask */
-  _SetCNTR(wInterrupt_Mask);
-  return 0;
+	_SetISTR(0);
+	_SetCNTR(CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM);
+	return 0;
 }
 
 /*******************************************************************************

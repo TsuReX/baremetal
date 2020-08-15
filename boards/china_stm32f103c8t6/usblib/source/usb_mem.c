@@ -1,4 +1,5 @@
-#include "usb_lib.h"
+#include "usb_mem.h"
+#include "usb_regs.h"
 
 /*******************************************************************************
 * Function Name  : UserToPMABufferCopy

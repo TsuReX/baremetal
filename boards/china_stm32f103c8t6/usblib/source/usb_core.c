@@ -1,5 +1,6 @@
+#include "usb_core.h"
 #include "usb_lib.h"
-#include "stddef.h"
+#include <stddef.h>
 
 bool multiple_max_packet_size = FALSE;
 extern DEVICE_INFO *usb_device_info;

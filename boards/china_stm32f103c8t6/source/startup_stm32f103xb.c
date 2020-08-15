@@ -36,7 +36,7 @@ WEAK void DMA1_Channel6_IRQHandler(void);
 WEAK void DMA1_Channel7_IRQHandler(void);
 WEAK void ADC1_2_IRQHandler(void);
 WEAK void USB_HP_CAN1_TX_IRQHandler(void);
-WEAK void USB_LP_CAN1_RX0_IRQHandler(void);
+WEAK void usb_lp_can1_rx0_handle(void);
 WEAK void CAN1_RX1_IRQHandler(void);
 WEAK void CAN1_SCE_IRQHandler(void);
 WEAK void EXTI9_5_IRQHandler(void);
@@ -117,7 +117,7 @@ void (* const isr_vector_table[])(void) = {
 	DMA1_Channel7_IRQHandler,
 	ADC1_2_IRQHandler,
 	USB_HP_CAN1_TX_IRQHandler,
-	USB_LP_CAN1_RX0_IRQHandler,
+	usb_lp_can1_rx0_handle,
 	CAN1_RX1_IRQHandler,
 	CAN1_SCE_IRQHandler,
 	EXTI9_5_IRQHandler,
@@ -333,7 +333,7 @@ WEAK void USB_HP_CAN1_TX_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void USB_LP_CAN1_RX0_IRQHandler(void)
+WEAK void usb_lp_can1_rx0_handle(void)
 {	while(1) {}
 }
 

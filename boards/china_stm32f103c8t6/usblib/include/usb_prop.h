@@ -1,15 +1,16 @@
 #ifndef __USB_PROP_H
 #define __USB_PROP_H
 
-typedef enum _HID_REQUESTS
-{
-  GET_REPORT = 1,
-  GET_IDLE,
-  GET_PROTOCOL,
+#include <usb_lib.h>
 
-  SET_REPORT = 9,
-  SET_IDLE,
-  SET_PROTOCOL
+typedef enum _HID_REQUESTS {
+	GET_REPORT = 1,
+	GET_IDLE,
+	GET_PROTOCOL,
+
+	SET_REPORT = 9,
+	SET_IDLE,
+	SET_PROTOCOL
 } HID_REQUESTS;
 
 void HID_init(void);
