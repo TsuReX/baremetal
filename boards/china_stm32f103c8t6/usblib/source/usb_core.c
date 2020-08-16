@@ -1,5 +1,7 @@
 #include "usb_core.h"
 #include "usb_lib.h"
+#include "console.h"
+
 #include <stddef.h>
 
 bool multiple_max_packet_size = FALSE;
@@ -745,6 +747,7 @@ void setup_with_data_process(void)
 *******************************************************************************/
 uint8_t ep0_setup_process(void)
 {
+	d_print("%s()\r\n",  __func__);
 	struct std_request {
 		uint8_t		bm_request_type;
 		uint8_t		b_request;
@@ -752,11 +755,16 @@ uint8_t ep0_setup_process(void)
 		uint16_t	w_index;
 		uint16_t	w_length;
 	};
-
 	struct std_request prequest;
 
 	/* TODO: USB check correctness of the swapping*/
 	copy_from_usb((uint8_t*)&prequest, _GetEPRxAddr(ENDP0), sizeof(struct std_request));
+
+	d_print("bm_request_type: 0x%02X\r\n", prequest.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", prequest.b_request);
+	d_print("w_value: 0x%04X\r\n", prequest.w_value);
+	d_print("w_value: 0x%04X\r\n", prequest.w_value);
+	d_print("w_length: 0x%04X\r\n", prequest.w_length);
 
 	if (usb_device_info->control_state != PAUSE) {
 
@@ -821,6 +829,7 @@ uint8_t ep0_setup_process(void)
 *******************************************************************************/
 uint8_t ep0_in_process(void)
 {
+	d_print("%s()\r\n",  __func__);
 	uint8_t control_state = usb_device_info->control_state;
 
 	if ((control_state == IN_DATA) || (control_state == LAST_IN_DATA)) {
@@ -859,6 +868,7 @@ uint8_t ep0_in_process(void)
 *******************************************************************************/
 uint8_t ep0_out_process(void)
 {
+	d_print("%s()\r\n",  __func__);
 	uint32_t control_state = usb_device_info->control_state;
 
 	if ((control_state == OUT_DATA) || (control_state == LAST_OUT_DATA)) {
@@ -893,6 +903,7 @@ uint8_t ep0_out_process(void)
 *******************************************************************************/
 uint8_t ep0_finish_processing(void)
 {
+	d_print("%s()\r\n",  __func__);
 	_SetEPRxCount(ENDP0, property.MaxPacketSize);
 
 	if (usb_device_info->control_state == STALLED) {

@@ -392,7 +392,7 @@ void hp_ctr_handle(void)
 	}
 }
 
-static void esof_handle()
+void esof_handle()
 {
 	uint32_t ep_ind = 0;
 	uint32_t endpoints[EP_COUNT];

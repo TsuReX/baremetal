@@ -39,27 +39,11 @@ uint16_t _GetEPRxAddr(uint32_t bEpNum)
 void _SetEPRxCount(uint32_t bEpNum, uint16_t wCount)
 {
 	uint16_t *ep_rx_count = (uint16_t*)(PMAAddr + (*BTABLE + bEpNum * 8 + 6) * 2);
-//	uint16_t wNBlocks;
-//
-//	if (wCount > 32) {
-//		wNBlocks = wCount >> 5;
-//
-//		if ((wCount & 0x1f) == 0) {
-//			wNBlocks--;
-//		}
-//
-//		*ep_rx_count = (uint32_t)((wNBlocks << 10) | 0x8000);
-//
-//	} else {
-//		wNBlocks = wCount >> 1;
-//
-//		if((wCount & 0x1) != 0) {
-//			wNBlocks++;
-//		}
-//
-//		*ep_rx_count = (uint32_t)(wNBlocks << 10);
-//	}
-	*ep_rx_count = wCount;
+
+//	*ep_rx_count = wCount;
+	/* TODO: USB Make calculation algorithm. */
+	/* BLSIZE = 1 -> 32bytes, NUM_BLOCK = 1 -> 2, buffer size 2 * 32 = 64 bytes */
+	*ep_rx_count = (1 << 15) | (1 << 10);
 }
 
 uint16_t _GetEPRxCount(uint32_t bEpNum)
