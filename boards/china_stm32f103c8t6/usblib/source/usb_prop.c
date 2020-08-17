@@ -102,9 +102,9 @@ void hid_init(void)
 //	Get_SerialNum();
 
 	usb_device_info->Current_Configuration = 0;
-
-	_SetISTR(0);
 	_SetCNTR(CNTR_FRES);
+	LL_mDelay(1);
+	_SetISTR(0);
 	_SetCNTR(CNTR_CTRM | /*CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | */ CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM);
 
 	bDeviceState = UNCONNECTED;
@@ -120,6 +120,7 @@ void hid_init(void)
 void hid_reset(void)
 {
 	d_print("%s()\r\n",  __func__);
+	pma_init();
 	/* Set HID_DEVICE as not configured */
 	usb_device_info->Current_Configuration = 0;
 	usb_device_info->Current_Interface = 0;/*the default Interface*/
@@ -131,6 +132,7 @@ void hid_reset(void)
 	_SetEPType(ENDP0, EP_CONTROL);
 	_SetEPTxStatus(ENDP0, EP_TX_STALL);
 	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
+
 	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
 	_ClearEP_KIND(ENDP0);
 	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
@@ -515,16 +517,14 @@ RESULT Standard_SetDeviceFeature(void)
 *******************************************************************************/
 uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 {
-  uint32_t  wOffset;
+	uint32_t  wOffset;
 
-  wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
-  if (Length == 0)
-  {
-    usb_device_info->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
-    return 0;
-  }
-
-  return pDesc->Descriptor + wOffset;
+	wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
+		return 0;
+	}
+	return pDesc->Descriptor + wOffset;
 }
 
 /*******************************************************************************

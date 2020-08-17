@@ -445,7 +445,6 @@ void esof_handle()
 void usb_lp_can1_rx0_handle(void)
 {
 	usb_irq_flags = _GetISTR();
-
 //	d_print("\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
 
 	if (usb_irq_flags & ISTR_SOF) {

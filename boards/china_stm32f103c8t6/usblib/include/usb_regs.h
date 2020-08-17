@@ -19,7 +19,7 @@ enum EP_BUF_NUM {
 
 /* Exported constants --------------------------------------------------------*/
 #define RegBase  (0x40005C00L)  /* USB_IP Peripheral Registers base address */
-#define PMAAddr  (0x40006000L)  /* USB_IP Packet Memory Area base address   */
+#define PACKAGE_MEMORY_ADDR  (0x40006000L)  /* USB_IP Packet Memory Area base address   */
 
 /******************************************************************************/
 /*                         General registers                                  */
@@ -420,15 +420,19 @@ enum EP_BUF_NUM {
 //#define _pEPRxAddr(bEpNum) ((uint32_t *)((_GetBTABLE()+bEpNum*8+4)*2 + PMAAddr))
 //#define _pEPRxCount(bEpNum) ((uint32_t *)((_GetBTABLE()+bEpNum*8+6)*2 + PMAAddr))
 
-void		_SetEPTxAddr(uint32_t bEpNum, uint16_t wAddr);
-uint16_t	_GetEPTxAddr(uint32_t bEpNum);
-void		_SetEPTxCount(uint32_t bEpNum, uint16_t wCount);
-uint16_t	_GetEPTxCount(uint32_t bEpNum);
+void		_SetEPTxAddr(uint32_t ep_ind, uint16_t ep_tx_addr);
+uint16_t	_GetEPTxAddr(uint32_t ep_ind);
+void		_SetEPTxCount(uint32_t ep_ind, uint16_t ep_tx_count);
+uint16_t	_GetEPTxCount(uint32_t ep_ind);
 
-void		_SetEPRxAddr(uint32_t bEpNum, uint16_t wAddr);
-uint16_t	_GetEPRxAddr(uint32_t bEpNum);
-void		_SetEPRxCount(uint32_t bEpNum, uint16_t wCount);
-uint16_t	_GetEPRxCount(uint32_t bEpNum);
+void		_SetEPRxAddr(uint32_t ep_ind, uint16_t ep_rx_addr);
+uint16_t	_GetEPRxAddr(uint32_t ep_ind);
+void		_SetEPRxCount(uint32_t ep_ind, uint16_t ep_rx_count);
+uint16_t	_GetEPRxCount(uint32_t ep_ind);
+
+void pma_init(void);
+
+void pma_print(void);
 /*******************************************************************************
 * Macro Name     : SetEPCountRxReg.
 * Description    : Sets counter of rx buffer with no. of blocks.
