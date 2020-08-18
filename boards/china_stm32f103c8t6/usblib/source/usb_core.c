@@ -113,18 +113,26 @@ void ep0_data_stage_in_process(void)
 
 	src_data_buffer = (*ep0_ctrl_info->data_copy)(single_transfer_size);
 
-	copy_to_usb(src_data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
 
+	copy_to_usb(src_data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
 	_SetEPTxCount(ENDP0, single_transfer_size);
+
+//	uint16_t *usb_word_buffer = (uint16_t *)(_GetEPTxAddr(ENDP0) * 2 + PACKAGE_MEMORY_ADDR);
+//	d_print("usb_word_buffer: 0x%08lX\r\n", (uint32_t)usb_word_buffer);
+//	d_print("usb_word_buffer[%i]: 0x%02X\r\n", 0, usb_word_buffer[0]);
+//	usb_word_buffer[0] = 0x4321;
+//	d_print("usb_word_buffer[%i]: 0x%02X\r\n", 0, usb_word_buffer[0]);
+//	pma_print(_GetEPTxAddr(ENDP0), single_transfer_size >> 1);
+
+//	d_print("src_data_buffer[%i]: 0x%02X\r\n", 0, src_data_buffer[0]);
+//	d_print("EP0_TX_ADDR: 0x%03X\r\n", _GetEPTxAddr(ENDP0));
 //	d_print("EP0_TX_COUNT: 0x%03X\r\n", _GetEPTxCount(ENDP0));
+
 	ep0_ctrl_info->remaining_data_size -= single_transfer_size;
 	ep0_ctrl_info->data_buffer_offset += single_transfer_size;
 
 	ep0_tx_state = EP_TX_VALID;
-
-	/* Expect the host to abort the data IN stage */
 	ep0_rx_state = EP_RX_VALID;
-//	d_print("%s()\r\n",  __func__);
 }
 
 /*******************************************************************************
@@ -247,15 +255,16 @@ void standard_request_process()
 					break;
 
 				case SET_ADDRESS:
-//					d_print("SET_ADDRESS\r\n");
 					if (((usb_device_info->w_value & 0xFF) > 127) ||
 						((usb_device_info->w_value >> 8) != 0) ||
 						(usb_device_info->w_index != 0) ||
 						(usb_device_info->Current_Configuration != 0)) {
 
 						usb_device_info->control_state = STALLED;
+//						d_print("SET_ADDRESS 1\r\n");
 						return;
 					}
+//					d_print("SET_ADDRESS 2\r\n");
 					break;
 
 				case SET_FEATURE:
@@ -523,7 +532,6 @@ uint8_t ep0_setup_process(void)
 	} else {
 		setup_with_data_process();
 	}
-
 	return ep0_finish_processing();
 
 }
@@ -550,7 +558,7 @@ uint8_t ep0_in_process(void)
 //		d_print("WAIT_STATUS_IN\r\n");
 		if ((usb_device_info->b_request == SET_ADDRESS) &&
 			(((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == DEVICE_RECIPIENT))) {
-
+//			d_print("SET_ADDRESS 3 addr: 0x%04X\r\n", usb_device_info->w_value & 0xFF);
 			SetDeviceAddress(usb_device_info->w_value & 0xFF);
 			usb_standard_requests->User_SetDeviceAddress();
 		}
@@ -589,7 +597,8 @@ uint8_t ep0_out_process(void)
 
 	} else if (control_state == WAIT_STATUS_OUT) {
 //		d_print("WAIT_STATUS_OUT\r\n");
-
+//		(*usb_device_property->status_in_process)();
+		usb_device_property->status_out_process();
 		control_state = STALLED;
 
 	} else {
@@ -631,12 +640,10 @@ uint8_t ep0_finish_processing(void)
 *******************************************************************************/
 void SetDeviceAddress(uint8_t usb_addr)
 {
-//	d_print("%s(0x%02X)\r\n",  __func__, usb_addr);
+	d_print("%s(0x%02X)\r\n",  __func__, usb_addr);
 	uint32_t i;
-	uint32_t nEP = Device_Table.Total_Endpoint;
 
-	/* set address in every used endpoint */
-	for (i = 0; i < nEP; i++) {
+	for (i = 0; i < EP_COUNT; i++) {
 		_SetEPAddress((uint8_t)i, (uint8_t)i);
 	}
 

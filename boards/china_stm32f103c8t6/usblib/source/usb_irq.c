@@ -19,16 +19,12 @@ uint32_t		endpoints[8];
 
 void (*ep_in[EP_COUNT])(void) = {
 	ep_in_handle,
-	ep_in_handle,
-	ep_in_handle,
-	ep_in_handle,
+	ep_in_handle
 };
 
 void (*ep_out[EP_COUNT])(void) = {
 	ep_out_handle,
-	ep_out_handle,
-	ep_out_handle,
-	ep_out_handle,
+	ep_out_handle
 };
 
 struct {
@@ -301,24 +297,26 @@ void ep0_handle(void)
 	if ((usb_irq_flags & ISTR_DIR) == 0) {
 
 		_ClearEP_CTR_TX(ENDP0);
-
 		ep0_in_process();
 
 	}  else {
 
 		usb_ep0_register = _GetENDPOINT(ENDP0);
-
 		if ((usb_ep0_register & EP_SETUP) != 0) {
 
 			_ClearEP_CTR_RX(ENDP0);
-
 			ep0_setup_process();
 
 		} else if ((usb_ep0_register & EP_CTR_RX) != 0) {
 
 			_ClearEP_CTR_RX(ENDP0);
-
 			ep0_out_process();
+
+		} else {
+
+//			_ClearEP_CTR_TX(ENDP0);
+//			ep0_in_process();
+			d_print("Error! usb_ep0_register: 0x%04X\r\n",  usb_ep0_register);
 		}
 	}
 
@@ -327,7 +325,7 @@ void ep0_handle(void)
 
 void ep_handle(void)
 {
-//	d_print("%s()\r\n",  __func__);
+	d_print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -350,12 +348,15 @@ void ep_handle(void)
 void lp_ctr_handle( void)
 {
 //	d_print("%s()\r\n",  __func__);
-	while (((usb_irq_flags = _GetISTR()) & ISTR_CTR) != 0) {
+	while ((usb_irq_flags & ISTR_CTR) != 0) {
+	usb_irq_flags = _GetISTR();
+//	d_print("ISTR: 0x%04X\r\n", usb_irq_flags);
+
 		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
 
 		if (ep_index == 0) {
 			ep0_handle();
-
+//			d_print("ISTR: 0x%04X\r\n", _GetISTR());
 		} else {
 			ep_handle(/*TODO: add index argument, remove index var from the global space.*/);
 		}

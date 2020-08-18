@@ -99,6 +99,8 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 void hid_init(void)
 {
 	d_print("%s()\r\n",  __func__);
+	_SetCNTR(CNTR_FRES | CNTR_PDWN);
+	LL_mDelay(100);
 //	Get_SerialNum();
 
 	usb_device_info->Current_Configuration = 0;
@@ -522,8 +524,10 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 	wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
 	if (Length == 0) {
 		usb_device_info->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
+//		d_print("Standard_GetDescriptorData 1\r\n");
 		return 0;
 	}
+//	d_print("Standard_GetDescriptorData size:0x%04X\r\n", Length);
 	return pDesc->Descriptor + wOffset;
 }
 
@@ -623,43 +627,7 @@ void HID_SetDeviceAddress (void)
 *******************************************************************************/
 void HID_Status_In(void)
 {
-//  BitAction Led_State;
-//
-//  if (Report_Buf[1] == 0)
-//  {
-//    Led_State = Bit_RESET;
-//  }
-//  else
-//  {
-//    Led_State = Bit_SET;
-//  }
-//
-//  switch (Report_Buf[0])
-//  {
-//    case 1: /* Led 1 */
-//     if (Led_State != Bit_RESET)
-//     {
-//       GPIO_SetBits(LED_PORT,LED1_PIN);
-//     }
-//     else
-//     {
-//       GPIO_ResetBits(LED_PORT,LED1_PIN);
-//     }
-//     break;
-//    case 2: /* Led 2 */
-//     if (Led_State != Bit_RESET)
-//     {
-//       GPIO_SetBits(LED_PORT,LED2_PIN);
-//     }
-//     else
-//     {
-//       GPIO_ResetBits(LED_PORT,LED2_PIN);
-//     }
-//      break;
-//    case 3: /* Led 1&2 */
-//       Buffer[4]=Report_Buf[1];
-//     break;
-//  }
+	d_print("%s()\r\n",  __func__);
 }
 
 /*******************************************************************************
@@ -670,7 +638,9 @@ void HID_Status_In(void)
 * Return         : None.
 *******************************************************************************/
 void HID_Status_Out (void)
-{}
+{
+	d_print("%s()\r\n",  __func__);
+}
 
 /*******************************************************************************
 * Function Name  : HID_Data_Setup
@@ -796,9 +766,11 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 {
 	uint8_t wValue0 = (usb_device_info->w_value & 0xFF);
 	if (wValue0 > 4) {
+//		d_print("HID_GetStringDescriptor 1\r\n");
 		return NULL;
 
 	} else {
+//		d_print("HID_GetStringDescriptor 2\r\n");
 		return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
 	}
 }

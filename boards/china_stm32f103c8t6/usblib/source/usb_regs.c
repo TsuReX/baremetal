@@ -66,13 +66,12 @@ void pma_init(void)
 	}
 }
 
-void pma_print(void)
+void pma_print(uint16_t offset_word, uint16_t word_count)
 {
-	size_t pma_dwords_count = 256;
-	uint32_t *ptr_pma = (uint32_t*)PACKAGE_MEMORY_ADDR;
+	uint16_t *ptr_pma = (uint16_t*)(PACKAGE_MEMORY_ADDR + offset_word * 2);
 	size_t dword_ind = 0;
 	d_print("PMA\r\n");
-	for (; dword_ind < pma_dwords_count; ++dword_ind) {
-		d_print("0x%02X:0x%04lX\r\n", dword_ind, ptr_pma[dword_ind]);
+	for (; dword_ind < word_count; ++dword_ind) {
+		d_print("0x%08lX:0x%04X\r\n", ((uint32_t)ptr_pma) + dword_ind * 4, ptr_pma[dword_ind * 2]);
 	}
 }

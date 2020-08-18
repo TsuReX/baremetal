@@ -17,7 +17,7 @@ void copy_to_usb(uint8_t *src_buffer, uint16_t usb_buffer_addr, uint16_t data_si
 	uint32_t word_count = data_size >> 1;
 	uint32_t word_num;
 
-	uint16_t *usb_word_buffer = (uint16_t *)(usb_buffer_addr * 2 + PACKAGE_MEMORY_ADDR + *BTABLE);
+	uint16_t *usb_word_buffer = (uint16_t *)(usb_buffer_addr * 2 + PACKAGE_MEMORY_ADDR/* + *BTABLE*/);
 
 	for (word_num = 0; word_num < word_count; ++word_num) {
 
@@ -46,7 +46,7 @@ void copy_from_usb(uint8_t *dst_buffer, uint16_t usb_buffer_addr, uint16_t data_
 	uint32_t word_count = data_size >> 1;   /* n = (wNBytes + 1) / 2 */
 	uint32_t word_num;
 
-	uint16_t *usb_word_buffer = (uint16_t *)(usb_buffer_addr * 2 + PACKAGE_MEMORY_ADDR + *BTABLE);
+	uint16_t *usb_word_buffer = (uint16_t *)(usb_buffer_addr * 2 + PACKAGE_MEMORY_ADDR/* + *BTABLE*/);
 
 	for (word_num = 0; word_num < word_count; ++word_num) {
 

@@ -171,6 +171,8 @@ void board_init(void)
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_14);
 	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_15);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
+
 }
 
 /**

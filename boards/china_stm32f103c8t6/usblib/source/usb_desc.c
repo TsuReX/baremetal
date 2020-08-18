@@ -9,9 +9,9 @@ const uint8_t rhid_device_descriptor[RHID_SIZ_DEVICE_DESC] = {
 	0x00, 0x02,                 // bcdUSB - ����� ������ ��������� USB ������������ ����������. 2.0
 
 	// �����, �������� ���������� � ��������, �� ��������� USB. � ��� ����, �������� ������ ��������� ��� �� ����
-	0x00,                       //bDeviceClass
-	0x00,                       //bDeviceSubClass
-	0x00,                       //bDeviceProtocol
+	0xAA,                       //bDeviceClass
+	0xBB,                       //bDeviceSubClass
+	0xCC,                       //bDeviceProtocol
 
 	0x40,                       //bMaxPacketSize - ������������ ������ ������� ��� Endpoint 0 (��� ����������������)
 

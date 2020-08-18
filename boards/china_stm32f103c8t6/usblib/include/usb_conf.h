@@ -3,7 +3,7 @@
 
 /* EP_NUM defines how many endpoints are used by the device */
 
-#define EP_COUNT			(4)
+#define EP_COUNT			(2)
 
 /* buffer table base address */
 /* buffer table base address */
