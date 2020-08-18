@@ -226,7 +226,7 @@ void Resume_Init(void)
 *******************************************************************************/
 void resume(RESUME_STATE eResumeSetVal)
 {
-	d_print("%s(0x%04X)\r\n",  __func__, eResumeSetVal);
+//	d_print("%s(0x%04X)\r\n",  __func__, eResumeSetVal);
 	uint16_t wCNTR;
 
 	if (eResumeSetVal != RESUME_ESOF)
@@ -289,7 +289,7 @@ void resume(RESUME_STATE eResumeSetVal)
 
 void ep0_handle(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep0_register = 0;
 
 	ep0_rx_state = _GetENDPOINT(ENDP0);
@@ -327,7 +327,7 @@ void ep0_handle(void)
 
 void ep_handle(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -349,7 +349,7 @@ void ep_handle(void)
 
 void lp_ctr_handle( void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	while (((usb_irq_flags = _GetISTR()) & ISTR_CTR) != 0) {
 		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
 
@@ -398,7 +398,7 @@ void esof_handle()
 	uint32_t endpoints[EP_COUNT];
 	uint16_t w_fnr = _GetFNR();
 
-	d_print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
+//	d_print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
 
 	if ((w_fnr & FNR_RXDP) != 0) {
 		/* increment ESOF counter */
@@ -489,7 +489,7 @@ void usb_lp_can1_rx0_handle(void)
 	if (usb_irq_flags & ISTR_ESOF) {
 		/* clear ESOF flag in ISTR */
 		_SetISTR(CLR_ESOF);
-		esof_handle();
+//		esof_handle();
 	}
 
 //	d_print("%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());

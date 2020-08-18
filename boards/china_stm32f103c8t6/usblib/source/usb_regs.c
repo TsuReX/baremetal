@@ -52,7 +52,7 @@ void _SetEPRxCount(uint32_t ep_ind, uint16_t ep_rx_count)
 uint16_t _GetEPRxCount(uint32_t ep_ind)
 {
 	uint16_t *ptr_ep_rx_count = (uint16_t*)(PACKAGE_MEMORY_ADDR + (*BTABLE + ep_ind * 8 + 6) * 2);
-	return *ptr_ep_rx_count;
+	return *ptr_ep_rx_count & 0x3FF;
 }
 
 void pma_init(void)

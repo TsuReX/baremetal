@@ -116,7 +116,7 @@ void ep0_data_stage_in_process(void)
 	copy_to_usb(src_data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
 
 	_SetEPTxCount(ENDP0, single_transfer_size);
-
+//	d_print("EP0_TX_COUNT: 0x%03X\r\n", _GetEPTxCount(ENDP0));
 	ep0_ctrl_info->remaining_data_size -= single_transfer_size;
 	ep0_ctrl_info->data_buffer_offset += single_transfer_size;
 
@@ -124,7 +124,7 @@ void ep0_data_stage_in_process(void)
 
 	/* Expect the host to abort the data IN stage */
 	ep0_rx_state = EP_RX_VALID;
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 }
 
 /*******************************************************************************
@@ -137,16 +137,16 @@ void ep0_data_stage_in_process(void)
 void setup_without_data_process(void)
 {
 	uint8_t request_type = usb_device_info->bm_request_type & REQUEST_TYPE;
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	switch (request_type) {
 
 		case STANDARD_REQUEST_TYPE:
-			d_print("STANDARD_REQUEST_TYPE\r\n");
+//			d_print("STANDARD_REQUEST_TYPE\r\n");
 			standard_request_process();
 			break;
 
 		case CLASS_REQUEST_TYPE:
-			d_print("CLASS_REQUEST_TYPE\r\n");
+//			d_print("CLASS_REQUEST_TYPE\r\n");
 			if ((*usb_device_property->class_setup_without_data_process)(usb_device_info->b_request) == USB_NOT_READY) {
 				usb_device_info->control_state = PAUSE;
 				return;
@@ -206,7 +206,7 @@ void standard_request_process()
 	switch (request_recipient) {
 
 		case DEVICE_RECIPIENT_TYPE:
-			d_print("DEVICE_RECIPIENT_TYPE\r\n");
+//			d_print("DEVICE_RECIPIENT_TYPE\r\n");
 			switch (request_number) {
 
 				case GET_STATUS:
@@ -217,11 +217,11 @@ void standard_request_process()
 					break;
 
 				case GET_DESCRIPTOR:
-					d_print("GET_DESCRIPTOR\r\n");
+//					d_print("GET_DESCRIPTOR\r\n");
 					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == DEVICE_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetDeviceDescriptor;
-						d_print("DEVICE_DESCRIPTOR\r\n");
+//						d_print("DEVICE_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == CONFIG_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetConfigDescriptor;
@@ -247,7 +247,7 @@ void standard_request_process()
 					break;
 
 				case SET_ADDRESS:
-					d_print("SET_ADDRESS\r\n");
+//					d_print("SET_ADDRESS\r\n");
 					if (((usb_device_info->w_value & 0xFF) > 127) ||
 						((usb_device_info->w_value >> 8) != 0) ||
 						(usb_device_info->w_index != 0) ||
@@ -299,7 +299,7 @@ void standard_request_process()
 			break;
 
 		case INTERFACE_RECIPIENT_TYPE:
-			d_print("INTERFACE_RECIPIENT_TYPE\r\n");
+//			d_print("INTERFACE_RECIPIENT_TYPE\r\n");
 			switch (request_number) {
 
 				case GET_STATUS:
@@ -337,7 +337,7 @@ void standard_request_process()
 			break;
 
 		case ENDPOINT_RECIPIENT_TYPE:
-			d_print("ENDPOINT_RECIPIENT_TYPE\r\n");
+//			d_print("ENDPOINT_RECIPIENT_TYPE\r\n");
 			switch (request_number) {
 
 				case GET_STATUS:
@@ -415,7 +415,7 @@ void standard_request_process()
 		}
 
 		if (request_direction == TO_HOST_DIRECTION_TYPE) {
-			d_print("TO_HOST_DIRECTION_TYPE\r\n");
+//			d_print("TO_HOST_DIRECTION_TYPE\r\n");
 			/* Restrict the data length to be the one host asks for */
 			if (usb_device_info->ep0_ctrl_info.remaining_data_size > usb_device_info->w_length) {
 				/* TODO: USB Check a correctness of the construction below. */
@@ -434,7 +434,7 @@ void standard_request_process()
 			ep0_data_stage_in_process();
 
 		} else { /* TO_DEVICE_DIRECTION_TYPE */
-			d_print("TO_DEVICE_DIRECTION_TYPE\r\n");
+//			d_print("TO_DEVICE_DIRECTION_TYPE\r\n");
 			usb_device_info->control_state = OUT_DATA;
 			ep0_rx_state = EP_RX_VALID; /* enable for next data reception */
 		}
@@ -451,16 +451,16 @@ void standard_request_process()
 void setup_with_data_process(void)
 {
 	uint8_t	request_type = usb_device_info->bm_request_type & REQUEST_TYPE;
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	switch (request_type) {
 
 		case STANDARD_REQUEST_TYPE:
-			d_print("STANDARD_REQUEST_TYPE\r\n");
+//			d_print("STANDARD_REQUEST_TYPE\r\n");
 			standard_request_process();
 			break;
 
 		case CLASS_REQUEST_TYPE:
-			d_print("CLASS_REQUEST_TYPE\r\n");
+//			d_print("CLASS_REQUEST_TYPE\r\n");
 			if ((*usb_device_property->class_setup_with_data_process)(usb_device_info->b_request) == USB_NOT_READY) {
 				usb_device_info->control_state = PAUSE;
 				return;
@@ -487,7 +487,7 @@ void setup_with_data_process(void)
 *******************************************************************************/
 uint8_t ep0_setup_process(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	struct std_request {
 		uint8_t		bm_request_type;
 		uint8_t		b_request;
@@ -537,17 +537,17 @@ uint8_t ep0_setup_process(void)
 *******************************************************************************/
 uint8_t ep0_in_process(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	uint8_t control_state = usb_device_info->control_state;
 
 	if ((control_state == IN_DATA) || (control_state == LAST_IN_DATA)) {
-		d_print("IN_DATA\r\n");
+//		d_print("IN_DATA\r\n");
 		ep0_data_stage_in_process();
 		/* ControlState may be changed outside the function */
 		control_state = usb_device_info->control_state;
 
 	} else if (control_state == WAIT_STATUS_IN) {
-		d_print("WAIT_STATUS_IN\r\n");
+//		d_print("WAIT_STATUS_IN\r\n");
 		if ((usb_device_info->b_request == SET_ADDRESS) &&
 			(((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == DEVICE_RECIPIENT))) {
 
@@ -576,19 +576,19 @@ uint8_t ep0_in_process(void)
 *******************************************************************************/
 uint8_t ep0_out_process(void)
 {
-	d_print("%s()\r\n",  __func__);
-	d_print("TODO: Print received data size\r\n");
+//	d_print("%s()\r\n",  __func__);
+//	d_print("EP0_RX_COUNT: 0x%03X\r\n", _GetEPRxCount(ENDP0));
 	uint32_t control_state = usb_device_info->control_state;
 
 	if ((control_state == OUT_DATA) || (control_state == LAST_OUT_DATA)) {
-		d_print("OUT_DATA\r\n");
+//		d_print("OUT_DATA\r\n");
 
 		ep0_data_stage_out_process();
 
 		control_state = usb_device_info->control_state;
 
 	} else if (control_state == WAIT_STATUS_OUT) {
-		d_print("WAIT_STATUS_OUT\r\n");
+//		d_print("WAIT_STATUS_OUT\r\n");
 
 		control_state = STALLED;
 
@@ -611,7 +611,7 @@ uint8_t ep0_out_process(void)
 *******************************************************************************/
 uint8_t ep0_finish_processing(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	_SetEPRxCount(ENDP0, property.MaxPacketSize);
 
 	if (usb_device_info->control_state == STALLED) {
@@ -629,9 +629,9 @@ uint8_t ep0_finish_processing(void)
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void SetDeviceAddress(uint8_t Val)
+void SetDeviceAddress(uint8_t usb_addr)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s(0x%02X)\r\n",  __func__, usb_addr);
 	uint32_t i;
 	uint32_t nEP = Device_Table.Total_Endpoint;
 
@@ -640,7 +640,7 @@ void SetDeviceAddress(uint8_t Val)
 		_SetEPAddress((uint8_t)i, (uint8_t)i);
 	}
 
-	_SetDADDR(Val | DADDR_EF); /* set device address and enable function */
+	_SetDADDR(usb_addr | DADDR_EF); /* set device address and enable function */
 }
 
 /*******************************************************************************

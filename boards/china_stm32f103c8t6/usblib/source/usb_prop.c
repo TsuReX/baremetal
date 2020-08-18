@@ -119,7 +119,7 @@ void hid_init(void)
 *******************************************************************************/
 void hid_reset(void)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	pma_init();
 	/* Set HID_DEVICE as not configured */
 	usb_device_info->Current_Configuration = 0;
