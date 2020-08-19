@@ -13,6 +13,7 @@
 #include "ringbuf.h"
 #include "console.h"
 #include "drivers.h"
+#include "config.h"
 
 /* Содержащаяся в данном файле настройка и вариант использования USART1 будут специфичны для текстовой консоли.
  * Настройки и вариант использования USART1 для spi-manager будут иными и будут располагаться в другом файле.
@@ -78,7 +79,7 @@ static void console_usart1_init(void)
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART1, 24000000, 115200);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >>2, 115200);
 
 	/*LL_USART_EnableOverrunDetect(USART1);*/
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/

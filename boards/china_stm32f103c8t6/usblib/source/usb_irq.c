@@ -43,7 +43,7 @@ __IO uint32_t remotewakeupon=0;
 *******************************************************************************/
 RESULT PowerOn(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 
 	_SetISTR(0);
 
@@ -61,7 +61,7 @@ RESULT PowerOn(void)
 *******************************************************************************/
 RESULT PowerOff()
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 
 	_SetCNTR(CNTR_FRES);
 
@@ -81,7 +81,7 @@ RESULT PowerOff()
 *******************************************************************************/
 void suspend(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	uint32_t ep_ind = 0;
 	uint16_t w_cntr = 0;
 	uint32_t tmp_pwr_cr = 0;
@@ -168,7 +168,7 @@ void suspend(void)
 *******************************************************************************/
 void Leave_LowPowerMode(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	DEVICE_INFO *pInfo = &device_info;
 
 	/* Set the device state to the correct state */
@@ -191,7 +191,7 @@ void Leave_LowPowerMode(void)
 *******************************************************************************/
 void Resume_Init(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	uint16_t wCNTR;
 
 	/* CNTR_LPMODE = 0 */
@@ -222,7 +222,7 @@ void Resume_Init(void)
 *******************************************************************************/
 void resume(RESUME_STATE eResumeSetVal)
 {
-//	d_print("%s(0x%04X)\r\n",  __func__, eResumeSetVal);
+//	// print("%s(0x%04X)\r\n",  __func__, eResumeSetVal);
 	uint16_t wCNTR;
 
 	if (eResumeSetVal != RESUME_ESOF)
@@ -285,7 +285,7 @@ void resume(RESUME_STATE eResumeSetVal)
 
 void ep0_handle(void)
 {
-//	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep0_register = 0;
 
 	ep0_rx_state = _GetENDPOINT(ENDP0);
@@ -316,7 +316,7 @@ void ep0_handle(void)
 
 //			_ClearEP_CTR_TX(ENDP0);
 //			ep0_in_process();
-			d_print("Error! usb_ep0_register: 0x%04X\r\n",  usb_ep0_register);
+			// print("Error! usb_ep0_register: 0x%04X\r\n",  usb_ep0_register);
 		}
 	}
 
@@ -325,7 +325,7 @@ void ep0_handle(void)
 
 void ep_handle(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -347,16 +347,16 @@ void ep_handle(void)
 
 void lp_ctr_handle( void)
 {
-//	d_print("%s()\r\n",  __func__);
+//	// print("%s()\r\n",  __func__);
 	while ((usb_irq_flags & ISTR_CTR) != 0) {
 	usb_irq_flags = _GetISTR();
-//	d_print("ISTR: 0x%04X\r\n", usb_irq_flags);
+//	// print("ISTR: 0x%04X\r\n", usb_irq_flags);
 
 		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
 
 		if (ep_index == 0) {
 			ep0_handle();
-//			d_print("ISTR: 0x%04X\r\n", _GetISTR());
+//			// print("ISTR: 0x%04X\r\n", _GetISTR());
 		} else {
 			ep_handle(/*TODO: add index argument, remove index var from the global space.*/);
 		}
@@ -365,7 +365,7 @@ void lp_ctr_handle( void)
 
 void hp_ctr_handle(void)
 {
-	d_print("%s()\r\n",  __func__);
+	// print("%s()\r\n",  __func__);
 	uint32_t usb_ep_register = 0;
 
 	usb_irq_flags = _GetISTR();
@@ -399,7 +399,7 @@ void esof_handle()
 	uint32_t endpoints[EP_COUNT];
 	uint16_t w_fnr = _GetFNR();
 
-//	d_print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
+//	// print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
 
 	if ((w_fnr & FNR_RXDP) != 0) {
 		/* increment ESOF counter */
@@ -446,18 +446,21 @@ void esof_handle()
 void usb_lp_can1_rx0_handle(void)
 {
 	usb_irq_flags = _GetISTR();
-//	d_print("\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
+//	// print("\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
 
 	if (usb_irq_flags & ISTR_SOF) {
+//		// print("ISTR_SOF\r\n");
 		_SetISTR(CLR_SOF);
 	}
 
 	if (usb_irq_flags & ISTR_CTR) {
+		 print("ISTR_CTR\r\n");
 		lp_ctr_handle();
 	}
 
 	if (usb_irq_flags & ISTR_RESET) {
 		_SetISTR(CLR_RESET);
+		 print("ISTR_RESET: ISTR 0x%04X\r\n", _GetISTR());
 		property.reset();
 	}
 
@@ -470,34 +473,39 @@ void usb_lp_can1_rx0_handle(void)
 	}
 
 	if (usb_irq_flags & ISTR_WKUP) {
+		 print("ISTR_WKUP\r\n");
+//		resume(RESUME_EXTERNAL);
+
+		uint16_t cntr = _GetCNTR();
+		cntr &= (~CNTR_LPMODE);
+		_SetCNTR(cntr);
+
+		/* reset FSUSP bit */
+//		_SetCNTR(IMR_MSK);
+		cntr = _GetCNTR();
+		cntr &= (~CNTR_FSUSP);
+		_SetCNTR(cntr);
+
 		_SetISTR(CLR_WKUP);
-		resume(RESUME_EXTERNAL);
-	}
-
-	if (usb_irq_flags & ISTR_SUSP) {
-
-		/* check if SUSPEND is possible */
-		if (fSuspendEnabled) {
-			suspend();
-		} else {
-			/* if not possible then resume after xx ms */
-			resume(RESUME_LATER);
-		}
-		/* clear of the ISTR bit must be done after setting of CNTR_FSUSP */
-		_SetISTR(CLR_SUSP);
 	}
 
 	if (usb_irq_flags & ISTR_ESOF) {
-		/* clear ESOF flag in ISTR */
+		 print("ISTR_ESOF\r\n");
 		_SetISTR(CLR_ESOF);
 //		esof_handle();
 	}
 
-//	d_print("%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());
+	if (usb_irq_flags & ISTR_SUSP) {
+		 print("ISTR_SUSP\r\n");
+		_SetCNTR(CNTR_FSUSP);
+		_SetISTR(CLR_SUSP);
+	}
+
+//	// print("%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());
 }
 
 void usbwakeup_handle(void)
 {
-	d_print("%s()\r\n",  __func__);
+	 print("%s()\r\n",  __func__);
 	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_18);
 }

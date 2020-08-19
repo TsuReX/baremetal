@@ -70,8 +70,8 @@ void pma_print(uint16_t offset_word, uint16_t word_count)
 {
 	uint16_t *ptr_pma = (uint16_t*)(PACKAGE_MEMORY_ADDR + offset_word * 2);
 	size_t dword_ind = 0;
-	d_print("PMA\r\n");
+	print("PMA\r\n");
 	for (; dword_ind < word_count; ++dword_ind) {
-		d_print("0x%08lX:0x%04X\r\n", ((uint32_t)ptr_pma) + dword_ind * 4, ptr_pma[dword_ind * 2]);
+		print("0x%08lX:0x%04X\r\n", ((uint32_t)ptr_pma) + dword_ind * 4, ptr_pma[dword_ind * 2]);
 	}
 }

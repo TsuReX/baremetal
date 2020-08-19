@@ -14,7 +14,7 @@ void scheduler_init(void)
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
-	LL_TIM_SetPrescaler(TIM2, 100);
+	LL_TIM_SetPrescaler(TIM2, 300);
 
 	LL_TIM_SetAutoReload(TIM2, 24000);
 
@@ -27,7 +27,7 @@ void scheduler_init(void)
 
 	LL_TIM_EnableIT_UPDATE(TIM2);
 
-	NVIC_SetPriority(TIM2_IRQn, 0);
+	NVIC_SetPriority(TIM2_IRQn, 3);
 
 	NVIC_EnableIRQ(TIM2_IRQn);
 

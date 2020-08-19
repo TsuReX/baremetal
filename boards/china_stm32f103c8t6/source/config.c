@@ -9,9 +9,6 @@
 #include "drivers.h"
 #include "config.h"
 
-/** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	48000000
-
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
  * 			работающем на частоте 48 МГц.
@@ -37,7 +34,7 @@ static void sysclk_init_48mhz_hse()
 
 	/* Установка источника сигнала для PLL - PLLSRC.
 	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_6);
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_9);
 
 	/* Включение PLL. */
 	LL_RCC_PLL_Enable();
@@ -63,7 +60,7 @@ static void sysclk_init_48mhz_hse()
 //
 //	/* Установка источника сигнала для PLL - PLLSRC.
 //	 * Установка множителя PLL - PLLMUL.*/
-//	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_6);
+//	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_9);
 //
 //	/* Включение PLL. */
 //	LL_RCC_PLL_Enable();
@@ -91,7 +88,7 @@ static void ahbclk_init_48mhz()
 static void apb1clk_init_24mhz()
 {
 	/* Настройка делителя для шины APB1 - PCLK1. */
-	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_4);
 }
 
 /**
@@ -100,7 +97,7 @@ static void apb1clk_init_24mhz()
 static void apb2clk_init_24mhz()
 {
 	/* Настройка делителя для шины APB2 - PCLK2. */
-	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
+	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_4);
 
 	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_2);
 }
@@ -187,7 +184,7 @@ void soc_init(void)
 	/* Настройка вспомогательных параметров. */
 	LL_SetSystemCoreClock(HCLK_FREQ);
 	/* Настраивает системный таймер ядра. */
-	systick_init(SystemCoreClock);
+	systick_init(HCLK_FREQ);
 
 	/** Configuring GPIO. */
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
@@ -198,7 +195,7 @@ void soc_init(void)
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_15, LL_GPIO_MODE_OUTPUT);
 
 	/* TODO: USB check*/
-	LL_RCC_SetUSBClockSource(LL_RCC_USB_CLKSOURCE_PLL);
+	LL_RCC_SetUSBClockSource(LL_RCC_USB_CLKSOURCE_PLL_DIV_1_5);
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USB);
 
 }
