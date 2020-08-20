@@ -98,7 +98,7 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 *******************************************************************************/
 void hid_init(void)
 {
-	// print("%s()\r\n",  __func__);
+//	print("%s()\r\n",  __func__);
 	_SetCNTR(CNTR_FRES | CNTR_PDWN);
 	LL_mDelay(100);
 //	Get_SerialNum();
@@ -121,7 +121,7 @@ void hid_init(void)
 *******************************************************************************/
 void hid_reset(void)
 {
-//	// print("%s()\r\n",  __func__);
+//	print("%s()\r\n",  __func__);
 	pma_init();
 	/* Set HID_DEVICE as not configured */
 	usb_device_info->Current_Configuration = 0;
@@ -530,10 +530,10 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 	wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
 	if (Length == 0) {
 		usb_device_info->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
-//		// print("Standard_GetDescriptorData 1\r\n");
+//		print("Standard_GetDescriptorData 1\r\n");
 		return 0;
 	}
-//	// print("Standard_GetDescriptorData size:0x%04X\r\n", Length);
+//	print("Standard_GetDescriptorData size:0x%04X\r\n", Length);
 	return pDesc->Descriptor + wOffset;
 }
 
@@ -633,7 +633,7 @@ void HID_SetDeviceAddress (void)
 *******************************************************************************/
 void HID_Status_In(void)
 {
-	// print("%s()\r\n",  __func__);
+	print("%s()\r\n",  __func__);
 }
 
 /*******************************************************************************
@@ -645,7 +645,7 @@ void HID_Status_In(void)
 *******************************************************************************/
 void HID_Status_Out (void)
 {
-	// print("%s()\r\n",  __func__);
+	print("%s()\r\n",  __func__);
 }
 
 /*******************************************************************************
@@ -665,11 +665,11 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 		((usb_device_info->w_index & 0xFF) == 0)) {
 
 		if ((usb_device_info->w_value >> 8) == REPORT_DESCRIPTOR) {
-			print("GET_REPORT_DESCRIPTOR\r\n");
+//			print("GET_REPORT_DESCRIPTOR\r\n");
 			CopyRoutine = HID_GetReportDescriptor;
 
 		} else if ((usb_device_info->w_value >> 8) == HID_DESCRIPTOR_TYPE) {
-			print("GET_HID_DESCRIPTOR\r\n");
+//			print("GET_HID_DESCRIPTOR\r\n");
 			CopyRoutine = HID_GetHIDDescriptor;
 		}
 
@@ -678,12 +678,12 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT))  == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) ) {
 		switch( RequestNo ) {
 			case GET_PROTOCOL:
-				print("GET_PROTOCOL\r\n");
+//				print("GET_PROTOCOL\r\n");
 				CopyRoutine = HID_GetProtocolValue;
 				break;
 
 			case SET_REPORT:
-				print("SET_REPORT\r\n");
+//				print("SET_REPORT\r\n");
 				CopyRoutine = HID_SetReport_Feature;
 				Request = SET_REPORT;
 				break;
@@ -716,7 +716,7 @@ RESULT hid_setup_without_data_process(uint8_t RequestNo)
 {
 	if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) &&
 		(RequestNo == SET_PROTOCOL)) {
-		print("SET_PROTOCOL\r\n");
+//		print("SET_PROTOCOL\r\n");
 		return HID_SetProtocol();
 	} else {
 		return USB_UNSUPPORT;
@@ -776,11 +776,11 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 {
 	uint8_t wValue0 = (usb_device_info->w_value & 0xFF);
 	if (wValue0 > 4) {
-//		// print("HID_GetStringDescriptor 1\r\n");
+//		print("HID_GetStringDescriptor 1\r\n");
 		return NULL;
 
 	} else {
-//		 print("HID_GetStringDescriptor 2\r\n");
+//		print("HID_GetStringDescriptor 2\r\n");
 		return Standard_GetDescriptorData(Length, &String_Descriptor[wValue0]);
 	}
 }
