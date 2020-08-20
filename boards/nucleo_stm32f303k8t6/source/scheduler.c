@@ -14,7 +14,7 @@ void scheduler_init(void)
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
 
-	LL_TIM_SetPrescaler(TIM6, 100);
+	LL_TIM_SetPrescaler(TIM6, 50);
 
 	LL_TIM_SetAutoReload(TIM6, 48000);
 

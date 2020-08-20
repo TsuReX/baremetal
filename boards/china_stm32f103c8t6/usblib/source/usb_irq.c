@@ -34,199 +34,25 @@ struct {
 
 __IO uint32_t remotewakeupon=0;
 
-/*******************************************************************************
-* Function Name  : PowerOn
-* Description    :
-* Input          : None.
-* Output         : None.
-* Return         : USB_SUCCESS.
-*******************************************************************************/
-RESULT PowerOn(void)
-{
-//	 print("%s()\r\n",  __func__);
-
-	_SetISTR(0);
-
-//	_SetCNTR(CNTR_RESETM | CNTR_SUSPM | CNTR_WKUPM | CNTR_PDWN);
-
-	return USB_SUCCESS;
-}
-
-/*******************************************************************************
-* Function Name  : PowerOff
-* Description    : handles switch-off conditions
-* Input          : None.
-* Output         : None.
-* Return         : USB_SUCCESS.
-*******************************************************************************/
-RESULT PowerOff()
-{
-//	 print("%s()\r\n",  __func__);
-
-	_SetCNTR(CNTR_FRES);
-
-	_SetISTR(0);
-
-	_SetCNTR(CNTR_FRES + CNTR_PDWN);
-
-	return USB_SUCCESS;
-}
-
-/*******************************************************************************
-* Function Name  : Suspend
-* Description    : sets suspend mode operating conditions
-* Input          : None.
-* Output         : None.
-* Return         : USB_SUCCESS.
-*******************************************************************************/
-void suspend(void)
-{
-//	print("%s()\r\n",  __func__);
-	uint32_t ep_ind = 0;
-	uint16_t w_cntr = 0;
-	uint32_t tmp_pwr_cr = 0;
-	uint32_t pwr_cr = 0;
-
-	/*Store CNTR value */
-	w_cntr = _GetCNTR();
-
-	/*Store endpoints registers status */
-	for (ep_ind = 0; ep_ind < EP_COUNT; ep_ind++)
-		endpoints[ep_ind] = _GetENDPOINT(ep_ind);
-
-	/* unmask RESET flag */
-	w_cntr |= CNTR_RESETM;
-	_SetCNTR(w_cntr);
-
-	/*apply FRES */
-	w_cntr |= CNTR_FRES;
-	_SetCNTR(w_cntr);
-
-	/*clear FRES*/
-	w_cntr &= ~CNTR_FRES;
-	_SetCNTR(w_cntr);
-
-	/*poll for RESET flag in ISTR*/
-	while((_GetISTR()&ISTR_RESET) == 0);
-
-	/* clear RESET flag in ISTR */
-	_SetISTR(CLR_RESET);
-
-	/*restore Enpoints*/
-	for (ep_ind = 0; ep_ind < EP_COUNT; ep_ind++)
-		_SetENDPOINT(ep_ind, endpoints[ep_ind]);
-
-	/* Now it is safe to enter macrocell in suspend mode */
-	w_cntr |= CNTR_FSUSP;
-	_SetCNTR(w_cntr);
-
-	/* force low-power mode in the macrocell */
-//	w_cntr = _GetCNTR();
-	w_cntr |= CNTR_LPMODE;
-	_SetCNTR(w_cntr);
-
-	/*prepare entry in low power mode (STOP mode)*/
-	/* Select the regulator state in STOP mode*/
-	pwr_cr = PWR->CR;
-	tmp_pwr_cr = PWR->CR;
-	/* Clear PDDS and LPDS bits */
-	tmp_pwr_cr &= ((uint32_t)0xFFFFFFFC);
-	/* Set LPDS bit according to PWR_Regulator value */
-	tmp_pwr_cr |= PWR_CR_LPDS;
-	/* Store the new value */
-	PWR->CR = tmp_pwr_cr;
-	/* Set SLEEPDEEP bit of Cortex System Control Register */
-        SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-
-	/* enter system in STOP mode, only when wakeup flag in not set */
-	if((_GetISTR() & ISTR_WKUP) == 0) {
-		__WFI();
-		/* Reset SLEEPDEEP bit of Cortex System Control Register */
-		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
-	} else {
-		/* Clear Wakeup flag */
-		_SetISTR(CLR_WKUP);
-		/* clear FSUSP to abort entry in suspend mode  */
-        w_cntr = _GetCNTR();
-        w_cntr &= ~CNTR_FSUSP;
-        _SetCNTR(w_cntr);
-
-		/*restore sleep mode configuration */
-		/* restore Power regulator config in sleep mode*/
-		PWR->CR = pwr_cr;
-
-		/* Reset SLEEPDEEP bit of Cortex System Control Register */
-		SCB->SCR &= (uint32_t)~((uint32_t)SCB_SCR_SLEEPDEEP_Msk);
-    }
-}
-
-/*******************************************************************************
-* Function Name  : Leave_LowPowerMode
-* Description    : Restores system clocks and power while exiting suspend mode
-* Input          : None.
-* Return         : None.
-*******************************************************************************/
-void Leave_LowPowerMode(void)
-{
-//	print("%s()\r\n",  __func__);
-	DEVICE_INFO *pInfo = &device_info;
-
-	/* Set the device state to the correct state */
-	if (pInfo->Current_Configuration != 0) {
-		/* Device configured */
-		bDeviceState = CONFIGURED;
-	} else {
-			bDeviceState = ATTACHED;
-	}
-	/*Enable SystemCoreClock*/
-	SystemInit();
-}
-
-/*******************************************************************************
-* Function Name  : Resume_Init
-* Description    : Handles wake-up restoring normal operations
-* Input          : None.
-* Output         : None.
-* Return         : USB_SUCCESS.
-*******************************************************************************/
-void Resume_Init(void)
-{
-//	print("%s()\r\n",  __func__);
-	uint16_t wCNTR;
-
-	/* CNTR_LPMODE = 0 */
-	wCNTR = _GetCNTR();
-	wCNTR &= (~CNTR_LPMODE);
-	_SetCNTR(wCNTR);
-
-	/* restore full power */
-	/* ... on connected devices */
-	Leave_LowPowerMode();
-
-	/* reset FSUSP bit */
-	_SetCNTR(IMR_MSK);
-
-}
-
 void ep0_handle(void)
 {
-	 print("%s() USB_EP0R: 0x%04X\r\n",  __func__, _GetENDPOINT(ENDP0));
-	__IO uint16_t usb_ep0_register = 0;
+	__IO uint16_t usb_ep0_register = _GetENDPOINT(ENDP0);
+	 print("\r\n%s() USB_EP0R: 0x%04X\r\n",  __func__, usb_ep0_register);
 
-	ep0_rx_state = _GetENDPOINT(ENDP0);
+	ep0_rx_state = usb_ep0_register;
 	ep0_tx_state = ep0_rx_state & EPTX_STAT;
 	ep0_rx_state &=  EPRX_STAT;
 
 	_SetEPRxTxStatus(ENDP0, EP_RX_NAK, EP_TX_NAK);
 
 	if ((usb_irq_flags & ISTR_DIR) == 0) {
-		print("EP0_RX_COUNT: 0x%04X\r\n", _GetEPRxCount(ENDP0));
 		_ClearEP_CTR_TX(ENDP0);
 		ep0_in_process();
-
+		print("EP0_TX_COUNT: 0x%04X\r\n", _GetEPTxCount(ENDP0));
 	}  else {
 
-		usb_ep0_register = _GetENDPOINT(ENDP0);
+		print("EP0_RX_COUNT: 0x%04X\r\n", _GetEPRxCount(ENDP0));
+//		usb_ep0_register = _GetENDPOINT(ENDP0);
 		if ((usb_ep0_register & EP_SETUP) != 0) {
 
 			_ClearEP_CTR_RX(ENDP0);
@@ -241,16 +67,17 @@ void ep0_handle(void)
 
 //			_ClearEP_CTR_TX(ENDP0);
 //			ep0_in_process();
-//			print("Error! usb_ep0_register: 0x%04X\r\n",  usb_ep0_register);
+			print("ERROR state r: 0x%04X\r\n",  usb_ep0_register);
 		}
 	}
-	print("ep0_rx_state: 0x%04X, ep0_tx_state: 0x%04X\r\n",  ep0_rx_state, ep0_tx_state);
+//	print("ep0_rx_state: 0x%04X, ep0_tx_state: 0x%04X\r\n",  ep0_rx_state, ep0_tx_state);
+
 	_SetEPRxTxStatus(ENDP0, ep0_rx_state, ep0_tx_state);
 }
 
 void ep_handle(void)
 {
-//	 print("%s()\r\n",  __func__);
+	 print("%s()\r\n",  __func__);
 	__IO uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -273,18 +100,17 @@ void ep_handle(void)
 void lp_ctr_handle( void)
 {
 //	print("%s()\r\n",  __func__);
-	while ((usb_irq_flags & ISTR_CTR) != 0) {
 	usb_irq_flags = _GetISTR();
-//	 print("ISTR: 0x%04X\r\n", usb_irq_flags);
+	while ((usb_irq_flags & ISTR_CTR) != 0) {
 
 		ep_index = (uint8_t)(usb_irq_flags & ISTR_EP_ID);
 
 		if (ep_index == 0) {
 			ep0_handle();
-//			print("ISTR: 0x%04X\r\n", _GetISTR());
 		} else {
 			ep_handle(/*TODO: add index argument, remove index var from the global space.*/);
 		}
+		usb_irq_flags = _GetISTR();
 	}
 }
 
@@ -317,56 +143,6 @@ void hp_ctr_handle(void)
 		}
 	}
 }
-
-//void esof_handle()
-//{
-//	uint32_t ep_ind = 0;
-//	uint32_t endpoints[EP_COUNT];
-//	uint16_t w_fnr = _GetFNR();
-//
-////	print("%s() FNR: 0x%04X\r\n",  __func__, w_fnr);
-//
-//	if ((w_fnr & FNR_RXDP) != 0) {
-//		/* increment ESOF counter */
-//		esof_counter++;
-//
-//		/* test if we enter in ESOF more than 3 times with FSUSP =0 and RXDP =1=>> possible missing SUSP flag*/
-//		if ((esof_counter > 3) && ((_GetCNTR() & CNTR_FSUSP) == 0)) {
-//			/* this a sequence to apply a force RESET*/
-//			/*Store CNTR value */
-//			wCNTR = _GetCNTR();
-//
-//			/*Store endpoints registers status */
-//			for (ep_ind = 0; ep_ind < 8; ep_ind++) {
-//				endpoints[ep_ind] = _GetENDPOINT(ep_ind);
-//			}
-//
-//			/*apply FRES */
-//			wCNTR |= CNTR_FRES;
-//			_SetCNTR(wCNTR);
-//
-//			/*clear FRES*/
-//			wCNTR &= ~CNTR_FRES;
-//			_SetCNTR(wCNTR);
-//
-//			/*poll for RESET flag in ISTR*/
-//			while ((_GetISTR() & ISTR_RESET) == 0);
-//
-//			/* clear RESET flag in ISTR */
-//			_SetISTR((uint16_t)CLR_RESET);
-//
-//			/*restore Enpoints*/
-//			for (ep_ind = 0; ep_ind < 8; ep_ind++) {
-//				_SetENDPOINT(ep_ind, endpoints[ep_ind]);
-//			}
-//			esof_counter = 0;
-//		}
-//	} else { /* if ((_GetFNR() & FNR_RXDP)!=0) */
-//		esof_counter = 0;
-//	}
-//	/* resume handling timing is made with ESOFs */
-////	resume(RESUME_ESOF); /* request without change of the machine state */
-//}
 
 void usb_lp_can1_rx0_handle(void)
 {

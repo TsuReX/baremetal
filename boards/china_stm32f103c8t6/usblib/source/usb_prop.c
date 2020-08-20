@@ -23,9 +23,9 @@ ErrorStatus HSEStartUpStatus;
 #define SetBit(VAR,Place)    (VAR |= (1 << Place))
 #define ClrBit(VAR,Place)    (VAR &= ((1 << Place) ^ 255))
 
-//uint16_t_uint8_t StatusInfo;
-//#define StatusInfo0 StatusInfo.bw.bb1 /* Reverse bb0 & bb1 */
-//#define StatusInfo1 StatusInfo.bw.bb0
+uint16_t device_status;
+uint16_t interface_status;
+uint16_t endpoint_status;
 
 extern DEVICE_INFO *usb_device_info;
 extern USER_STANDARD_REQUESTS  *usb_standard_requests;
@@ -273,77 +273,65 @@ RESULT Standard_SetInterface(void)
 *******************************************************************************/
 uint8_t *Standard_GetStatus(uint16_t Length)
 {
-//  if (Length == 0)
-//  {
-//    usb_device_info->ep0_ctrl_info.remaining_data_size = 2;
-//    return 0;
-//  }
-//
-//  /* Reset Status Information */
-//  StatusInfo.w = 0;
-//
-//  if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT))
-//  {
-//    /*Get Device Status */
-//    uint8_t Feature = usb_device_info->Current_Feature;
-//
-//    /* Remote Wakeup enabled */
-//    if (ValBit(Feature, 5))
-//    {
-//      SetBit(StatusInfo0, 1);
-//    }
-//    else
-//    {
-//      ClrBit(StatusInfo0, 1);
-//    }
-//
-//    /* Bus-powered */
-//    if (ValBit(Feature, 6))
-//    {
-//      SetBit(StatusInfo0, 0);
-//    }
-//    else /* Self-powered */
-//    {
-//      ClrBit(StatusInfo0, 0);
-//    }
-//  }
-//  /*Interface Status*/
-//  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | INTERFACE_RECIPIENT))
-//  {
-//    return (uint8_t *)&StatusInfo;
-//  }
-//  /*Get EndPoint Status*/
-//  else if ((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT))
-//  {
-//    uint8_t Related_Endpoint;
-//    uint8_t wIndex0 = usb_device_info->w_index & 0xFF;
-//
-//    Related_Endpoint = (wIndex0 & 0x0f);
-//    if (ValBit(wIndex0, 7))
-//    {
-//      /* IN endpoint */
-//      if (_GetTxStallStatus(Related_Endpoint))
-//      {
-//        SetBit(StatusInfo0, 0); /* IN Endpoint stalled */
-//      }
-//    }
-//    else
-//    {
-//      /* OUT endpoint */
-//      if (_GetRxStallStatus(Related_Endpoint))
-//      {
-//        SetBit(StatusInfo0, 0); /* OUT Endpoint stalled */
-//      }
-//    }
-//
-//  }
-//  else
-//  {
-//    return NULL;
-//  }
-//  usb_standard_requests->User_GetStatus();
-//  return (uint8_t *)&StatusInfo;
-	return 0;
+	print("%s()\r\n",  __func__);
+	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = 2;
+		return 0;
+	}
+
+/*Get Device Status */
+	if (request_recipient ==  DEVICE_RECIPIENT_TYPE) {
+		uint8_t Feature = usb_device_info->Current_Feature;
+
+		/* Remote Wakeup enabled */
+		if (ValBit(Feature, 5)) {
+			SetBit(device_status, 1);
+		} else {
+			ClrBit(device_status, 1);
+		}
+
+		/* Bus-powered */
+		if (ValBit(Feature, 6)) {
+			SetBit(device_status, 0);
+		} else /* Self-powered */  {
+			ClrBit(device_status, 0);
+		}
+		usb_standard_requests->User_GetStatus();
+		return (uint8_t *)&device_status;
+
+
+/*Interface Status*/
+	} else if (request_recipient == INTERFACE_RECIPIENT_TYPE) {
+		usb_standard_requests->User_GetStatus();
+		return (uint8_t *)&interface_status;
+
+
+/*Get EndPoint Status*/
+	} else if (request_recipient == ENDPOINT_RECIPIENT_TYPE) {
+		uint8_t Related_Endpoint;
+		uint8_t wIndex0 = usb_device_info->w_index & 0xFF;
+
+		Related_Endpoint = (wIndex0 & 0x0f);
+		if (ValBit(wIndex0, 7)) {
+			/* IN endpoint */
+			if (_GetTxStallStatus(Related_Endpoint)) {
+				SetBit(endpoint_status, 0); /* IN Endpoint stalled */
+			}
+		} else {
+
+			/* OUT endpoint */
+			if (_GetRxStallStatus(Related_Endpoint)) {
+				SetBit(endpoint_status, 0); /* OUT Endpoint stalled */
+			}
+		}
+
+		usb_standard_requests->User_GetStatus();
+		return (uint8_t *)&endpoint_status;
+	}
+
+	return NULL;
 }
 
 /*******************************************************************************

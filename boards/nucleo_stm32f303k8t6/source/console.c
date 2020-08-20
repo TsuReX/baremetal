@@ -19,7 +19,7 @@
  * USART1 может быть использован только либо для текстовой консоли, либо для spi-manager.*/
 
 /** Количество байтов передаваемых через USART1. */
-#define SIZE_TO_TRANSMIT	32
+#define SIZE_TO_TRANSMIT	32*2
 /** Количество миллисекунд,
  * за которое должна завершиться передача байта даных через USART1. */
 #define TRANSMIT_TIMEOUT	20
@@ -121,7 +121,7 @@ static void console_start_transmission()
 	 * При необходимости реализовать асинхронную передачу. */
 
 	uint8_t		data_buf[SIZE_TO_TRANSMIT];
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT*10;
 
 	/** Пердавать данные, пока кольцевой буфер не пуст. */
 	while (rb_get_data_size(&tx_rb) != 0) {
@@ -136,7 +136,7 @@ static void console_start_transmission()
 
 			/** Ожидать окончания передачи ms_timeout миллисекунд.*/
 			do {
-				LL_mDelay(1);
+//				LL_mDelay(1);
 				--ms_timeout;
 				if (ms_timeout == 0)
 					/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
