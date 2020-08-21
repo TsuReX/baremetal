@@ -38,8 +38,7 @@ typedef enum _RESULT {
 } RESULT;
 
 void suspend(void);
-void Resume_Init(void);
-void resume(RESUME_STATE eResumeSetVal);
+void resume(void);
 RESULT PowerOn(void);
 RESULT PowerOff(void);
 

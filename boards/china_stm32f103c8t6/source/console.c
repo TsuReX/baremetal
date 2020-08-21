@@ -144,7 +144,7 @@ static void console_start_transmission()
 
 			/** Ожидать окончания передачи ms_timeout миллисекунд.*/
 			do {
-				LL_mDelay(1);
+//				LL_mDelay(1);
 				--ms_timeout;
 				if (ms_timeout == 0)
 					/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
@@ -389,7 +389,7 @@ void d_print(const char *format, ...)
 	va_list 	argptr;
 	char		str[512];
 	int			sz;
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 10;
 
 	va_start(argptr, format);
 	sz = vsnprintf(str, 512, format, argptr);
@@ -410,7 +410,7 @@ void d_print(const char *format, ...)
 
 		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
 		do {
-			LL_mDelay(1);
+//			LL_mDelay(1);
 			--ms_timeout;
 			if (ms_timeout == 0)
 				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
