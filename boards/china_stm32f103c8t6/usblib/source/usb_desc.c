@@ -1,7 +1,6 @@
 #include "usb_lib.h"
 #include "usb_desc.h"
 
-
 /* USB Standard Device Descriptor */
 const uint8_t rhid_device_descriptor[RHID_SIZ_DEVICE_DESC] = {
 	RHID_SIZ_DEVICE_DESC,         // ����� ����� ����������� ���������� � ������

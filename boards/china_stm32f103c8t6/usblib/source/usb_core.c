@@ -1,5 +1,6 @@
 #include "usb_core.h"
 #include "usb_lib.h"
+#include "usb_prop.h"
 #include "console.h"
 
 #include <stddef.h>
@@ -227,6 +228,10 @@ void standard_request_process()
 					} else if (wValue1 == STRING_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetStringDescriptor;
 						d_print("STRING_DESCRIPTOR\r\n");
+
+					} else if (wValue1 == DEVICE_QUALIFIER) {
+						copy_routine = HID_GetDeviceDescriptorQualifier;
+						d_print("DEVICE_QUALIFIER\r\n");
 					}
 					break;
 

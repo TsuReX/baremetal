@@ -31,6 +31,18 @@ extern DEVICE_INFO *usb_device_info;
 extern USER_STANDARD_REQUESTS  *usb_standard_requests;
 extern DEVICE_PROP *usb_device_property;
 
+const uint8_t rhid_device_qualifier[0xA] = {
+	0xA,
+	0x6,		/*< bDescriptorType */
+	0x00,0x02,	/*< bcdUSB */
+	0x00,		/*< bDeviceClass */
+	0x00,		/*< bDeviceSubClass */
+	0x00,		/*< bDeviceProtocol */
+	0x40,		/*< bMaxPacketSize */
+	0x00,		/*< bNumConfigurations */
+	0x00		/*< bReserved */
+};
+
 DEVICE Device_Table = {
 	EP_COUNT,
 	1
@@ -729,6 +741,18 @@ uint8_t *HID_SetReport_Feature(uint16_t Length)
 	}
 }
 
+uint8_t *HID_GetDeviceDescriptorQualifier(uint16_t Length)
+{
+	uint32_t  wOffset;
+
+	wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = rhid_device_qualifier[0] - wOffset;
+
+		return 0;
+	}
+	return (uint8_t *)rhid_device_qualifier + wOffset;
+}
 /*******************************************************************************
 * Function Name  : HID_GetDeviceDescriptor.
 * Description    : Gets the device descriptor.

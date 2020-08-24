@@ -22,6 +22,7 @@ void HID_Status_Out (void);
 RESULT hid_setup_with_data_process(uint8_t);
 RESULT hid_setup_without_data_process(uint8_t);
 RESULT HID_Get_Interface_Setting(uint8_t Interface, uint8_t AlternateSetting);
+uint8_t *HID_GetDeviceDescriptorQualifier(uint16_t Length);
 uint8_t *HID_GetDeviceDescriptor(uint16_t );
 uint8_t *HID_GetConfigDescriptor(uint16_t);
 uint8_t *HID_GetStringDescriptor(uint16_t);
