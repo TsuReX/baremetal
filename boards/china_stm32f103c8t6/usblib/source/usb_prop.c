@@ -214,7 +214,7 @@ RESULT Standard_SetInterface(void)
 *******************************************************************************/
 uint8_t *Standard_GetStatus(uint16_t Length)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
 
 	if (Length == 0) {
@@ -562,7 +562,7 @@ void HID_SetDeviceAddress (void)
 *******************************************************************************/
 void HID_Status_In(void)
 {
-	d_print("%s()\r\n",  __func__);
+	d_print("HID_Status_In()\r\n");
 }
 
 /*******************************************************************************
@@ -574,7 +574,7 @@ void HID_Status_In(void)
 *******************************************************************************/
 void HID_Status_Out (void)
 {
-	d_print("%s()\r\n",  __func__);
+	d_print("HID_Status_Out()\r\n");
 }
 
 /*******************************************************************************

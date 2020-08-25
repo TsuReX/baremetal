@@ -69,7 +69,7 @@ int main(void)
 
 	console_init();
 
-	scheduler_init();
+//	scheduler_init();
 
 	/*i2c_init();*/
 
