@@ -49,8 +49,8 @@ DEVICE Device_Table = {
 };
 
 DEVICE_PROP property = {
-	hid_init,
-	hid_reset,
+	init,
+	reset,
 	HID_Status_In,
 	HID_Status_Out,
 	hid_setup_with_data_process,
@@ -100,77 +100,6 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 	{(uint8_t*)rhid_string_product, RHID_SIZ_STRING_PRODUCT},
 	{(uint8_t*)rhid_string_serial, RHID_SIZ_STRING_SERIAL}
 };
-
-/*******************************************************************************
-* Function Name  : HID_init.
-* Description    : HID init routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void hid_init(void)
-{
-//	d_print("%s()\r\n",  __func__);
-	_SetCNTR(CNTR_FRES | CNTR_PDWN);
-	LL_mDelay(100);
-//	Get_SerialNum();
-
-	usb_device_info->Current_Configuration = 0;
-	_SetCNTR(CNTR_FRES);
-	LL_mDelay(1);
-	_SetISTR(0);
-	_SetCNTR(CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM /*| CNTR_SOFM*/ | CNTR_ESOFM | CNTR_RESETM);
-
-	bDeviceState = UNCONNECTED;
-}
-
-/*******************************************************************************
-* Function Name  : HID_Reset.
-* Description    : HID reset routine.
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-void hid_reset(void)
-{
-//	d_print("%s()\r\n",  __func__);
-	pma_init();
-	/* Set HID_DEVICE as not configured */
-	usb_device_info->Current_Configuration = 0;
-	usb_device_info->Current_Interface = 0;/*the default Interface*/
-	/* Current Feature initialization */
-	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
-
-
-	_SetBTABLE(BTABLE_ADDRESS);
-
-	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
-	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
-	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
-
-//	_SetEPType(ENDP0, EP_CONTROL);
-//	_ClearEP_KIND(ENDP0);
-//	_SetEPTxStatus(ENDP0, EP_TX_STALL);
-//	_SetEPRxValid(ENDP0);
-//		register uint16_t _wRegVal = _GetENDPOINT(ENDP0) & (EPRX_STAT|EP_CTR_RX|EP_SETUP|EP_T_FIELD|EP_KIND|EP_CTR_TX|EPADDR_FIELD);
-//		_wRegVal ^= EPRX_DTOG1 | EPRX_DTOG2;
-//		_SetENDPOINT(ENDP0, (_wRegVal | EP_CTR_RX | EP_CTR_TX));
-
-	_SetENDPOINT(ENDP0, EP_CONTROL | EP_TX_STALL | EP_RX_VALID);
-
-//	/* Initialize Endpoint 1 */
-//	_SetEPType(ENDP1, EP_INTERRUPT);
-//	_SetEPTxAddr(ENDP1, ENDP1_TXADDR);
-//	_SetEPRxAddr(ENDP1, ENDP1_RXADDR);
-//	_SetEPTxCount(ENDP1, EP1TxCount);
-//	_SetEPRxCount(ENDP1, EP1RxCount);
-//	_SetEPRxStatus(ENDP1, EP_RX_VALID);
-//	_SetEPTxStatus(ENDP1, EP_TX_NAK);
-
-	/* Set this device to response on default address */
-	SetDeviceAddress(0);
-	bDeviceState = ATTACHED;
-}
 
 /*******************************************************************************
 * Function Name  : Standard_GetConfiguration.

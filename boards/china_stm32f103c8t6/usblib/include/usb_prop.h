@@ -13,8 +13,7 @@ typedef enum _HID_REQUESTS {
 	SET_PROTOCOL
 } HID_REQUESTS;
 
-void hid_init(void);
-void hid_reset(void);
+
 void HID_SetConfiguration(void);
 void HID_SetDeviceAddress (void);
 void HID_Status_In (void);

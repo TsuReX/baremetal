@@ -28,7 +28,10 @@ USER_STANDARD_REQUESTS  *usb_standard_requests;
 
 void usb_init(void)
 {
-	NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0);
+
+	NVIC_SetPriorityGrouping(2);
+
+	NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 2);
 	NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 
 	NVIC_SetPriority(USBWakeUp_IRQn, 1);
@@ -72,6 +75,8 @@ int main(void)
 
 	/*gpio_setup_it();*/
 
+	/* PA7 set high level. */
+//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
 	usb_init();
 
 //	uint32_t i = 0;

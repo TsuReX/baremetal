@@ -95,6 +95,9 @@ typedef struct _USER_STANDARD_REQUESTS {
 	void (*User_SetDeviceAddress)(void);       /* Set Device Address */
 } USER_STANDARD_REQUESTS;
 
+void init(void);
+void reset(void);
+
 uint8_t ep0_setup_process(void);
 uint8_t ep0_finish_processing(void);
 uint8_t ep0_out_process(void);

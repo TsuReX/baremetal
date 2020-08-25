@@ -79,7 +79,7 @@ static void console_usart1_init(void)
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 115200);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 115200*8);
 
 	/*LL_USART_EnableOverrunDetect(USART1);*/
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
@@ -389,7 +389,7 @@ void d_print(const char *format, ...)
 	va_list 	argptr;
 	char		str[512];
 	int			sz;
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 10;
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 100;
 
 	va_start(argptr, format);
 	sz = vsnprintf(str, 512, format, argptr);

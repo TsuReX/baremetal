@@ -1,6 +1,7 @@
 #include "usb_core.h"
 #include "usb_lib.h"
 #include "usb_prop.h"
+#include "usb_desc.h"
 #include "console.h"
 
 #include <stddef.h>
@@ -15,7 +16,67 @@ static void ep0_data_stage_in_process(void);
 static void setup_without_data_process(void);
 static void setup_with_data_process(void);
 static void standard_request_process(void);
+/*******************************************************************************
+* Function Name  : HID_init.
+* Description    : HID init routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void init(void)
+{
+//	d_print("%s()\r\n",  __func__);
+	_SetCNTR(CNTR_FRES | CNTR_PDWN);
 
+	LL_mDelay(10);
+
+	_SetCNTR(CNTR_FRES);
+
+	LL_mDelay(1);
+
+	_SetISTR(0);
+	_SetCNTR(CNTR_CTRM | /*CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM |*/ CNTR_RESETM);
+
+	usb_device_info->Current_Configuration = 0;
+	bDeviceState = UNCONNECTED;
+}
+
+/*******************************************************************************
+* Function Name  : HID_Reset.
+* Description    : HID reset routine.
+* Input          : None.
+* Output         : None.
+* Return         : None.
+*******************************************************************************/
+void reset(void)
+{
+//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
+//	d_print("%s()\r\n",  __func__);
+//	pma_init();
+	usb_device_info->Current_Configuration = 0;
+	usb_device_info->Current_Interface = 0;/*the default Interface*/
+	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
+
+	_SetCNTR(0);
+	_SetCNTR(CNTR_CTRM | CNTR_RESETM);
+
+	_SetISTR(0);
+
+	_SetDADDR(DADDR_EF);
+
+	_SetENDPOINT(ENDP0, EP_CONTROL | EP_TX_STALL | EP_RX_VALID);
+
+	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
+	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
+	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
+
+	_SetBTABLE(BTABLE_ADDRESS);
+
+	/* Set this device to response on default address */
+	SetDeviceAddress(0);
+//	bDeviceState = ATTACHED;
+//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
+}
 /*******************************************************************************
 * Function Name  : DataStageOut.
 * Description    : Data stage of a Control Write Transfer.
