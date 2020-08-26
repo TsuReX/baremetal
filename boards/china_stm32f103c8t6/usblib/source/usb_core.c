@@ -293,6 +293,7 @@ void standard_request_process()
 					} else if (wValue1 == DEVICE_QUALIFIER) {
 						copy_routine = HID_GetDeviceDescriptorQualifier;
 //						d_print("DEVICE_QUALIFIER\r\n");
+
 					}
 					break;
 
@@ -356,7 +357,7 @@ void standard_request_process()
 					break;
 
 				default:
-//					 d_print("DEVICE_RECIPIENT_TYPE UNKNOWN_REQUEST\r\n");
+					d_print("DEVICE_RECIPIENT_TYPE UNKNOWN_REQUEST\r\n");
 					break;
 			}
 
@@ -365,7 +366,16 @@ void standard_request_process()
 		case INTERFACE_RECIPIENT_TYPE:
 //			// d_print("INTERFACE_RECIPIENT_TYPE\r\n");
 			switch (request_number) {
+				case GET_DESCRIPTOR:
+					d_print("GET_DESCRIPTOR\r\n");
+					wValue1 = (usb_device_info->w_value >> 8);
+					if (wValue1 == HID_REPORT_DESCRIPTOR_TYPE) {
+						copy_routine = HID_GetReportDescriptor;
 
+					} else if (wValue1 == HID_DESCRIPTOR_TYPE) {
+						copy_routine = HID_GetHIDDescriptor;
+					}
+					break;
 				case GET_STATUS:
 //					d_print("GET_STATUS\r\n");
 					if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, 0) == USB_SUCCESS) &&
@@ -395,7 +405,7 @@ void standard_request_process()
 					break;
 
 				default:
-//					d_print("INTERFACE_RECIPIENT_TYPE UNKNOWN_REQUEST\r\n");
+					d_print("INTERFACE_RECIPIENT_TYPE UNKNOWN_REQUEST\r\n");
 					break;
 			}
 			break;
@@ -539,11 +549,11 @@ void setup_with_data_process(void)
 			break;
 
 		case VENDOR_REQUEST_TYPE:
-//			 d_print("RESERVED_REQUEST_TYPE\r\n");
+			 d_print("RESERVED_REQUEST_TYPE\r\n");
 			break;
 
 		default: /*RESERVED_REQUEST_TYPE*/
-//			 d_print("RESERVED_REQUEST_TYPE\r\n");
+			 d_print("RESERVED_REQUEST_TYPE\r\n");
 			break;
 	}
 }
