@@ -15,7 +15,7 @@
 
 #define RHID_SIZ_DEVICE_DESC                18
 #define RHID_SIZ_CONFIG_DESC                41
-#define RHID_SIZ_REPORT_DESC                79
+#define RHID_SIZ_REPORT_DESC               0x3F
 #define RHID_SIZ_STRING_LANGID              4
 #define RHID_SIZ_STRING_VENDOR              10
 #define RHID_SIZ_STRING_PRODUCT             22
