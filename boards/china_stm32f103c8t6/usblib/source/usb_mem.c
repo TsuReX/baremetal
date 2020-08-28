@@ -25,8 +25,8 @@ void copy_to_usb(uint8_t *src_buffer, uint16_t usb_buffer_addr, uint16_t data_si
 	}
 
 	if (byte_count != 0) {
-		uint16_t byte = *((uint8_t*)src_word_buffer + word_num * 2 + 1);
-		usb_word_buffer[(word_num + 1) * 2] = byte;
+		uint16_t byte = *((uint8_t*)src_word_buffer + word_num * 2);
+		usb_word_buffer[(word_num) * 2] = byte;
 	}
 }
 

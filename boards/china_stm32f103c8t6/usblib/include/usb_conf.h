@@ -16,8 +16,8 @@
 
 /* EP1  */
 /* tx buffer base address */
-#define ENDP1_TXADDR        (0x100)
-#define ENDP1_RXADDR        (0x140)
+#define ENDP1_RXADDR        (0xA8)
+#define ENDP1_TXADDR        (0xA0)
 
 #define IMR_MSK (CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM)
 

@@ -77,7 +77,7 @@ void ep0_handle(void)
 
 void ep_handle(uint32_t ep_index)
 {
-//	d_print("%s()\r\n",  __func__);
+	d_print("%s()\r\n",  __func__);
 	uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);

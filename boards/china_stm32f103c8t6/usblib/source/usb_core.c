@@ -55,7 +55,7 @@ void reset(void)
 //	pma_init();
 	usb_device_info->Current_Configuration = 0;
 	usb_device_info->Current_Interface = 0;/*the default Interface*/
-	usb_device_info->Current_Feature = rhid_configuration_descriptor[7];
+	usb_device_info->Current_Feature = config_descriptor[7];
 
 	_SetCNTR(0);
 	_SetCNTR(CNTR_CTRM | CNTR_RESETM);
@@ -69,6 +69,12 @@ void reset(void)
 	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
 	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
 	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
+
+	_SetENDPOINT(ENDP1, EP_INTERRUPT | EP_TX_VALID | EP_RX_VALID);
+	_SetEPRxAddr(ENDP1, ENDP1_RXADDR);
+	_SetEPTxAddr(ENDP1, ENDP1_TXADDR);
+	_SetEPRxCount(ENDP1, EP1_MAX_PACKET_SIZE);
+	_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 
 	_SetBTABLE(BTABLE_ADDRESS);
 
@@ -176,6 +182,7 @@ void ep0_data_stage_in_process(void)
 	src_data_buffer = (*ep0_ctrl_info->data_copy)(single_transfer_size);
 
 	copy_to_usb(src_data_buffer, _GetEPTxAddr(ENDP0), single_transfer_size);
+
 	_SetEPTxCount(ENDP0, single_transfer_size);
 
 	ep0_ctrl_info->remaining_data_size -= single_transfer_size;
@@ -713,13 +720,11 @@ uint8_t ep0_finish_processing(void)
 void SetDeviceAddress(uint8_t usb_addr)
 {
 //	d_print("%s(0x%02X)\r\n",  __func__, usb_addr);
-	uint32_t i;
 
-	for (i = 0; i < EP_COUNT; i++) {
-		_SetEPAddress((uint8_t)i, (uint8_t)i);
-	}
+	_SetEPAddress(ENDP0, 0x00);
+	_SetEPAddress(ENDP1, 0x01);
 
-	_SetDADDR(usb_addr | DADDR_EF); /* set device address and enable function */
+	_SetDADDR(usb_addr | DADDR_EF);
 }
 
 /*******************************************************************************

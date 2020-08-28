@@ -12,12 +12,12 @@
 extern DEVICE_INFO *usb_device_info;
 
 uint32_t ProtocolValue;
-__IO uint8_t EXTI_Enable;
-__IO uint8_t Request = 0;
 uint8_t Report_Buf[EP0_MAX_PACKET_SIZE];
-uint8_t Buffer[RPT4_COUNT+1];
 uint8_t *HID_SetReport_Feature(uint16_t Length);
-ErrorStatus HSEStartUpStatus;
+//__IO uint8_t EXTI_Enable;
+//__IO uint8_t Request = 0;
+//uint8_t Buffer[RPT4_COUNT+1];
+//ErrorStatus HSEStartUpStatus;
 
 #define ValBit(VAR,Place)    (VAR & (1 << Place))
 #define SetBit(VAR,Place)    (VAR |= (1 << Place))
@@ -76,21 +76,21 @@ USER_STANDARD_REQUESTS standard_requests = {
 
 ONE_DESCRIPTOR Device_Descriptor = {
 	(uint8_t*)rhid_device_descriptor,
-	RHID_SIZ_DEVICE_DESC
+	DEV_DESCRIPTOR_SIZE
 };
 
 ONE_DESCRIPTOR Config_Descriptor = {
-	(uint8_t*)rhid_configuration_descriptor,
-	RHID_SIZ_CONFIG_DESC
+	(uint8_t*)config_descriptor,
+	CONFIG_DESCRIPTOR_SIZE
 };
 
 ONE_DESCRIPTOR RHID_Report_Descriptor = {
 	(uint8_t *)rhid_report_descriptor,
-	RHID_SIZ_REPORT_DESC
+	REPORT_DESCRIPTOR_SIZE
 };
 
 ONE_DESCRIPTOR RHID_Hid_Descriptor = {
-	(uint8_t*)rhid_configuration_descriptor + RHID_OFF_HID_DESC,
+	(uint8_t*)config_descriptor + RHID_OFF_HID_DESC,
 	RHID_SIZ_HID_DESC
 };
 
@@ -214,7 +214,7 @@ RESULT Standard_SetInterface(void)
 *******************************************************************************/
 uint8_t *Standard_GetStatus(uint16_t Length)
 {
-//	d_print("%s()\r\n",  __func__);
+	d_print("%s()\r\n",  __func__);
 	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
 
 	if (Length == 0) {
@@ -459,10 +459,8 @@ uint8_t *Standard_GetDescriptorData(uint16_t Length, ONE_DESCRIPTOR *pDesc)
 	wOffset = usb_device_info->ep0_ctrl_info.data_buffer_offset;
 	if (Length == 0) {
 		usb_device_info->ep0_ctrl_info.remaining_data_size = pDesc->Descriptor_Size - wOffset;
-//		d_print("Standard_GetDescriptorData 1\r\n");
 		return 0;
 	}
-//	d_print("Standard_GetDescriptorData size:0x%04X\r\n", Length);
 	return pDesc->Descriptor + wOffset;
 }
 
@@ -614,7 +612,7 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 			case SET_REPORT:
 //				d_print("SET_REPORT\r\n");
 				CopyRoutine = HID_SetReport_Feature;
-				Request = SET_REPORT;
+//				Request = SET_REPORT;
 				break;
 			default:
 				break;
@@ -735,6 +733,7 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetReportDescriptor(uint16_t Length)
 {
+//	d_print("HID_GetReportDescriptor\r\n");
 	return Standard_GetDescriptorData(Length, &RHID_Report_Descriptor);
 }
 
@@ -747,6 +746,7 @@ uint8_t *HID_GetReportDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetHIDDescriptor(uint16_t Length)
 {
+//	d_print("HID_GetHIDDescriptor\r\n");
 	return Standard_GetDescriptorData(Length, &RHID_Hid_Descriptor);
 }
 
