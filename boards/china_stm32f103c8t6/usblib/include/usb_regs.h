@@ -432,7 +432,7 @@ uint16_t	_GetEPRxCount(uint32_t ep_ind);
 
 void pma_init(void);
 
-void pma_print(uint16_t offset_word, uint16_t word_count);
+void pma_print(uint16_t offset_usb_word, uint16_t word_count);
 /*******************************************************************************
 * Macro Name     : SetEPCountRxReg.
 * Description    : Sets counter of rx buffer with no. of blocks.

@@ -85,8 +85,8 @@ ONE_DESCRIPTOR Config_Descriptor = {
 };
 
 ONE_DESCRIPTOR RHID_Report_Descriptor = {
-	(uint8_t *)rhid_report_descriptor,
-	REPORT_DESCRIPTOR_SIZE
+	(uint8_t *)keyboard_rhid_report_descriptor,
+	KEYBOARD_REPORT_DESCRIPTOR_SIZE
 };
 
 ONE_DESCRIPTOR RHID_Hid_Descriptor = {

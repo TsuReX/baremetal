@@ -14,8 +14,9 @@
 #define RHID_OFF_HID_DESC				0x12
 
 #define DEV_DESCRIPTOR_SIZE				0x12
-#define CONFIG_DESCRIPTOR_SIZE			0x22
-#define REPORT_DESCRIPTOR_SIZE			(0x3F)
+#define CONFIG_DESCRIPTOR_SIZE			0x3B
+#define KEYBOARD_REPORT_DESCRIPTOR_SIZE	0x3F
+#define MOUSE_REPORT_DESCRIPTOR_SIZE	0x32
 #define RHID_SIZ_STRING_LANGID			0x04
 #define RHID_SIZ_STRING_VENDOR			0x0A
 #define RHID_SIZ_STRING_PRODUCT			0x16
@@ -28,11 +29,13 @@
 
 #define EP0_MAX_PACKET_SIZE				0x40
 #define EP1_MAX_PACKET_SIZE				0x8
+#define EP2_MAX_PACKET_SIZE				0x8
 
 /* Exported functions ------------------------------------------------------- */
 extern const uint8_t rhid_device_descriptor[DEV_DESCRIPTOR_SIZE];
 extern const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE];
-extern const uint8_t rhid_report_descriptor[REPORT_DESCRIPTOR_SIZE + 3];
+extern const uint8_t keyboard_rhid_report_descriptor[KEYBOARD_REPORT_DESCRIPTOR_SIZE];
+extern const uint8_t mouse_rhid_report_descriptor[MOUSE_REPORT_DESCRIPTOR_SIZE];
 extern const uint8_t rhid_string_lang_id[RHID_SIZ_STRING_LANGID];
 extern const uint8_t rhid_string_vendor[RHID_SIZ_STRING_VENDOR];
 extern const uint8_t rhid_string_product[RHID_SIZ_STRING_PRODUCT];

@@ -19,6 +19,11 @@
 #define ENDP1_RXADDR        (0xA8)
 #define ENDP1_TXADDR        (0xA0)
 
+/* EP1  */
+/* tx buffer base address */
+#define ENDP2_RXADDR        (0xB8)
+#define ENDP2_TXADDR        (0xB0)
+
 #define IMR_MSK (CNTR_CTRM | CNTR_WKUPM | CNTR_SUSPM | CNTR_ERRM | CNTR_SOFM | CNTR_ESOFM | CNTR_RESETM)
 
 #endif /* __USB_CONF_H */

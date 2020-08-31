@@ -30,12 +30,13 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 	0x09, 							// bLength:
 	CONFIG_DESCRIPTOR_TYPE,			// bDescriptorType:
 	CONFIG_DESCRIPTOR_SIZE, 0x00,	// wTotalLength:
-	0x01,							// bNumInterfaces:
+	0x02,							// bNumInterfaces:
 	0x01,							// bConfigurationValue:
 	0x00,							// iConfiguration:
 	0xA0,							// bmAttributes:  USB
 	0x32,							// MaxPower 100 mA:
 
+/* Keyboard */
 /* USB Standard Interface Descriptor */
 	0x09,							// bLength:
 	USB_INTERFACE_DESCRIPTOR_TYPE,	// bDescriptorType:
@@ -54,7 +55,7 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 	0x00,							// bCountryCode:
 	0x01,							// bNumDescriptors:
 	HID_REPORT_DESCRIPTOR_TYPE,		// bDescriptorType:
-	REPORT_DESCRIPTOR_SIZE, 0x00,	// wItemLength:
+	KEYBOARD_REPORT_DESCRIPTOR_SIZE, 0x00,	// wItemLength:
 
 /* USB Standard Endpoint Descriptor (endpoint 1)*/
 	0x07,							// bLength:
@@ -63,9 +64,38 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 	0x03,							// bmAttributes:
 	0x08, 0x00,						// wMaxPacketSize:  Bytes max
 	0xFA,							// bInterval: Polling Interval (250 ms)
+
+/* Mouse */
+/* USB Standard Interface Descriptor */
+	0x09,							// bLength:
+	USB_INTERFACE_DESCRIPTOR_TYPE,	// bDescriptorType:
+	0x01,							// bInterfaceNumber:
+	0x00,							// bAlternateSetting:
+	0x01,							// bNumEndpoints -
+	0x03,							// bInterfaceClass:
+	0x01,							// bInterfaceSubClass :
+	0x02,							// nInterfaceProtocol :
+	0x00,							// iInterface:
+
+/* USB HID Descriptor */
+	0x09,							// bLength:
+	HID_DESCRIPTOR_TYPE,			// bDescriptorType:
+	0x01, 0x01,						// bcdHID:
+	0x00,							// bCountryCode:
+	0x01,							// bNumDescriptors:
+	HID_REPORT_DESCRIPTOR_TYPE,		// bDescriptorType:
+	MOUSE_REPORT_DESCRIPTOR_SIZE, 0x00,	// wItemLength:
+
+/* USB Standard Endpoint Descriptor (endpoint 2)*/
+	0x07,							// bLength:
+	ENDP_DESCRIPTOR_TYPE,			// bDescriptorType:
+	0x82,							// bEndpointAddress:
+	0x03,							// bmAttributes:
+	0x08, 0x00,						// wMaxPacketSize:  Bytes max
+	0xFA,							// bInterval: Polling Interval (250 ms)
 };
 
-const uint8_t rhid_report_descriptor[REPORT_DESCRIPTOR_SIZE + 3] = {
+const uint8_t keyboard_rhid_report_descriptor[KEYBOARD_REPORT_DESCRIPTOR_SIZE] = {
 		0x05, 0x01,
 		0x09, 0x06,
 		0xA1, 0x01,
@@ -97,8 +127,35 @@ const uint8_t rhid_report_descriptor[REPORT_DESCRIPTOR_SIZE + 3] = {
 		0x19, 0x00,
 		0x29, 0x65,
 		0x81, 0x00,
-		0xC0, 0x11,
-		0x22, 0x33
+		0xC0
+};
+
+const uint8_t mouse_rhid_report_descriptor[MOUSE_REPORT_DESCRIPTOR_SIZE] = {
+		0x05, 0x01,
+		0x09, 0x02,
+		0xA1, 0x01,
+		0x09, 0x01,
+		0xA1, 0x00,
+		0x05, 0x09,
+		0x19, 0x01,
+		0x29, 0x03,
+		0x15, 0x00,
+		0x25, 0x01,
+		0x95, 0x03,
+		0x75, 0x01,
+		0x81, 0x02,
+		0x95, 0x01,
+		0x75, 0x05,
+		0x81, 0x01,
+		0x05, 0x01,
+		0x09, 0x30,
+		0x09, 0x31,
+		0x15, 0x81,
+		0x25, 0x7F,
+		0x75, 0x08,
+		0x95, 0x02,
+		0x81, 0x06,
+		0xC0, 0xC0
 };
 
 /* USB String Descriptors (optional) */

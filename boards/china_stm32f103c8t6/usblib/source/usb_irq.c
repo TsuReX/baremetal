@@ -18,13 +18,13 @@ __IO uint32_t	bDeviceState = UNCONNECTED; /* USB device status */
 //uint32_t		endpoints[8];
 
 void (*ep_in[EP_COUNT])(void) = {
-	ep_in_handle,
-	ep_in_handle
+	keyboard_ep_in_handle,
+	mouse_ep_in_handle
 };
 
 void (*ep_out[EP_COUNT])(void) = {
-	ep_out_handle,
-	ep_out_handle
+	keyboard_ep_out_handle,
+	mouse_ep_out_handle
 };
 
 struct {

@@ -50,22 +50,17 @@ void init(void)
 *******************************************************************************/
 void reset(void)
 {
-//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
-//	d_print("%s()\r\n",  __func__);
-//	pma_init();
 	usb_device_info->Current_Configuration = 0;
-	usb_device_info->Current_Interface = 0;/*the default Interface*/
+	usb_device_info->Current_Interface = 0;
 	usb_device_info->Current_Feature = config_descriptor[7];
 
 	_SetCNTR(0);
 	_SetCNTR(CNTR_CTRM | CNTR_RESETM);
-
 	_SetISTR(0);
 
-	_SetDADDR(DADDR_EF);
+	pma_init();
 
 	_SetENDPOINT(ENDP0, EP_CONTROL | EP_TX_STALL | EP_RX_VALID);
-
 	_SetEPRxAddr(ENDP0, ENDP0_RXADDR);
 	_SetEPTxAddr(ENDP0, ENDP0_TXADDR);
 	_SetEPRxCount(ENDP0, EP0_MAX_PACKET_SIZE);
@@ -76,12 +71,16 @@ void reset(void)
 	_SetEPRxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 	_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 
-	_SetBTABLE(BTABLE_ADDRESS);
+	_SetENDPOINT(ENDP2, EP_INTERRUPT | EP_TX_VALID | EP_RX_VALID);
+	_SetEPRxAddr(ENDP2, ENDP2_RXADDR);
+	_SetEPTxAddr(ENDP2, ENDP2_TXADDR);
+	_SetEPRxCount(ENDP2, EP2_MAX_PACKET_SIZE);
+	_SetEPTxCount(ENDP2, EP2_MAX_PACKET_SIZE);
 
-	/* Set this device to response on default address */
+	_SetBTABLE(BTABLE_ADDRESS);
+	_SetDADDR(DADDR_EF);
+
 	SetDeviceAddress(0);
-//	bDeviceState = ATTACHED;
-//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
 }
 /*******************************************************************************
 * Function Name  : DataStageOut.
@@ -723,6 +722,7 @@ void SetDeviceAddress(uint8_t usb_addr)
 
 	_SetEPAddress(ENDP0, 0x00);
 	_SetEPAddress(ENDP1, 0x01);
+	_SetEPAddress(ENDP2, 0x02);
 
 	_SetDADDR(usb_addr | DADDR_EF);
 }
