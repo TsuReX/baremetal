@@ -84,9 +84,14 @@ ONE_DESCRIPTOR Config_Descriptor = {
 	CONFIG_DESCRIPTOR_SIZE
 };
 
-ONE_DESCRIPTOR RHID_Report_Descriptor = {
+ONE_DESCRIPTOR Keyboard_RHID_Report_Descriptor = {
 	(uint8_t *)keyboard_rhid_report_descriptor,
 	KEYBOARD_REPORT_DESCRIPTOR_SIZE
+};
+
+ONE_DESCRIPTOR Mouse_RHID_Report_Descriptor = {
+	(uint8_t *)mouse_rhid_report_descriptor,
+	MOUSE_REPORT_DESCRIPTOR_SIZE
 };
 
 ONE_DESCRIPTOR RHID_Hid_Descriptor = {
@@ -733,8 +738,14 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 *******************************************************************************/
 uint8_t *HID_GetReportDescriptor(uint16_t Length)
 {
-//	d_print("HID_GetReportDescriptor\r\n");
-	return Standard_GetDescriptorData(Length, &RHID_Report_Descriptor);
+
+	d_print("HID_GetReportDescriptor, index: 0x%04X\r\n", usb_device_info->w_index);
+	if (usb_device_info->w_index == 0xAB)
+		return Standard_GetDescriptorData(Length, &Keyboard_RHID_Report_Descriptor);
+	else if (usb_device_info->w_index == 5)
+		return Standard_GetDescriptorData(Length, &Mouse_RHID_Report_Descriptor);
+
+	return 0;
 }
 
 /*******************************************************************************

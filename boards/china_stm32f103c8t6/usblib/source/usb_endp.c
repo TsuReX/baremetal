@@ -53,13 +53,13 @@ void mouse_ep_in_handle (void)
 
 	copy_to_usb((uint8_t*)&mouse, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
 
-	_SetEPTxValid(ENDP1);
+	_SetEPTxValid(ENDP2);
 }
 
 void keyboard_ep_out_handle (void)
 {
 	d_print("%s()\r\n",  __func__);
-	_SetEPRxValid(ENDP2);
+	_SetEPRxValid(ENDP1);
 }
 
 void mouse_ep_out_handle (void)

@@ -40,7 +40,7 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 /* USB Standard Interface Descriptor */
 	0x09,							// bLength:
 	USB_INTERFACE_DESCRIPTOR_TYPE,	// bDescriptorType:
-	0x00,							// bInterfaceNumber:
+	0xAB,							// bInterfaceNumber:
 	0x00,							// bAlternateSetting:
 	0x01,							// bNumEndpoints -
 	0x03,							// bInterfaceClass:
@@ -69,7 +69,7 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 /* USB Standard Interface Descriptor */
 	0x09,							// bLength:
 	USB_INTERFACE_DESCRIPTOR_TYPE,	// bDescriptorType:
-	0x01,							// bInterfaceNumber:
+	0x05,							// bInterfaceNumber:
 	0x00,							// bAlternateSetting:
 	0x01,							// bNumEndpoints -
 	0x03,							// bInterfaceClass:
