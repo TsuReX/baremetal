@@ -116,14 +116,11 @@ ONE_DESCRIPTOR String_Descriptor[4] = {
 *******************************************************************************/
 uint8_t *Standard_GetConfiguration(uint16_t Length)
 {
-  if (Length == 0)
-  {
-    usb_device_info->ep0_ctrl_info.remaining_data_size =
-      sizeof(usb_device_info->Current_Configuration);
-    return 0;
-  }
-  usb_standard_requests->User_GetConfiguration();
-  return (uint8_t *)&usb_device_info->Current_Configuration;
+	if (Length == 0) {
+		usb_device_info->ep0_ctrl_info.remaining_data_size = sizeof(usb_device_info->Current_Configuration);
+		return 0;
+	}
+	return (uint8_t *)&usb_device_info->Current_Configuration;
 }
 
 /*******************************************************************************
@@ -138,18 +135,10 @@ uint8_t *Standard_GetConfiguration(uint16_t Length)
 RESULT Standard_SetConfiguration(void)
 {
 
-  if (((usb_device_info->w_value & 0xFF) <=
-      Device_Table.Total_Configuration) && ((usb_device_info->w_value >> 8) == 0)
-      && (usb_device_info->w_index == 0)) /*call Back usb spec 2.0*/
-  {
-    usb_device_info->Current_Configuration = usb_device_info->w_value & 0xFF;
-    usb_standard_requests->User_SetConfiguration();
-    return USB_SUCCESS;
-  }
-  else
-  {
-    return USB_UNSUPPORT;
-  }
+	usb_device_info->Current_Configuration = usb_device_info->w_value & 0xFF;
+	bDeviceState = CONFIGURED;
+
+	return USB_SUCCESS;
 }
 
 /*******************************************************************************
@@ -589,20 +578,28 @@ void HID_Status_Out (void)
 *******************************************************************************/
 RESULT hid_setup_with_data_process(uint8_t RequestNo)
 {
-	uint8_t *(*CopyRoutine)(uint16_t);
+	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
+	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+	uint8_t	request_number = usb_device_info->b_request;
 
-	CopyRoutine = NULL;
+	uint8_t *(*copy_routine)(uint16_t) = NULL;
+	uint8_t wValue1 = 0;
+	uint32_t status;
+	uint32_t related_endpoint = 0;
+	uint32_t reserved = 0;
+
+	copy_routine = NULL;
 	if ((RequestNo == GET_DESCRIPTOR) &&
 		((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT)) == INTERFACE_RECIPIENT) &&
 		((usb_device_info->w_index & 0xFF) == 0)) {
 
 		if ((usb_device_info->w_value >> 8) == REPORT_DESCRIPTOR) {
-//			d_print("GET_REPORT_DESCRIPTOR\r\n");
-			CopyRoutine = HID_GetReportDescriptor;
+			d_print("GET_REPORT_DESCRIPTOR\r\n");
+			copy_routine = HID_GetReportDescriptor;
 
 		} else if ((usb_device_info->w_value >> 8) == HID_DESCRIPTOR_TYPE) {
-//			d_print("GET_HID_DESCRIPTOR\r\n");
-			CopyRoutine = HID_GetHIDDescriptor;
+			d_print("GET_HID_DESCRIPTOR\r\n");
+			copy_routine = HID_GetHIDDescriptor;
 		}
 
 	}
@@ -610,13 +607,13 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT))  == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) ) {
 		switch( RequestNo ) {
 			case GET_PROTOCOL:
-//				d_print("GET_PROTOCOL\r\n");
-				CopyRoutine = HID_GetProtocolValue;
+				d_print("GET_PROTOCOL\r\n");
+				copy_routine = HID_GetProtocolValue;
 				break;
 
 			case SET_REPORT:
-//				d_print("SET_REPORT\r\n");
-				CopyRoutine = HID_SetReport_Feature;
+				d_print("SET_REPORT\r\n");
+				copy_routine = HID_SetReport_Feature;
 //				Request = SET_REPORT;
 				break;
 			default:
@@ -624,14 +621,76 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 		}
 	}
 
-	if (CopyRoutine == NULL) {
+	if (copy_routine == NULL) {
+		d_print("USB_UNSUPPORT\r\n");
 		return USB_UNSUPPORT;
 	}
 
-	usb_device_info->ep0_ctrl_info.data_copy = CopyRoutine;
-	usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
+//	usb_device_info->ep0_ctrl_info.data_copy = copy_routine;
+//	usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
+//
+//	(*copy_routine)(0);
+/*******************************************************************************************/
+	/* Setup without data stage. */
+	if (usb_device_info->w_length == 0) {
 
-	(*CopyRoutine)(0);
+		_SetEPTxCount(ENDP0, 0);
+		ep0_tx_state = EP_TX_VALID;
+		usb_device_info->control_state = WAIT_STATUS_IN;
+
+	} else { /* Setup with data stage. */
+
+		usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
+		usb_device_info->ep0_ctrl_info.data_copy = copy_routine;
+
+		if (copy_routine == 0) {
+			d_print("ERROR bm_request_type: 0x%02X, b_request: 0x%02X, w_value: 0x%04X\r\n",
+					usb_device_info->bm_request_type, usb_device_info->b_request, usb_device_info->w_value);
+		} else {
+			copy_routine(0);
+		}
+
+		/* TODO: USB Check a purpose of the construction below.*/
+		if (usb_device_info->ep0_ctrl_info.remaining_data_size == 0xFFFF) {
+			/* Data is not ready, wait it */
+			usb_device_info->control_state = PAUSE;
+			return USB_UNSUPPORT;
+		}
+
+		/* TODO: USB Check a purpose of the construction below.*/
+		if ((usb_device_info->ep0_ctrl_info.remaining_data_size == 0)) {
+			/* Unsupported request */
+			usb_device_info->control_state = STALLED;
+			return USB_UNSUPPORT;
+		}
+
+		if (request_direction == TO_HOST_DIRECTION_TYPE) {
+//			d_print("TO_HOST_DIRECTION_TYPE\r\n");
+//			d_print("usb_device_info->w_length: 0x%04X\r\n", usb_device_info->w_length);
+			/* Restrict the data length to be the one host asks for */
+			if (usb_device_info->ep0_ctrl_info.remaining_data_size > usb_device_info->w_length) {
+				/* TODO: USB Check a correctness of the construction below. */
+				usb_device_info->ep0_ctrl_info.remaining_data_size = usb_device_info->w_length;
+			}
+
+			if (usb_device_info->ep0_ctrl_info.remaining_data_size < usb_device_property->MaxPacketSize) {
+				multiple_max_packet_size = FALSE;
+
+			} else if ((usb_device_info->ep0_ctrl_info.remaining_data_size % usb_device_property->MaxPacketSize) == 0) {
+				multiple_max_packet_size = TRUE;
+			}
+
+			usb_device_info->ep0_ctrl_info.single_transfer_size = usb_device_property->MaxPacketSize;
+
+			ep0_data_stage_in_process();
+
+		} else { /* TO_DEVICE_DIRECTION_TYPE */
+//			d_print("TO_DEVICE_DIRECTION_TYPE\r\n");
+			usb_device_info->control_state = OUT_DATA;
+			ep0_rx_state = EP_RX_VALID; /* enable for next data reception */
+		}
+	}
+
 
 	return USB_SUCCESS;
 }

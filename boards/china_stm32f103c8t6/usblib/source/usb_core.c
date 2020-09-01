@@ -230,32 +230,6 @@ void setup_without_data_process(void)
 
 }
 
-uint32_t class_request_process()
-{
-//	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
-	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
-
-	switch (request_recipient) {
-
-		case DEVICE_RECIPIENT_TYPE:
-
-			break;
-
-		case INTERFACE_RECIPIENT_TYPE:
-
-			break;
-
-		case ENDPOINT_RECIPIENT_TYPE:
-
-			break;
-
-		default:
-			break;
-	}
-
-	return 0;
-}
-
 void standard_request_process()
 {
 	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
@@ -275,7 +249,7 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-//					d_print("GET_STATUS\r\n");
+					d_print("GET_STATUS\r\n");
 					if (usb_device_info->w_index == 0) {
 						copy_routine = Standard_GetStatus;
 					}
@@ -286,30 +260,30 @@ void standard_request_process()
 					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == DEVICE_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetDeviceDescriptor;
-//						d_print("DEVICE_DESCRIPTOR\r\n");
+						d_print("GET_DEVICE_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == CONFIG_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetConfigDescriptor;
-//						d_print("CONFIG_DESCRIPTOR\r\n");
+						d_print("GET_CONFIG_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == STRING_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetStringDescriptor;
-//						d_print("STRING_DESCRIPTOR\r\n");
+						d_print("GET_STRING_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == DEVICE_QUALIFIER) {
 						copy_routine = HID_GetDeviceDescriptorQualifier;
-//						d_print("DEVICE_QUALIFIER\r\n");
+						d_print("GET_DEVICE_QUALIFIER\r\n");
 
 					}
 					break;
 
 				case GET_CONFIGURATION:
-//					d_print("GET_CONFIGURATION\r\n");
+					d_print("GET_CONFIGURATION\r\n");
 					copy_routine = Standard_GetConfiguration;
 					break;
 
 				case SET_CONFIGURATION:
-//					d_print("SET_CONFIGURATION\r\n");
+					d_print("SET_CONFIGURATION\r\n");
 					if (Standard_SetConfiguration() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -326,11 +300,11 @@ void standard_request_process()
 						// d_print("SET_ADDRESS ERR\r\n");
 						return;
 					}
-//					d_print("SET_ADDRESS\r\n");
+					d_print("SET_ADDRESS\r\n");
 					break;
 
 				case SET_FEATURE:
-//					d_print("SET_FEATURE\r\n");
+					d_print("SET_FEATURE\r\n");
 					if (((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP) &&
 						(usb_device_info->w_index == 0)) {
 
@@ -346,7 +320,7 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-//					d_print("CLEAR_FEATURE\r\n");
+					d_print("CLEAR_FEATURE\r\n");
 					if ((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP &&
 						usb_device_info->w_index == 0 &&
 						(usb_device_info->Current_Feature & (1 << 5))) {
@@ -373,17 +347,18 @@ void standard_request_process()
 //			// d_print("INTERFACE_RECIPIENT_TYPE\r\n");
 			switch (request_number) {
 				case GET_DESCRIPTOR:
-					d_print("GET_DESCRIPTOR\r\n");
 					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == HID_REPORT_DESCRIPTOR_TYPE) {
 						copy_routine = HID_GetReportDescriptor;
+						d_print("GET_REPORT_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == HID_DESCRIPTOR_TYPE) {
 						copy_routine = HID_GetHIDDescriptor;
+						d_print("GET_HID_DESCRIPTOR\r\n");
 					}
 					break;
 				case GET_STATUS:
-//					d_print("GET_STATUS\r\n");
+					d_print("GET_STATUS\r\n");
 					if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, 0) == USB_SUCCESS) &&
 						(usb_device_info->Current_Configuration != 0)) {
 
@@ -392,7 +367,7 @@ void standard_request_process()
 					break;
 
 				case GET_INTERFACE:
-//					d_print("GET_INTERFACE\r\n");
+					d_print("GET_INTERFACE\r\n");
 					if ((usb_device_info->Current_Configuration != 0) &&
 						(usb_device_info->w_value == 0) &&
 						((usb_device_info->w_index >> 8) == 0) &&
@@ -403,7 +378,7 @@ void standard_request_process()
 					}
 					break;
 				case SET_INTERFACE:
-//					d_print("SET_INTERFACE\r\n");
+					d_print("SET_INTERFACE\r\n");
 					if (Standard_SetInterface() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -421,7 +396,7 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-//					d_print("GET_STATUS\r\n");
+					d_print("GET_STATUS\r\n");
 					related_endpoint = (usb_device_info->w_index & 0xFF & 0x0f);
 					reserved = usb_device_info->w_index & 0xFF & 0x70;
 
@@ -440,7 +415,7 @@ void standard_request_process()
 					break;
 
 				case SET_FEATURE:
-//					d_print("SET_FEATURE\r\n");
+					d_print("SET_FEATURE\r\n");
 					if (Standard_SetEndPointFeature() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -448,7 +423,7 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-//					d_print("CLEAR_FEATURE\r\n");
+					d_print("CLEAR_FEATURE\r\n");
 					if (Standard_ClearFeature() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -547,7 +522,8 @@ void setup_with_data_process(void)
 
 		case CLASS_REQUEST_TYPE:
 //			d_print("CLASS_REQUEST_TYPE\r\n");
-			if ((*usb_device_property->class_setup_with_data_process)(usb_device_info->b_request) == USB_NOT_READY) {
+//			if ((*usb_device_property->class_setup_with_data_process)(usb_device_info->b_request) == USB_NOT_READY) {
+			if (hid_setup_with_data_process() == USB_NOT_READY)
 				usb_device_info->control_state = PAUSE;
 				return;
 			}

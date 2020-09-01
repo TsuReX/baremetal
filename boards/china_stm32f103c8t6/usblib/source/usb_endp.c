@@ -21,14 +21,22 @@ struct mouse_state {
 } ;
 
 struct keyboard_state keyboard = {
-		0x18,
-		0x27,
-		0x36,
-		0x45,
-		0x54,
-		0x63,
-		0x72,
-		0x81,
+//		0x18,
+//		0x27,
+//		0x36,
+//		0x45,
+//		0x54,
+//		0x63,
+//		0x72,
+//		0x81,
+		0,
+		0,
+		65,
+		0,
+		0,
+		0,
+		0,
+		0
 };
 
 struct mouse_state mouse = {
@@ -38,22 +46,38 @@ struct mouse_state mouse = {
 		{0xCD, 0xDC, 0xEB, 0xFA, 0x09}
 };
 
+static uint32_t keyboard_cntr = 1;
+static uint32_t mouse_cntr = 1;
+
 void keyboard_ep_in_handle (void)
 {
 	d_print("%s()\r\n",  __func__);
 
+	keyboard.keycode_1 = keyboard_cntr;
+
 	copy_to_usb((uint8_t*)&keyboard, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
 
-	_SetEPTxValid(ENDP1);
+	if (keyboard_cntr++ < 4) {
+		_SetEPTxStatus(ENDP1, EP_TX_VALID);
+	} else {
+		_SetEPTxStatus(ENDP1, EP_TX_NAK);
+	}
 }
 
 void mouse_ep_in_handle (void)
 {
 	d_print("%s()\r\n",  __func__);
 
+	mouse.x_displacement = mouse_cntr;
+	mouse.y_displacement = mouse_cntr + 100;
+
 	copy_to_usb((uint8_t*)&mouse, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
 
-	_SetEPTxValid(ENDP2);
+	if (mouse_cntr++ < 3) {
+		_SetEPTxStatus(ENDP1, EP_TX_VALID);
+	} else {
+		_SetEPTxStatus(ENDP1, EP_TX_NAK);
+	}
 }
 
 void keyboard_ep_out_handle (void)
