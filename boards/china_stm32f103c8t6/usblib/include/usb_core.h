@@ -98,6 +98,12 @@ typedef struct _USER_STANDARD_REQUESTS {
 void init(void);
 void reset(void);
 
+void ep0_data_stage_out_process(void);
+void ep0_data_stage_in_process(void);
+void setup_without_data_process(void);
+void setup_with_data_process(void);
+void standard_request_process(void);
+
 uint8_t ep0_setup_process(void);
 uint8_t ep0_finish_processing(void);
 uint8_t ep0_out_process(void);

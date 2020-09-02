@@ -11,11 +11,7 @@ extern DEVICE_INFO *usb_device_info;
 extern USER_STANDARD_REQUESTS  *usb_standard_requests;
 extern DEVICE_PROP *usb_device_property;
 
-static void ep0_data_stage_out_process(void);
-static void ep0_data_stage_in_process(void);
-static void setup_without_data_process(void);
-static void setup_with_data_process(void);
-static void standard_request_process(void);
+
 /*******************************************************************************
 * Function Name  : HID_init.
 * Description    : HID init routine.
@@ -523,7 +519,7 @@ void setup_with_data_process(void)
 		case CLASS_REQUEST_TYPE:
 //			d_print("CLASS_REQUEST_TYPE\r\n");
 //			if ((*usb_device_property->class_setup_with_data_process)(usb_device_info->b_request) == USB_NOT_READY) {
-			if (hid_setup_with_data_process() == USB_NOT_READY)
+			if (hid_setup_with_data_process(usb_device_info->b_request) == USB_NOT_READY) {
 				usb_device_info->control_state = PAUSE;
 				return;
 			}

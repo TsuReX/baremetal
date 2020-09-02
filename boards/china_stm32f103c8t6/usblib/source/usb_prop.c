@@ -9,6 +9,7 @@
 #define ID2		(0x1FFFF7EC)
 #define ID3		(0x1FFFF7F0)
 
+extern bool multiple_max_packet_size;
 extern DEVICE_INFO *usb_device_info;
 
 uint32_t ProtocolValue;
@@ -579,14 +580,14 @@ void HID_Status_Out (void)
 RESULT hid_setup_with_data_process(uint8_t RequestNo)
 {
 	uint8_t	request_direction = usb_device_info->bm_request_type & REQUEST_DIRECTION;
-	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
-	uint8_t	request_number = usb_device_info->b_request;
+//	uint8_t	request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+//	uint8_t	request_number = usb_device_info->b_request;
 
 	uint8_t *(*copy_routine)(uint16_t) = NULL;
-	uint8_t wValue1 = 0;
-	uint32_t status;
-	uint32_t related_endpoint = 0;
-	uint32_t reserved = 0;
+//	uint8_t wValue1 = 0;
+//	uint32_t status;
+//	uint32_t related_endpoint = 0;
+//	uint32_t reserved = 0;
 
 	copy_routine = NULL;
 	if ((RequestNo == GET_DESCRIPTOR) &&
