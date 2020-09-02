@@ -245,7 +245,7 @@ void standard_request_process()
 			switch (request_number) {
 
 				case GET_STATUS:
-					d_print("GET_STATUS\r\n");
+//					d_print("GET_STATUS\r\n");
 					if (usb_device_info->w_index == 0) {
 						copy_routine = Standard_GetStatus;
 					}
@@ -256,30 +256,30 @@ void standard_request_process()
 					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == DEVICE_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetDeviceDescriptor;
-						d_print("GET_DEVICE_DESCRIPTOR\r\n");
+//						d_print("GET_DEVICE_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == CONFIG_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetConfigDescriptor;
-						d_print("GET_CONFIG_DESCRIPTOR\r\n");
+//						d_print("GET_CONFIG_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == STRING_DESCRIPTOR) {
 						copy_routine = usb_device_property->GetStringDescriptor;
-						d_print("GET_STRING_DESCRIPTOR\r\n");
+//						d_print("GET_STRING_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == DEVICE_QUALIFIER) {
 						copy_routine = HID_GetDeviceDescriptorQualifier;
-						d_print("GET_DEVICE_QUALIFIER\r\n");
+//						d_print("GET_DEVICE_QUALIFIER\r\n");
 
 					}
 					break;
 
 				case GET_CONFIGURATION:
-					d_print("GET_CONFIGURATION\r\n");
+//					d_print("GET_CONFIGURATION\r\n");
 					copy_routine = Standard_GetConfiguration;
 					break;
 
 				case SET_CONFIGURATION:
-					d_print("SET_CONFIGURATION\r\n");
+//					d_print("SET_CONFIGURATION\r\n");
 					if (Standard_SetConfiguration() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -296,11 +296,11 @@ void standard_request_process()
 						// d_print("SET_ADDRESS ERR\r\n");
 						return;
 					}
-					d_print("SET_ADDRESS\r\n");
+//					d_print("SET_ADDRESS\r\n");
 					break;
 
 				case SET_FEATURE:
-					d_print("SET_FEATURE\r\n");
+//					d_print("SET_FEATURE\r\n");
 					if (((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP) &&
 						(usb_device_info->w_index == 0)) {
 
@@ -316,20 +316,20 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-					d_print("CLEAR_FEATURE\r\n");
-					if ((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP &&
-						usb_device_info->w_index == 0 &&
-						(usb_device_info->Current_Feature & (1 << 5))) {
+					d_print("DEVICE_CLEAR_FEATURE\r\n");
+//					if ((usb_device_info->w_value & 0xFF) == DEVICE_REMOTE_WAKEUP &&
+//						usb_device_info->w_index == 0 &&
+//						(usb_device_info->Current_Feature & (1 << 5))) {
+//
+//						if (Standard_ClearFeature() != USB_SUCCESS) {
+//							usb_device_info->control_state = STALLED;
+//							return;
+//						}
 
-						if (Standard_ClearFeature() != USB_SUCCESS) {
-							usb_device_info->control_state = STALLED;
-							return;
-						}
-
-					} else {
-						usb_device_info->control_state = STALLED;
-						return;
-					}
+//					} else {
+//						usb_device_info->control_state = STALLED;
+//						return;
+//					}
 					break;
 
 				default:
@@ -346,15 +346,15 @@ void standard_request_process()
 					wValue1 = (usb_device_info->w_value >> 8);
 					if (wValue1 == HID_REPORT_DESCRIPTOR_TYPE) {
 						copy_routine = HID_GetReportDescriptor;
-						d_print("GET_REPORT_DESCRIPTOR\r\n");
+//						d_print("GET_REPORT_DESCRIPTOR\r\n");
 
 					} else if (wValue1 == HID_DESCRIPTOR_TYPE) {
 						copy_routine = HID_GetHIDDescriptor;
-						d_print("GET_HID_DESCRIPTOR\r\n");
+//						d_print("GET_HID_DESCRIPTOR\r\n");
 					}
 					break;
 				case GET_STATUS:
-					d_print("GET_STATUS\r\n");
+//					d_print("GET_STATUS\r\n");
 					if (((*usb_device_property->Class_Get_Interface_Setting)(usb_device_info->w_index & 0xFF, 0) == USB_SUCCESS) &&
 						(usb_device_info->Current_Configuration != 0)) {
 
@@ -363,7 +363,7 @@ void standard_request_process()
 					break;
 
 				case GET_INTERFACE:
-					d_print("GET_INTERFACE\r\n");
+//					d_print("GET_INTERFACE\r\n");
 					if ((usb_device_info->Current_Configuration != 0) &&
 						(usb_device_info->w_value == 0) &&
 						((usb_device_info->w_index >> 8) == 0) &&
@@ -374,7 +374,7 @@ void standard_request_process()
 					}
 					break;
 				case SET_INTERFACE:
-					d_print("SET_INTERFACE\r\n");
+//					d_print("SET_INTERFACE\r\n");
 					if (Standard_SetInterface() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -419,11 +419,11 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-					d_print("CLEAR_FEATURE\r\n");
-					if (Standard_ClearFeature() != USB_SUCCESS) {
-						usb_device_info->control_state = STALLED;
-						return;
-					}
+					d_print("ENDPOINT_CLEAR_FEATURE\r\n");
+//					if (Standard_ClearFeature() != USB_SUCCESS) {
+//						usb_device_info->control_state = STALLED;
+//						return;
+//					}
 					break;
 
 				default:

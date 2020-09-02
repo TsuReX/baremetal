@@ -30,7 +30,7 @@ const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE] = {
 	0x09, 							// bLength:
 	CONFIG_DESCRIPTOR_TYPE,			// bDescriptorType:
 	CONFIG_DESCRIPTOR_SIZE, 0x00,	// wTotalLength:
-	0x01,							// bNumInterfaces:
+	0x02,							// bNumInterfaces:
 	0x01,							// bConfigurationValue:
 	0x00,							// iConfiguration:
 	0xA0,							// bmAttributes:  USB

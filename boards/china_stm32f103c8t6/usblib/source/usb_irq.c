@@ -77,7 +77,7 @@ void ep0_handle(void)
 
 void ep_handle(uint32_t ep_index)
 {
-	d_print("%s()\r\n",  __func__);
+//	d_print("%s()\r\n",  __func__);
 	uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -234,12 +234,12 @@ void usb_lp_can1_rx0_handle(void)
 	if (usb_irq_flags & ISTR_RESET) {
 		_SetISTR(CLR_RESET);
 //		if ((_GetFNR() & (FNR_RXDM | FNR_RXDP)) == 0x0) {
-			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
-//			d_print("ISTR_RESET\r\n");
+//			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
+			d_print("ISTR_RESET\r\n");
 //			d_print("ISTR_RESET USB_FNR: 0x%04X\r\n", _GetFNR() & (FNR_RXDM | FNR_RXDP));
 			reset();
 //			LL_mDelay(1);
-			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
+//			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
 //		} else {
 //		}
 	}

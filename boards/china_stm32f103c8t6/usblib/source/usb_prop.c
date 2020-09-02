@@ -280,83 +280,72 @@ uint8_t *Standard_GetStatus(uint16_t Length)
 *******************************************************************************/
 RESULT Standard_ClearFeature(void)
 {
-  uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
-  uint32_t     Status;
 
+	d_print("bm_request_type: 0x%02X\r\n", usb_device_info->bm_request_type);
+	d_print("b_request: 0x%02X\r\n", usb_device_info->b_request);
+	d_print("w_value: 0x%04X\r\n", usb_device_info->w_value);
+	d_print("w_index: 0x%04X\r\n", usb_device_info->w_index);
+	d_print("w_length: 0x%04X\r\n", usb_device_info->w_length);
+	uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
+	uint32_t     Status;
 
-  if (Type_Rec == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT))
-  {/*Device Clear Feature*/
-    ClrBit(usb_device_info->Current_Feature, 5);
-    return USB_SUCCESS;
-  }
-  else if (Type_Rec == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT))
-  {/*EndPoint Clear Feature*/
-    DEVICE* pDev;
-    uint32_t Related_Endpoint;
-    uint32_t wIndex0;
-    uint32_t rEP;
+	/*Device Clear Feature*/
+	if (Type_Rec == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT)) {
+		ClrBit(usb_device_info->Current_Feature, 5);
+		return USB_SUCCESS;
+	}
 
-    if ((usb_device_info->w_value != ENDPOINT_STALL)
-        || ((usb_device_info->w_index >> 8) != 0))
-    {
-      return USB_UNSUPPORT;
-    }
+	/*EndPoint Clear Feature*/
+	else if (Type_Rec == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT)) {
+		DEVICE* pDev;
+		uint32_t Related_Endpoint;
+		uint32_t wIndex0;
+		uint32_t rEP;
 
-    pDev = &Device_Table;
-    wIndex0 = usb_device_info->w_index & 0xFF;
-    rEP = wIndex0 & ~0x80;
-    Related_Endpoint = ENDP0 + rEP;
+		if ((usb_device_info->w_value != ENDPOINT_STALL) || ((usb_device_info->w_index >> 8) != 0)) {
+			return USB_UNSUPPORT;
+		}
 
-    if (ValBit(usb_device_info->w_index & 0xFF, 7))
-    {
-      /*Get Status of endpoint & stall the request if the related_ENdpoint
-      is Disabled*/
-      Status = _GetEPTxStatus(Related_Endpoint);
-    }
-    else
-    {
-      Status = _GetEPRxStatus(Related_Endpoint);
-    }
+		pDev = &Device_Table;
+		wIndex0 = usb_device_info->w_index & 0xFF;
+		rEP = wIndex0 & ~0x80;
+		Related_Endpoint = ENDP0 + rEP;
 
-    if ((rEP >= pDev->Total_Endpoint) || (Status == 0)
-        || (usb_device_info->Current_Configuration == 0))
-    {
-      return USB_UNSUPPORT;
-    }
+		/*Get Status of endpoint & stall the request if the related_ENdpoint is Disabled*/
+		if (ValBit(usb_device_info->w_index & 0xFF, 7)) {
+			Status = _GetEPTxStatus(Related_Endpoint);
+		} else {
+			Status = _GetEPRxStatus(Related_Endpoint);
+		}
 
+		if ((rEP >= pDev->Total_Endpoint) || (Status == 0) || (usb_device_info->Current_Configuration == 0)) {
+			return USB_UNSUPPORT;
+		}
 
-    if (wIndex0 & 0x80)
-    {
-      /* IN endpoint */
-      if (_GetTxStallStatus(Related_Endpoint ))
-      {
-        _ClearDTOG_TX(Related_Endpoint);
-        _SetEPTxStatus(Related_Endpoint, EP_TX_VALID);
-      }
-    }
-    else
-    {
-      /* OUT endpoint */
-      if (_GetRxStallStatus(Related_Endpoint))
-      {
-        if (Related_Endpoint == ENDP0)
-        {
-          /* After clear the STALL, enable the default endpoint receiver */
-          _SetEPRxCount(Related_Endpoint, property.MaxPacketSize);
-          _SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
-        }
-        else
-        {
-          _ClearDTOG_RX(Related_Endpoint);
-          _SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
-        }
-      }
-    }
-    usb_standard_requests->User_ClearFeature();
-    return USB_SUCCESS;
-  }
-
-  return USB_UNSUPPORT;
+		/* IN endpoint */
+		if (wIndex0 & 0x80) {
+			if (_GetTxStallStatus(Related_Endpoint )) {
+				_ClearDTOG_TX(Related_Endpoint);
+				_SetEPTxStatus(Related_Endpoint, EP_TX_VALID);
+			}
+		/* OUT endpoint */
+		} else {
+			if (_GetRxStallStatus(Related_Endpoint)) {
+				if (Related_Endpoint == ENDP0) {
+					/* After clear the STALL, enable the default endpoint receiver */
+					_SetEPRxCount(Related_Endpoint, property.MaxPacketSize);
+					_SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
+				} else {
+					_ClearDTOG_RX(Related_Endpoint);
+					_SetEPRxStatus(Related_Endpoint, EP_RX_VALID);
+				}
+			}
+		}
+		usb_standard_requests->User_ClearFeature();
+		return USB_SUCCESS;
+	}
+	return USB_UNSUPPORT;
+//	return USB_SUCCESS;
 }
 
 /*******************************************************************************
@@ -595,11 +584,11 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 		((usb_device_info->w_index & 0xFF) == 0)) {
 
 		if ((usb_device_info->w_value >> 8) == REPORT_DESCRIPTOR) {
-			d_print("GET_REPORT_DESCRIPTOR\r\n");
+//			d_print("GET_REPORT_DESCRIPTOR\r\n");
 			copy_routine = HID_GetReportDescriptor;
 
 		} else if ((usb_device_info->w_value >> 8) == HID_DESCRIPTOR_TYPE) {
-			d_print("GET_HID_DESCRIPTOR\r\n");
+//			d_print("GET_HID_DESCRIPTOR\r\n");
 			copy_routine = HID_GetHIDDescriptor;
 		}
 
@@ -608,12 +597,12 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 	else if (((usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT))  == (CLASS_REQUEST_TYPE | INTERFACE_RECIPIENT)) ) {
 		switch( RequestNo ) {
 			case GET_PROTOCOL:
-				d_print("GET_PROTOCOL\r\n");
+//				d_print("GET_PROTOCOL\r\n");
 				copy_routine = HID_GetProtocolValue;
 				break;
 
 			case SET_REPORT:
-				d_print("SET_REPORT\r\n");
+//				d_print("SET_REPORT\r\n");
 				copy_routine = HID_SetReport_Feature;
 //				Request = SET_REPORT;
 				break;
@@ -640,7 +629,6 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 		usb_device_info->control_state = WAIT_STATUS_IN;
 
 	} else { /* Setup with data stage. */
-
 		usb_device_info->ep0_ctrl_info.data_buffer_offset = 0;
 		usb_device_info->ep0_ctrl_info.data_copy = copy_routine;
 
@@ -691,7 +679,6 @@ RESULT hid_setup_with_data_process(uint8_t RequestNo)
 			ep0_rx_state = EP_RX_VALID; /* enable for next data reception */
 		}
 	}
-
 
 	return USB_SUCCESS;
 }
