@@ -318,7 +318,7 @@ RESULT Standard_ClearFeature(void)
 //		}
 
 		/* IN endpoint */
-		if (wIndex0 & 0x80) {
+		if ((wIndex0 & 0x80) != 0) {
 			if (_GetTxStallStatus(Related_Endpoint )) {
 				_ClearDTOG_TX(Related_Endpoint);
 				_SetEPTxStatus(Related_Endpoint, EP_TX_VALID);

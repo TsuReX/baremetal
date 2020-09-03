@@ -1,5 +1,6 @@
 #include "usb_endp.h"
 #include "usb_lib.h"
+#include "usb_desc.h"
 #include "console.h"
 
 struct keyboard_state {
@@ -58,6 +59,7 @@ void keyboard_ep_in_handle (void)
 	copy_to_usb((uint8_t*)&keyboard, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
 
 //	if (keyboard_cntr < 4) {
+		_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 		_SetEPTxStatus(ENDP1, EP_TX_VALID);
 //	} else {
 //		_SetEPTxStatus(ENDP1, EP_TX_NAK);
@@ -72,8 +74,8 @@ void mouse_ep_in_handle (void)
 	mouse.y_displacement = mouse_cntr++ + 100;
 
 	copy_to_usb((uint8_t*)&mouse, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
-
 //	if (mouse_cntr++ < 3) {
+		_SetEPTxCount(ENDP2, EP2_MAX_PACKET_SIZE);
 		_SetEPTxStatus(ENDP2, EP_TX_VALID);
 //	} else {
 //		_SetEPTxStatus(ENDP1, EP_TX_NAK);

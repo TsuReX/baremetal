@@ -321,10 +321,10 @@ void standard_request_process()
 //						usb_device_info->w_index == 0 &&
 //						(usb_device_info->Current_Feature & (1 << 5))) {
 //
-//						if (Standard_ClearFeature() != USB_SUCCESS) {
-//							usb_device_info->control_state = STALLED;
-//							return;
-//						}
+						if (Standard_ClearFeature() != USB_SUCCESS) {
+							usb_device_info->control_state = STALLED;
+							return;
+						}
 
 //					} else {
 //						usb_device_info->control_state = STALLED;
@@ -420,10 +420,10 @@ void standard_request_process()
 
 				case CLEAR_FEATURE:
 					d_print("ENDPOINT_CLEAR_FEATURE\r\n");
-//					if (Standard_ClearFeature() != USB_SUCCESS) {
-//						usb_device_info->control_state = STALLED;
-//						return;
-//					}
+					if (Standard_ClearFeature() != USB_SUCCESS) {
+						usb_device_info->control_state = STALLED;
+						return;
+					}
 					break;
 
 				default:

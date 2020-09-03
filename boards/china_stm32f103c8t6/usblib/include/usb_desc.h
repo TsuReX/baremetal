@@ -30,7 +30,7 @@
 
 #define EP0_MAX_PACKET_SIZE				0x40
 #define EP1_MAX_PACKET_SIZE				0x8
-#define EP2_MAX_PACKET_SIZE				0x8
+#define EP2_MAX_PACKET_SIZE				0x3
 
 /* Exported functions ------------------------------------------------------- */
 extern const uint8_t rhid_device_descriptor[DEV_DESCRIPTOR_SIZE];
