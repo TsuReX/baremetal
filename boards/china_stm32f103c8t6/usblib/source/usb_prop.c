@@ -286,41 +286,36 @@ RESULT Standard_ClearFeature(void)
 	d_print("w_value: 0x%04X\r\n", usb_device_info->w_value);
 	d_print("w_index: 0x%04X\r\n", usb_device_info->w_index);
 	d_print("w_length: 0x%04X\r\n", usb_device_info->w_length);
-	uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
-	uint32_t     Status;
+	uint8_t		request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
+//	uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
+//	uint32_t     Status;
 
 	/*Device Clear Feature*/
-	if (Type_Rec == (STANDARD_REQUEST_TYPE | DEVICE_RECIPIENT)) {
+	if (request_recipient == DEVICE_RECIPIENT_TYPE) {
 		ClrBit(usb_device_info->Current_Feature, 5);
 		return USB_SUCCESS;
 	}
 
 	/*EndPoint Clear Feature*/
-	else if (Type_Rec == (STANDARD_REQUEST_TYPE | ENDPOINT_RECIPIENT)) {
-		DEVICE* pDev;
-		uint32_t Related_Endpoint;
-		uint32_t wIndex0;
-		uint32_t rEP;
+	else if (request_recipient == ENDPOINT_RECIPIENT_TYPE) {
+
+		uint32_t wIndex0 = usb_device_info->w_index & 0xFF;
+		uint32_t Related_Endpoint = usb_device_info->w_index & 0x0F;
 
 		if ((usb_device_info->w_value != ENDPOINT_STALL) || ((usb_device_info->w_index >> 8) != 0)) {
 			return USB_UNSUPPORT;
 		}
 
-		pDev = &Device_Table;
-		wIndex0 = usb_device_info->w_index & 0xFF;
-		rEP = wIndex0 & ~0x80;
-		Related_Endpoint = ENDP0 + rEP;
-
 		/*Get Status of endpoint & stall the request if the related_ENdpoint is Disabled*/
-		if (ValBit(usb_device_info->w_index & 0xFF, 7)) {
-			Status = _GetEPTxStatus(Related_Endpoint);
-		} else {
-			Status = _GetEPRxStatus(Related_Endpoint);
-		}
+//		if (ValBit(usb_device_info->w_index & 0xFF, 7)) {
+//			Status = _GetEPTxStatus(Related_Endpoint);
+//		} else {
+//			Status = _GetEPRxStatus(Related_Endpoint);
+//		}
 
-		if ((rEP >= pDev->Total_Endpoint) || (Status == 0) || (usb_device_info->Current_Configuration == 0)) {
-			return USB_UNSUPPORT;
-		}
+//		if ((Related_Endpoint >= Device_Table.Total_Endpoint) || (Status == 0) || (usb_device_info->Current_Configuration == 0)) {
+//			return USB_UNSUPPORT;
+//		}
 
 		/* IN endpoint */
 		if (wIndex0 & 0x80) {
