@@ -447,7 +447,7 @@ void DMA1_Channel4_IRQHandler(void)
  *		возникла ошибка приема (пока не реализовано).
  *	Данный канал DMA связан с каналом приема (RX) USART 1.
  */
-void DMA1_Channel5_IRQHandler(void)
+void dma1_channel5_irq_handler(void)
 {
 	/*LL_DMA_IsActiveFlag_GI5(DMA1);
 	LL_DMA_IsActiveFlag_TC5(DMA1);

@@ -31,7 +31,7 @@ WEAK void DMA1_Channel1_IRQHandler(void);
 WEAK void DMA1_Channel2_IRQHandler(void);
 WEAK void DMA1_Channel3_IRQHandler(void);
 WEAK void DMA1_Channel4_IRQHandler(void);
-WEAK void DMA1_Channel5_IRQHandler(void);
+WEAK void dma1_channel5_irq_handler(void);
 WEAK void DMA1_Channel6_IRQHandler(void);
 WEAK void DMA1_Channel7_IRQHandler(void);
 WEAK void ADC1_2_IRQHandler(void);
@@ -112,7 +112,7 @@ void (* const isr_vector_table[])(void) = {
 	DMA1_Channel2_IRQHandler,
 	DMA1_Channel3_IRQHandler,
 	DMA1_Channel4_IRQHandler,
-	DMA1_Channel5_IRQHandler,
+	dma1_channel5_irq_handler,
 	DMA1_Channel6_IRQHandler,
 	DMA1_Channel7_IRQHandler,
 	ADC1_2_IRQHandler,
@@ -313,7 +313,7 @@ WEAK void DMA1_Channel4_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel5_IRQHandler(void)
+WEAK void dma1_channel5_irq_handler(void)
 {	while(1) {}
 }
 

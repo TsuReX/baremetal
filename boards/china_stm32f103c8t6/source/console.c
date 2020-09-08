@@ -448,22 +448,22 @@ void DMA1_Channel4_IRQHandler(void)
  *		возникла ошибка приема (пока не реализовано).
  *	Данный канал DMA связан с каналом приема (RX) USART 1.
  */
-void DMA1_Channel5_IRQHandler(void)
-{
-	/*LL_DMA_IsActiveFlag_GI5(DMA1);
-	LL_DMA_IsActiveFlag_TC5(DMA1);
-	LL_DMA_IsActiveFlag_HT5(DMA1);
-	LL_DMA_IsActiveFlag_TE5(DMA1);*/
-
-	/*uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
-	print("%s(): DMA1->ISR 0x%08X\r\n",__func__, dma1ch5_if);*/
-
-	/** Проверять тип прерывания нет необходимости, так как разрешены только прерывания по приему всего буфера. */
-
-	rb_store_data(&rx_rb, usart1_rx_buf, 1);
-
-	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
-}
+//void dma1_channel5_irq_handler(void)
+//{
+//	/*LL_DMA_IsActiveFlag_GI5(DMA1);
+//	LL_DMA_IsActiveFlag_TC5(DMA1);
+//	LL_DMA_IsActiveFlag_HT5(DMA1);
+//	LL_DMA_IsActiveFlag_TE5(DMA1);*/
+//
+//	/*uint32_t dma1ch5_if = READ_BIT(DMA1->ISR, (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5));
+//	print("%s(): DMA1->ISR 0x%08X\r\n",__func__, dma1ch5_if);*/
+//
+//	/** Проверять тип прерывания нет необходимости, так как разрешены только прерывания по приему всего буфера. */
+//
+//	rb_store_data(&rx_rb, usart1_rx_buf, 1);
+//
+//	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
+//}
 
 /*
  *	Обработчик прерывания, которое генерируется контроллером USART 1 в следующих случаях:

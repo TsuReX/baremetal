@@ -11,6 +11,7 @@
 #include "console.h"
 #include "scheduler.h"
 #include "spi.h"
+#include "communication.h"
 
 /*#include "i2c.h"
 #include "ds3231m.h"
@@ -27,6 +28,8 @@ DEVICE_PROP *usb_device_property;
 uint16_t	SaveState ;
 DEVICE_INFO	device_info;
 USER_STANDARD_REQUESTS  *usb_standard_requests;
+
+uint8_t comm_buff[16] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF};
 
 void usb_init(void)
 {
@@ -63,22 +66,19 @@ void usb_init(void)
  */
 int main(void)
 {
-	/** Configure internal subsystems of SoC. */
 	soc_init();
 
-	/** Configure board's peripherals. */
 	board_init();
 
-	console_init();
+//	console_init();
 
 //	scheduler_init();
 
-	/*i2c_init();*/
+//	spi1_init();
+//	spi1_test();
 
-	/*gpio_setup_it();*/
-
-	spi1_init();
-	spi1_test();
+	comm_init(&comm_buff, sizeof(comm_buff));
+	comm_start();
 
 //	usb_init();
 

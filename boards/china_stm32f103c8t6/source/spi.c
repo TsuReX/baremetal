@@ -50,7 +50,6 @@ void spi1_init(void) {
 //	LL_SPI_EnableIT_ERR(SPI1);
 
 	LL_SPI_Enable(SPI1);
-	d_print("DEBUG: SPI1 initialized\n\r");
 }
 
 void spi1_test(void) {
