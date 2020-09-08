@@ -10,6 +10,8 @@
 #include "config.h"
 #include "console.h"
 #include "scheduler.h"
+#include "spi.h"
+
 /*#include "i2c.h"
 #include "ds3231m.h"
 #include "ina3221.h"
@@ -75,9 +77,10 @@ int main(void)
 
 	/*gpio_setup_it();*/
 
-	/* PA7 set high level. */
-//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
-	usb_init();
+	spi1_init();
+	spi1_test();
+
+//	usb_init();
 
 //	uint32_t i = 0;
 	while (1) {

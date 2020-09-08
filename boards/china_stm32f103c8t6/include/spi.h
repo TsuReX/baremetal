@@ -9,6 +9,9 @@
 #ifndef _SPI_H_
 #define _SPI_H_
 
+#include "drivers.h"
 
+void spi1_init(void);
+void spi1_test(void);
 
 #endif /* _SPI_H_ */
