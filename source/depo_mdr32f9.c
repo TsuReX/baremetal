@@ -1,4 +1,5 @@
-#include <drivers.h>
+#include "drivers.h"
+#include "console.h"
 
 #define ALL_PORTS_CLK (RST_CLK_PCLK_PORTA | RST_CLK_PCLK_PORTB | \
                        RST_CLK_PCLK_PORTC | RST_CLK_PCLK_PORTD | \
@@ -66,6 +67,8 @@ int main(void)
 	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
 
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
+
+/*****************************************************************************************/
 
 /*****************************************************************************************/
 

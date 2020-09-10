@@ -22,7 +22,7 @@
 #define SIZE_TO_TRANSMIT	32
 /** Количество миллисекунд,
  * за которое должна завершиться передача байта даных через USART1. */
-#define TRANSMIT_TIMEOUT	20
+#define TRANSMIT_TIMEOUT	20000
 
 /** Размер передаваемого буфера в байтах.*/
 #define USART1_TX_BUF_SIZE	0x1
@@ -32,7 +32,7 @@
 /** Приемный буфер.*/
 //static uint8_t usart1_tx_buf[USART1_TX_BUF_SIZE];
 /** Передаваемый буфер.*/
-static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
+//static uint8_t usart1_rx_buf[USART1_RX_BUF_SIZE];
 
 /** Кольцевой буфер приема данных через USART 1. */
 static struct ring_buf rx_rb;
@@ -44,29 +44,40 @@ static struct ring_buf tx_rb;
  */
 static void console_gpio_init(void)
 {
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+	PORT_InitTypeDef PortInit;
+	/* Enables the HSI clock on PORTB,PORTD */
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB,ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD,ENABLE);
 
-/*	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_7, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
+	/* Fill PortInit structure*/
+	PortInit.PORT_PULL_UP = PORT_PULL_UP_OFF;
+	PortInit.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
+	PortInit.PORT_PD_SHM = PORT_PD_SHM_OFF;
+	PortInit.PORT_PD = PORT_PD_DRIVER;
+	PortInit.PORT_GFEN = PORT_GFEN_OFF;
+	PortInit.PORT_FUNC = PORT_FUNC_ALTER;
+	PortInit.PORT_SPEED = PORT_SPEED_MAXFAST;
+	PortInit.PORT_MODE = PORT_MODE_DIGITAL;
 
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
+	/* Configure PORTB pins 5 (UART1_TX) as output */
+	PortInit.PORT_OE = PORT_OE_OUT;
+	PortInit.PORT_Pin = PORT_Pin_5;
+	PORT_Init(MDR_PORTB, &PortInit);
 
-	LL_GPIO_AF_EnableRemap_USART1();
-*/
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
+	/* Configure PORTB pins 6 (UART1_RX) as input */
+	PortInit.PORT_OE = PORT_OE_IN;
+	PortInit.PORT_Pin = PORT_Pin_6;
+	PORT_Init(MDR_PORTB, &PortInit);
 
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_FLOATING);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+	/* Configure PORTD pins 1 (UART2_TX) as output */
+	PortInit.PORT_OE = PORT_OE_OUT;
+	PortInit.PORT_Pin = PORT_Pin_1;
+	PORT_Init(MDR_PORTD, &PortInit);
 
+	/* Configure PORTD pins 0 (UART1_RX) as input */
+	PortInit.PORT_OE = PORT_OE_IN;
+	PortInit.PORT_Pin = PORT_Pin_0;
+	PORT_Init(MDR_PORTD, &PortInit);
 }
 
 /*
@@ -74,24 +85,34 @@ static void console_gpio_init(void)
  */
 static void console_usart1_init(void)
 {
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
+	UART_InitTypeDef UART_InitStructure;
+	/* Enables the CPU_CLK clock on UART1,UART2 */
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART1, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART2, ENABLE);
 
-	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
+	/* Set the HCLK division factor = 1 for UART1,UART2*/
+	UART_BRGInit(MDR_UART1, UART_HCLKdiv1);
+	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
 
-	LL_USART_SetBaudRate(USART1, 24000000, 115200);
+	/* Initialize UART_InitStructure */
+	UART_InitStructure.UART_BaudRate                = 1500000;
+	UART_InitStructure.UART_WordLength              = UART_WordLength8b;
+	UART_InitStructure.UART_StopBits                = UART_StopBits2;
+	UART_InitStructure.UART_Parity                  = UART_Parity_Even;
+	UART_InitStructure.UART_FIFOMode                = UART_FIFO_OFF;
+	UART_InitStructure.UART_HardwareFlowControl     = UART_HardwareFlowControl_RXE | UART_HardwareFlowControl_TXE;
 
-	/*LL_USART_EnableOverrunDetect(USART1);*/
-	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
-	LL_USART_EnableDMAReq_RX(USART1);
-	/*LL_USART_EnableDMAReq_TX(USART1);*/
-	/*LL_USART_EnableIT_RXNE(USART1);*/
+	/* Configure UART1 parameters*/
+	UART_Init (MDR_UART1,&UART_InitStructure);
 
-	NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_EnableIRQ(USART1_IRQn);
+	/* Enables UART1 peripheral */
+	UART_Cmd(MDR_UART1,ENABLE);
 
-	LL_USART_EnableDirectionTx(USART1);
+	/* Configure UART2 parameters*/
+	UART_Init (MDR_UART2,&UART_InitStructure);
 
-	LL_USART_Enable(USART1);
+	/* Enables UART2 peripheral */
+	UART_Cmd(MDR_UART2,ENABLE);
 }
 
 /*
@@ -99,19 +120,7 @@ static void console_usart1_init(void)
  */
 static void console_usart1_close(void)
 {
-	LL_USART_DisableDirectionRx(USART1);
-	LL_USART_DisableDirectionTx(USART1);
 
-	/*LL_USART_DisableOverrunDetect(USART1);*/
-	/*LL_USART_DisableDMADeactOnRxErr(USART1);*/
-	LL_USART_DisableDMAReq_RX(USART1);
-	LL_USART_DisableDMAReq_TX(USART1);
-	/*LL_USART_DisableIT_RXNE(USART1);*/
-
-	/*NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_DisableIRQ(USART1_IRQn);*/
-
-	LL_USART_Disable(USART1);
 }
 
 /*
@@ -123,34 +132,34 @@ static void console_usart1_close(void)
  */
 static void console_start_transmission()
 {
-	/* TODO: Испытать синхронную передачу данных через USART1
-	 * самим процессором без использования DMA!!!
-	 * При необходимости реализовать асинхронную передачу. */
-
-	uint8_t		data_buf[SIZE_TO_TRANSMIT];
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
-
-	/** Пердавать данные, пока кольцевой буфер не пуст. */
-	while (rb_get_data_size(&tx_rb) != 0) {
-
-		/** Передавать блоками по SIZE_TO_TRANSMIT либо оставшемуся количеству байтов. */
-		size_t data_size = rb_get_data(&tx_rb, data_buf, SIZE_TO_TRANSMIT);
-
-		size_t i;
-		/** Передавать синхронно по байту с таймаутом. */
-		for (i = 0; i < data_size; ++i) {
-			LL_USART_TransmitData8(USART1, data_buf[i]);
-
-			/** Ожидать окончания передачи ms_timeout миллисекунд.*/
-			do {
-				LL_mDelay(1);
-				--ms_timeout;
-				if (ms_timeout == 0)
-					/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
-					break;
-			} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
-		}
-	}
+//	/* TODO: Испытать синхронную передачу данных через USART1
+//	 * самим процессором без использования DMA!!!
+//	 * При необходимости реализовать асинхронную передачу. */
+//
+//	uint8_t		data_buf[SIZE_TO_TRANSMIT];
+//	uint32_t	ms_timeout = TRANSMIT_TIMEOUT;
+//
+//	/** Пердавать данные, пока кольцевой буфер не пуст. */
+//	while (rb_get_data_size(&tx_rb) != 0) {
+//
+//		/** Передавать блоками по SIZE_TO_TRANSMIT либо оставшемуся количеству байтов. */
+//		size_t data_size = rb_get_data(&tx_rb, data_buf, SIZE_TO_TRANSMIT);
+//
+//		size_t i;
+//		/** Передавать синхронно по байту с таймаутом. */
+//		for (i = 0; i < data_size; ++i) {
+//			LL_USART_TransmitData8(USART1, data_buf[i]);
+//
+//			/** Ожидать окончания передачи ms_timeout миллисекунд.*/
+//			do {
+//				LL_mDelay(1);
+//				--ms_timeout;
+//				if (ms_timeout == 0)
+//					/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
+//					break;
+//			} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+//		}
+//	}
 }
 
 /*
@@ -188,11 +197,11 @@ static void console_start_transmission()
  */
 static void console_start_reception()
 {
-	/* Включить приемный канал 5 DMA1. */
-	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
-
-	/* Включить приемник USART1. */
-	LL_USART_EnableDirectionRx(USART1);
+//	/* Включить приемный канал 5 DMA1. */
+//	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
+//
+//	/* Включить приемник USART1. */
+//	LL_USART_EnableDirectionRx(USART1);
 }
 
 /*
@@ -200,16 +209,16 @@ static void console_start_reception()
  */
 static void console_stop_reception()
 {
-	/* TODO: Проанализировать работу функции и
-	 * при необходимости реализовать отключение
-	 * передачи с ожиднием флагов завершеня
-	 * для избежания взникновения ошибок. */
-
-	/* Включить приемник USART1. */
-	LL_USART_DisableDirectionRx(USART1);
-
-	/* Включить приемный канал 5 DMA1. */
-	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
+//	/* TODO: Проанализировать работу функции и
+//	 * при необходимости реализовать отключение
+//	 * передачи с ожиднием флагов завершеня
+//	 * для избежания взникновения ошибок. */
+//
+//	/* Включить приемник USART1. */
+//	LL_USART_DisableDirectionRx(USART1);
+//
+//	/* Включить приемный канал 5 DMA1. */
+//	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
 }
 
 /*
@@ -272,39 +281,39 @@ static void console_stop_reception()
  *
  * @param[in]	rx_buf_size		ожидаемый объем принимаемых данных.
  */
-static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
-{
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
-
-	/* Настройка канала приема. */
-	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_5,
-							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
-							LL_DMA_PRIORITY_HIGH              |
-							LL_DMA_MODE_CIRCULAR              |
-							LL_DMA_PERIPH_NOINCREMENT         |
-							LL_DMA_MEMORY_NOINCREMENT           |
-							LL_DMA_PDATAALIGN_BYTE            |
-							LL_DMA_MDATAALIGN_BYTE);
-
-	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
-							LL_USART_DMA_GetRegAddr(USART1),
-							(uint32_t)rx_buf,
-							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
-
-	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, rx_buf_size);
-
-	/** Генерация прерывания по приему половины буфера. */
-	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);*/
-
-	/** Генерация прерывания по приему всего буфера. */
-	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
-
-	/* Генерация прерывания по ошибке во время приема. */
-	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);*/
-
-	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
-	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
-}
+//static void console_dma1_ch5_init(void *rx_buf, size_t rx_buf_size)
+//{
+//	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+//
+//	/* Настройка канала приема. */
+//	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_5,
+//							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+//							LL_DMA_PRIORITY_HIGH              |
+//							LL_DMA_MODE_CIRCULAR              |
+//							LL_DMA_PERIPH_NOINCREMENT         |
+//							LL_DMA_MEMORY_NOINCREMENT           |
+//							LL_DMA_PDATAALIGN_BYTE            |
+//							LL_DMA_MDATAALIGN_BYTE);
+//
+//	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
+//							LL_USART_DMA_GetRegAddr(USART1),
+//							(uint32_t)rx_buf,
+//							LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_5));
+//
+//	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, rx_buf_size);
+//
+//	/** Генерация прерывания по приему половины буфера. */
+//	/*LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_5);*/
+//
+//	/** Генерация прерывания по приему всего буфера. */
+//	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
+//
+//	/* Генерация прерывания по ошибке во время приема. */
+//	/*LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_5);*/
+//
+//	NVIC_SetPriority(DMA1_Channel5_IRQn, 0);
+//	NVIC_EnableIRQ(DMA1_Channel5_IRQn);
+//}
 
 /*
  *	Настройка USART 1.
@@ -319,7 +328,7 @@ void console_init(void)
 	console_usart1_init();
 
 	/* Настройка и включение приемного канала 5 DMA1. */
-	console_dma1_ch5_init(usart1_rx_buf, 1);
+//	console_dma1_ch5_init(usart1_rx_buf, 1);
 
 	/* Настройка кольцевых буферов */
 	rb_init_ring_buffer(&rx_rb);
@@ -405,16 +414,15 @@ void d_print(const char *format, ...)
 	 */
 	size_t i;
 	for (i = 0; i < sz; ++i) {
-		LL_USART_TransmitData8(USART1, str[i]);
-
+		UART_SendData (MDR_UART1, str[i]);
 		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
 		do {
-			LL_mDelay(1);
+//			LL_mDelay(1);
 			--ms_timeout;
 			if (ms_timeout == 0)
 				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
 				break;
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+		} while (UART_GetFlagStatus (MDR_UART1, UART_FLAG_TXFE) != 1);
 	}
 }
 
@@ -437,7 +445,7 @@ void DMA1_Channel4_IRQHandler(void)
 
 	/* На данный момент прерывания по передаче не используются. */
 
-	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF4 | DMA_IFCR_CTCIF4 | DMA_IFCR_CHTIF4 | DMA_IFCR_CTEIF4));
+//	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF4 | DMA_IFCR_CTCIF4 | DMA_IFCR_CHTIF4 | DMA_IFCR_CTEIF4));
 }
 
 /*
@@ -459,9 +467,9 @@ void dma1_channel5_irq_handler(void)
 
 	/** Проверять тип прерывания нет необходимости, так как разрешены только прерывания по приему всего буфера. */
 
-	rb_store_data(&rx_rb, usart1_rx_buf, 1);
+//	rb_store_data(&rx_rb, usart1_rx_buf, 1);
 
-	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
+//	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }
 
 /*
@@ -477,7 +485,7 @@ void USART1_IRQHandler(void)
 
 	/* На данный момент прерывание не используются. */
 
-	WRITE_REG(USART1->SR, 0);
+//	WRITE_REG(USART1->SR, 0);
 }
 
 void scheduler_process(void)

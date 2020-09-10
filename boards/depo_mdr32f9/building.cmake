@@ -30,6 +30,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_MDR32F9Qx.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
 						"${BRD_PATH}/source/system_MDR32F9Qx.c"
+						"${BRD_PATH}/source/console.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
