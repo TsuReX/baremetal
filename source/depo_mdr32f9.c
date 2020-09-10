@@ -154,6 +154,85 @@ int main(void)
 		DataByte = UART_ReceiveData (MDR_UART1);
 
 	}
+/*****************************************************************************************/
+#define BufferSize         32
+	SSP_InitTypeDef sSSP;
+	PORT_InitTypeDef PORT_InitStructure;
+	uint16_t spi_buf[BufferSize];
+
+	uint8_t TxIdx = 0, RxIdx = 0;
+
+	PORT_DeInit(MDR_PORTF);
+
+	/* Configure SSP1 pins: FSS, CLK, RXD, TXD */
+
+	/* Configure PORTF pins 0, 1, 2, 3 */
+	PORT_InitStructure.PORT_Pin   = (PORT_Pin_3);
+	PORT_InitStructure.PORT_OE    = PORT_OE_IN;
+	PORT_InitStructure.PORT_FUNC  = PORT_FUNC_ALTER;
+	PORT_InitStructure.PORT_MODE  = PORT_MODE_DIGITAL;
+	PORT_InitStructure.PORT_SPEED = PORT_SPEED_FAST;
+
+	PORT_Init(MDR_PORTF, &PORT_InitStructure);
+
+	PORT_InitStructure.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1);
+	PORT_InitStructure.PORT_OE    = PORT_OE_OUT;
+
+	PORT_Init(MDR_PORTF, &PORT_InitStructure);
+
+	PORT_InitStructure.PORT_Pin   = (PORT_Pin_2);
+	PORT_InitStructure.PORT_OE    = PORT_OE_OUT;
+	PORT_InitStructure.PORT_FUNC  = PORT_FUNC_PORT;
+	PORT_InitStructure.PORT_MODE  = PORT_MODE_DIGITAL;
+	PORT_InitStructure.PORT_SPEED = PORT_SPEED_SLOW;
+
+	PORT_Init(MDR_PORTF, &PORT_InitStructure);
+
+//	/* Init RAM */
+//	Init_RAM (DstBuf1, BufferSize);
+//	Init_RAM (SrcBuf1, BufferSize);
+
+	/* Reset all SSP settings */
+	SSP_DeInit(MDR_SSP1);
+
+	SSP_BRGInit(MDR_SSP1,SSP_HCLKdiv16);
+
+	/* SSP1 MASTER configuration ------------------------------------------------*/
+	SSP_StructInit (&sSSP);
+
+	sSSP.SSP_SCR  = 0x10;
+	sSSP.SSP_CPSDVSR = 2;
+	sSSP.SSP_Mode = SSP_ModeMaster;
+	sSSP.SSP_WordLength = SSP_WordLength16b;
+	sSSP.SSP_SPH = SSP_SPH_2Edge;
+	sSSP.SSP_SPO = SSP_SPO_High;
+	sSSP.SSP_FRF = SSP_FRF_SPI_Motorola;
+//	sSSP.SSP_HardwareFlowControl = SSP_HardwareFlowControl_SSE;
+	sSSP.SSP_HardwareFlowControl = SSP_HardwareFlowControl_None;
+	SSP_Init (MDR_SSP1,&sSSP);
+
+	/* Enable SSP1 */
+	SSP_Cmd(MDR_SSP1, ENABLE);
+
+	/* Transfer procedure */
+	while (TxIdx < BufferSize) {
+		PORT_ResetBits(MDR_PORTF, PORT_Pin_2);
+
+		/* Wait for SPI1 Tx buffer empty */
+		while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_TFE) == RESET) {
+		}
+		/* Send SPI1 data */
+		SSP_SendData(MDR_SSP1, spi_buf[TxIdx++]);
+
+		/* Wait for SPI1 data reception */
+		while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET) {
+		}
+
+		/* Read SPI1 received data */
+		spi_buf[RxIdx++] = SSP_ReceiveData(MDR_SSP1);
+
+		PORT_SetBits(MDR_PORTF, PORT_Pin_2);
+	}
 
 /*****************************************************************************************/
 	/*

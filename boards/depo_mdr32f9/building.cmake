@@ -44,6 +44,7 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_port.c"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_uart.c"
+						"${DRV_SOURCES_PATH}/MDR32F9Qx_ssp.c"
 				)
 
 #######################################################################
