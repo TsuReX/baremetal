@@ -43,6 +43,7 @@ set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx
 set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_port.c"
+						"${DRV_SOURCES_PATH}/MDR32F9Qx_uart.c"
 				)
 
 #######################################################################
