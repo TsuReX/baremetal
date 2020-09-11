@@ -95,10 +95,10 @@ static void console_usart1_init(void)
 	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
 
 	/* Initialize UART_InitStructure */
-	UART_InitStructure.UART_BaudRate                = 1500000;
+	UART_InitStructure.UART_BaudRate                = 115200;
 	UART_InitStructure.UART_WordLength              = UART_WordLength8b;
-	UART_InitStructure.UART_StopBits                = UART_StopBits2;
-	UART_InitStructure.UART_Parity                  = UART_Parity_Even;
+	UART_InitStructure.UART_StopBits                = UART_StopBits1;
+	UART_InitStructure.UART_Parity                  = UART_Parity_No;
 	UART_InitStructure.UART_FIFOMode                = UART_FIFO_OFF;
 	UART_InitStructure.UART_HardwareFlowControl     = UART_HardwareFlowControl_RXE | UART_HardwareFlowControl_TXE;
 
