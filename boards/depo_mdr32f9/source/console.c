@@ -44,40 +44,7 @@ static struct ring_buf tx_rb;
  */
 static void console_gpio_init(void)
 {
-	PORT_InitTypeDef PortInit;
-	/* Enables the HSI clock on PORTB,PORTD */
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB,ENABLE);
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD,ENABLE);
 
-	/* Fill PortInit structure*/
-	PortInit.PORT_PULL_UP = PORT_PULL_UP_OFF;
-	PortInit.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
-	PortInit.PORT_PD_SHM = PORT_PD_SHM_OFF;
-	PortInit.PORT_PD = PORT_PD_DRIVER;
-	PortInit.PORT_GFEN = PORT_GFEN_OFF;
-	PortInit.PORT_FUNC = PORT_FUNC_ALTER;
-	PortInit.PORT_SPEED = PORT_SPEED_MAXFAST;
-	PortInit.PORT_MODE = PORT_MODE_DIGITAL;
-
-	/* Configure PORTB pins 5 (UART1_TX) as output */
-	PortInit.PORT_OE = PORT_OE_OUT;
-	PortInit.PORT_Pin = PORT_Pin_5;
-	PORT_Init(MDR_PORTB, &PortInit);
-
-	/* Configure PORTB pins 6 (UART1_RX) as input */
-	PortInit.PORT_OE = PORT_OE_IN;
-	PortInit.PORT_Pin = PORT_Pin_6;
-	PORT_Init(MDR_PORTB, &PortInit);
-
-	/* Configure PORTD pins 1 (UART2_TX) as output */
-	PortInit.PORT_OE = PORT_OE_OUT;
-	PortInit.PORT_Pin = PORT_Pin_1;
-	PORT_Init(MDR_PORTD, &PortInit);
-
-	/* Configure PORTD pins 0 (UART1_RX) as input */
-	PortInit.PORT_OE = PORT_OE_IN;
-	PortInit.PORT_Pin = PORT_Pin_0;
-	PORT_Init(MDR_PORTD, &PortInit);
 }
 
 /*
