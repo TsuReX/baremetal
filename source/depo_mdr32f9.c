@@ -10,7 +10,7 @@
 /* Max delay can be used in LL_mDelay */
 #define LL_MAX_DELAY                  0xFFFFFFFFU
 
-#define HCLKFrequency 16000000
+#define HCLKFrequency 64000000
 
 __STATIC_INLINE void LL_InitTick(uint32_t HCLKFreq, uint32_t Ticks)
 {
@@ -54,7 +54,7 @@ void spi_init()
 	ssp_descriptor.SSP_SCR  = 0x10;
 	ssp_descriptor.SSP_CPSDVSR = 2;
 	ssp_descriptor.SSP_Mode = SSP_ModeMaster;
-	ssp_descriptor.SSP_WordLength = SSP_WordLength16b;
+	ssp_descriptor.SSP_WordLength = SSP_WordLength8b;
 	ssp_descriptor.SSP_SPH = SSP_SPH_2Edge;
 	ssp_descriptor.SSP_SPO = SSP_SPO_High;
 	ssp_descriptor.SSP_FRF = SSP_FRF_SPI_Motorola;
@@ -96,27 +96,38 @@ static uint32_t spi_receive_byte(uint8_t *data)
 
 void spi_test(void)
 {
-#define USB_REV_BYTES 1
-#define SPI_CMD_RDREV 1
+#define USB_REV_BYTES		0x01
+#define SPI_USB_REVREG		0x12
+#define SPI_USB_REGNUMOFF	0x03
+#define SPI_USB_WROP		(0x01 << 1)
+#define SPI_USB_RDOP		(0x00 << 1)
+#define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
 	uint8_t	buffer[USB_REV_BYTES + 1] = {0xFF, 0xFF};
 	size_t	byte_idx;
 
 	buffer[0] = SPI_CMD_RDREV;
 
-	PORT_ResetBits(MDR_PORTF, PORT_Pin_2);
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
 
-		if (spi_transmit_byte(buffer[byte_idx]) == 1)
-			if (spi_receive_byte(&buffer[byte_idx]) == 0)
-				break;
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			buffer[0] = 0x5A;
+			break;
+		}
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			buffer[0] = 0xA5;
+			break;
+		}
 
 	}
-	PORT_SetBits(MDR_PORTF, PORT_Pin_2);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-	d_print("MC_SPI_FLASH_ID (Hex) ");
-	for (byte_idx = 1; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx)
+	d_print("MC_USB_REVISION (Hex) ");
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx)
 		d_print("%02X ", buffer[byte_idx]);
+	d_print("\r\n");
 }
 
 void gpio_init(void)
@@ -146,8 +157,18 @@ void gpio_init(void)
 	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
 	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
 
+	/*PA7 PPS_ON*/
 	PORT_Init(MDR_PORTA, &port_descriptor);
+	/*PD7 DEBUG_LED*/
 	PORT_Init(MDR_PORTD, &port_descriptor);
+
+	port_descriptor.PORT_Pin   = (PORT_Pin_0);
+	/*PE0 KM.KB_CS*/
+	PORT_Init(MDR_PORTE, &port_descriptor);
+
+	port_descriptor.PORT_Pin   = (PORT_Pin_8);
+	/*PB8 KM.MS_CS*/
+	PORT_Init(MDR_PORTB, &port_descriptor);
 
 	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
 
@@ -168,13 +189,13 @@ void gpio_init(void)
 
 	PORT_Init(MDR_PORTF, &port_descriptor);
 
-	port_descriptor.PORT_Pin   = (PORT_Pin_2);
-	port_descriptor.PORT_OE    = PORT_OE_OUT;
-	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
-	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
-	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
-
-	PORT_Init(MDR_PORTF, &port_descriptor);
+//	port_descriptor.PORT_Pin   = (PORT_Pin_2);
+//	port_descriptor.PORT_OE    = PORT_OE_OUT;
+//	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
+//	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
+//	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
+//
+//	PORT_Init(MDR_PORTF, &port_descriptor);
 
 	/****************************************************/
 	/*USART 1,2*/
@@ -218,13 +239,17 @@ void gpio_init(void)
 
 int main(void)
 {
-	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul16);
+	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
 
 	LL_InitTick(HCLKFrequency, 1000U);
 /*****************************************************************************************/
 	gpio_init();
 
 	console_init();
+
+	spi_init();
+
+	spi_test();
 /*****************************************************************************************/
 
 /*****************************************************************************************/
