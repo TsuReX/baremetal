@@ -10,7 +10,7 @@
 /* Max delay can be used in LL_mDelay */
 #define LL_MAX_DELAY                  0xFFFFFFFFU
 
-#define HCLKFrequency 64000000
+#define HCLKFrequency 8000000
 
 __STATIC_INLINE void LL_InitTick(uint32_t HCLKFreq, uint32_t Ticks)
 {
@@ -44,28 +44,32 @@ void LL_mDelay(uint32_t Delay)
 
 void spi_init()
 {
+	RST_CLK_PCLKcmd((RST_CLK_PCLK_RST_CLK | RST_CLK_PCLK_SSP1), ENABLE);
+
 	SSP_DeInit(MDR_SSP1);
 
-	SSP_BRGInit(MDR_SSP1, SSP_HCLKdiv16);
+	uint32_t temp= MDR_RST_CLK->SSP_CLOCK;
 
-	SSP_InitTypeDef ssp_descriptor;
-	SSP_StructInit (&ssp_descriptor);
+	temp |= RST_CLK_SSP_CLOCK_SSP1_CLK_EN;
+	temp &= ~RST_CLK_SSP_CLOCK_SSP1_BRG_Msk;
+	temp |= SSP_HCLKdiv1;
 
-	ssp_descriptor.SSP_SCR  = 0x10;
-	ssp_descriptor.SSP_CPSDVSR = 2;
-	ssp_descriptor.SSP_Mode = SSP_ModeMaster;
-	ssp_descriptor.SSP_WordLength = SSP_WordLength8b;
-	ssp_descriptor.SSP_SPH = SSP_SPH_2Edge;
-	ssp_descriptor.SSP_SPO = SSP_SPO_High;
-	ssp_descriptor.SSP_FRF = SSP_FRF_SPI_Motorola;
-//	sSSP.SSP_HardwareFlowControl = SSP_HardwareFlowControl_SSE;
-	ssp_descriptor.SSP_HardwareFlowControl = SSP_HardwareFlowControl_None;
+	MDR_RST_CLK->SSP_CLOCK = temp;
 
-	SSP_Init (MDR_SSP1,&ssp_descriptor);
+	/* SSPx CPSR Configuration */
+	MDR_SSP1->CPSR = 0x01;
 
-	/* Enable SSP1 */
-	SSP_Cmd(MDR_SSP1, ENABLE);
+	/* SSPx CR0 Configuration */
+	MDR_SSP1->CR0 = (0x01 << SSP_CR0_SCR_Pos)
+					| SSP_SPH_2Edge
+					| SSP_SPO_High
+					| SSP_FRF_SPI_Motorola
+					| SSP_WordLength8b;
 
+	MDR_SSP1->CR1 = SSP_HardwareFlowControl_None | SSP_ModeMaster;
+
+#define CR1_EN_Set	((uint16_t)0x0002)  /*!< SSP Enable Mask */
+	MDR_SSP1->CR1 |= CR1_EN_Set;
 }
 
 static uint32_t spi_transmit_byte(uint8_t data)
@@ -103,12 +107,14 @@ void spi_test(void)
 #define SPI_USB_RDOP		(0x00 << 1)
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
-	uint8_t	buffer[USB_REV_BYTES + 1] = {0xFF, 0xFF};
+	uint8_t	buffer[USB_REV_BYTES + 1] = {0x12, 0x34};
 	size_t	byte_idx;
 
 	buffer[0] = SPI_CMD_RDREV;
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
+
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
 
 		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
@@ -122,7 +128,8 @@ void spi_test(void)
 		}
 
 	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 
 	d_print("MC_USB_REVISION (Hex) ");
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx)
@@ -145,11 +152,8 @@ void gpio_init(void)
 	PORT_Init(MDR_PORTE, &port_descriptor);
 	PORT_Init(MDR_PORTF, &port_descriptor);
 
-	RST_CLK_PCLKcmd(ALL_PORTS_CLK, DISABLE);
-
 	/****************************************************/
 	/*Control*/
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA | RST_CLK_PCLK_PORTD, ENABLE);
 
 	port_descriptor.PORT_Pin   = (PORT_Pin_7);
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
@@ -171,10 +175,11 @@ void gpio_init(void)
 	PORT_Init(MDR_PORTB, &port_descriptor);
 
 	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 
 	/****************************************************/
 	/*SPI*/
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
 
 	port_descriptor.PORT_Pin   = (PORT_Pin_3);
 	port_descriptor.PORT_OE    = PORT_OE_IN;
@@ -199,7 +204,6 @@ void gpio_init(void)
 
 	/****************************************************/
 	/*USART 1,2*/
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB,ENABLE);
 
 	port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
 	port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
@@ -239,8 +243,34 @@ void gpio_init(void)
 
 int main(void)
 {
-	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
+//	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
 
+	  /* Select CPUPLL source */
+	uint32_t temp = MDR_RST_CLK->CPU_CLOCK;
+	/* Clear CPU_C1_SEL bits */
+	temp &= ~RST_CLK_CPU_CLOCK_CPU_C1_SEL_Msk;
+	/* Set the CPU_C1_SEL bits */
+	temp |= RST_CLK_CPU_PLLsrcHSIdiv1;
+	/* Store the new value */
+	MDR_RST_CLK->CPU_CLOCK = temp;
+
+	/* Set CPUPLL multiplier */
+	temp = MDR_RST_CLK->PLL_CONTROL;
+	/* Clear PLLMUL[3:0] bits */
+	temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Msk;
+	/* Set the PLLMUL[3:0] bits */
+	temp |= (RST_CLK_CPU_PLLmul8 << RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos);
+	/* Store the new value */
+	MDR_RST_CLK->PLL_CONTROL = temp;
+
+	if( (MDR_RST_CLK->PLL_CONTROL & RST_CLK_PLL_CONTROL_PLL_CPU_ON) == RST_CLK_PLL_CONTROL_PLL_CPU_ON ) {
+		temp = MDR_RST_CLK->PLL_CONTROL;
+		temp |= RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
+		MDR_RST_CLK->PLL_CONTROL = temp;
+		temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
+		MDR_RST_CLK->PLL_CONTROL = temp;
+	}
+/*****************************************************************************************/
 	LL_InitTick(HCLKFrequency, 1000U);
 /*****************************************************************************************/
 	gpio_init();
