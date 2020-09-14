@@ -57,12 +57,12 @@ void spi_init()
 	MDR_RST_CLK->SSP_CLOCK = temp;
 
 	/* SSPx CPSR Configuration */
-	MDR_SSP1->CPSR = 0x01;
+	MDR_SSP1->CPSR = 0x08;
 
 	/* SSPx CR0 Configuration */
-	MDR_SSP1->CR0 = (0x01 << SSP_CR0_SCR_Pos)
-					| SSP_SPH_2Edge
-					| SSP_SPO_High
+	MDR_SSP1->CR0 = (0x00 << SSP_CR0_SCR_Pos)
+					| SSP_SPH_1Edge
+					| SSP_SPO_Low
 					| SSP_FRF_SPI_Motorola
 					| SSP_WordLength8b;
 
@@ -107,10 +107,11 @@ void spi_test(void)
 #define SPI_USB_RDOP		(0x00 << 1)
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
-	uint8_t	buffer[USB_REV_BYTES + 1] = {0x12, 0x34};
+	uint8_t	buffer[USB_REV_BYTES + 1] = {SPI_CMD_RDREV, 0xA5};
 	size_t	byte_idx;
 
 	buffer[0] = SPI_CMD_RDREV;
+	d_print("SPI_CMD_RDREV: 0x%01X\r\n", buffer[0]);
 
 //	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
@@ -118,12 +119,12 @@ void spi_test(void)
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
 
 		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
-			buffer[0] = 0x5A;
+			d_print("spi transmit error\r\n");
 			break;
 		}
-
+		buffer[byte_idx] = 0xFF;
 		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
-			buffer[0] = 0xA5;
+			d_print("spi receive error\r\n");
 			break;
 		}
 
