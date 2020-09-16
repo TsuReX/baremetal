@@ -1,14 +1,33 @@
 #include "drivers.h"
 #include "console.h"
 
-#define USB_REV_BYTES		0x01
-#define SPI_USB_REVREG		0x12
-#define SPI_USB_PINCTLREG	0x11
-#define SPI_USB_REGNUMOFF	0x03
-#define SPI_USB_WROP		(0x01 << 1)
-#define SPI_USB_RDOP		(0x00 << 1)
+#define SPI_USB_REGNUMOFF		0x03
+#define SPI_USB_WROP			0x02
+#define SPI_USB_RDOP			0x00
+
+#define SPI_USB_USBIRQREG		0x0D
+#define SPI_USB_USBCTLREG		0x0F
+#define SPI_USB_PINCTLREG		0x11
+#define SPI_USB_REVREG			0x12
+#define SPI_USB_IOPINS1REG		0x14
+#define SPI_USB_IOPINS2REG		0x15
+
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+
+#define SPI_CMD_RDPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 #define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+#define SPI_CMD_RDUSBIRQ	((SPI_USB_USBIRQREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+
+#define SPI_CMD_WRUSBCTL	((SPI_USB_USBCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+#define SPI_CMD_RDUSBCTL	((SPI_USB_USBCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+
+#define SPI_CMD_WRIOPINS1	((SPI_USB_IOPINS1REG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+#define SPI_CMD_RDIOPINS1	((SPI_USB_IOPINS1REG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+
+#define SPI_CMD_WRIOPINS2	((SPI_USB_IOPINS2REG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+#define SPI_CMD_RDIOPINS2	((SPI_USB_IOPINS2REG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+
 
 #define BufferSize         32
 
@@ -18,7 +37,7 @@
 
 /* Max delay can be used in LL_mDelay */
 #define LL_MAX_DELAY                  0xFFFFFFFFU
-
+#define CR1_EN_Set	((uint16_t)0x0002)  /*!< SSP Enable Mask */
 #define HCLKFrequency 8000000
 
 __STATIC_INLINE void LL_InitTick(uint32_t HCLKFreq, uint32_t Ticks)
@@ -65,10 +84,8 @@ void spi_init()
 
 	MDR_RST_CLK->SSP_CLOCK = temp;
 
-	/* SSPx CPSR Configuration */
 	MDR_SSP1->CPSR = 0x08;
 
-	/* SSPx CR0 Configuration */
 	MDR_SSP1->CR0 = (0x00 << SSP_CR0_SCR_Pos)
 					| SSP_SPH_1Edge
 					| SSP_SPO_Low
@@ -77,7 +94,6 @@ void spi_init()
 
 	MDR_SSP1->CR1 = SSP_HardwareFlowControl_None | SSP_ModeMaster;
 
-#define CR1_EN_Set	((uint16_t)0x0002)  /*!< SSP Enable Mask */
 	MDR_SSP1->CR1 |= CR1_EN_Set;
 }
 
@@ -89,6 +105,7 @@ static uint32_t spi_transmit_byte(uint8_t data)
 
 	if (i == 0)
 		return 0;
+
 	SSP_SendData(MDR_SSP1, data);
 
 	return 1;
@@ -102,6 +119,7 @@ static uint32_t spi_receive_byte(uint8_t *data)
 
 	if (i == 0)
 		return 0;
+
 	*data = SSP_ReceiveData(MDR_SSP1);
 
 	return 1;
@@ -291,6 +309,232 @@ void clock_init(void)
 //	}
 
 	LL_InitTick(HCLKFrequency, 1000U);
+}
+
+uint8_t usbirq_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDUSBIRQ, 0x00};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+uint8_t usbctl_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDUSBCTL, 0x00};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void usbctl_write(uint8_t usbctl)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRUSBCTL, usbctl};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t pinctl_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDPINCTL, 0x00};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void pinctl_write(uint8_t pinctl)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRUSBCTL, pinctl};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t iopins1_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDIOPINS1, 0x00};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void iopins1_write(uint8_t iopins1)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRIOPINS1, iopins1};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t iopins2_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDIOPINS2, 0x00};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void iopins2_write(uint8_t iopins1)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRIOPINS2, iopins1};
+	size_t	byte_idx;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("%s(): spi transmit error\r\n", __func__);
+			break;
+		}
+
+		buffer[byte_idx] = 0xFF;
+
+		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
+			d_print("%s(): spi receive error\r\n", __func__);
+			break;
+		}
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 }
 
 int main(void)
