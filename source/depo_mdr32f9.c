@@ -1,6 +1,15 @@
 #include "drivers.h"
 #include "console.h"
 
+#define USB_REV_BYTES		0x01
+#define SPI_USB_REVREG		0x12
+#define SPI_USB_PINCTLREG	0x11
+#define SPI_USB_REGNUMOFF	0x03
+#define SPI_USB_WROP		(0x01 << 1)
+#define SPI_USB_RDOP		(0x00 << 1)
+#define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
 #define BufferSize         32
 
 #define ALL_PORTS_CLK (RST_CLK_PCLK_PORTA | RST_CLK_PCLK_PORTB | \
@@ -98,93 +107,73 @@ static uint32_t spi_receive_byte(uint8_t *data)
 	return 1;
 }
 
-void spi_fullduplex(void)
+void kb_usb_fullduplex_spi_set(void)
 {
-#define USB_REV_BYTES		0x01
-#define SPI_USB_REVREG		0x12
-#define SPI_USB_PINCTLREG	0x11
-#define SPI_USB_REGNUMOFF	0x03
-#define SPI_USB_WROP		(0x01 << 1)
-#define SPI_USB_RDOP		(0x00 << 1)
-#define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
-#define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
-
 	uint8_t	buffer[2] = {SPI_CMD_WRPINCTL, 0x1F};
 	size_t	byte_idx;
 
 
-//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
 
 		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
-			d_print("spi transmit error\r\n");
+			d_print("%s(): spi transmit error\r\n", __func__);
 			break;
 		}
 	}
-//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 }
 
-void spi_test(void)
+void kb_usb_revision_read(void)
 {
-#define USB_REV_BYTES		0x01
-#define SPI_USB_REVREG		0x12
-#define SPI_USB_PINCTLREG	0x11
-#define SPI_USB_REGNUMOFF	0x03
-#define SPI_USB_WROP		(0x01 << 1)
-#define SPI_USB_RDOP		(0x00 << 1)
-#define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
-#define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
-
 	uint8_t	buffer[2] = {SPI_CMD_RDREV, 0xFF};
 	size_t	byte_idx;
 
-//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 
 	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
 
 		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
-			d_print("spi transmit error\r\n");
+			d_print("%s(): spi transmit error\r\n", __func__);
 			break;
 		}
 		buffer[byte_idx] = 0xFF;
 		if (spi_receive_byte(&buffer[byte_idx]) == 0) {
-			d_print("spi receive error\r\n");
+			d_print("%s(): spi receive error\r\n", __func__);
 			break;
 		}
 
 	}
-//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-	d_print("MC_USB_REVISION (Hex) ");
-	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx)
-		d_print("%02X ", buffer[byte_idx]);
-	d_print("\r\n");
+	d_print("REVISION 0x%02X \r\n", buffer[1]);
 }
 
 void gpio_init(void)
 {
-	/*General initialization*/
-	RST_CLK_PCLKcmd(ALL_PORTS_CLK, ENABLE);
-
+//	/*General initialization*/
+//	RST_CLK_PCLKcmd(ALL_PORTS_CLK, ENABLE);
+//
 	PORT_InitTypeDef port_descriptor;
 	PORT_StructInit(&port_descriptor);
+//
+//	PORT_Init(MDR_PORTA, &port_descriptor);
+//	PORT_Init(MDR_PORTB, &port_descriptor);
+//	PORT_Init(MDR_PORTC, &port_descriptor);
+//	PORT_Init(MDR_PORTD, &port_descriptor);
+//	PORT_Init(MDR_PORTE, &port_descriptor);
+//	PORT_Init(MDR_PORTF, &port_descriptor);
+//
+//	RST_CLK_PCLKcmd(ALL_PORTS_CLK, DISABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTE, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
 
-	PORT_Init(MDR_PORTA, &port_descriptor);
-	PORT_Init(MDR_PORTB, &port_descriptor);
-	PORT_Init(MDR_PORTC, &port_descriptor);
-	PORT_Init(MDR_PORTD, &port_descriptor);
-	PORT_Init(MDR_PORTE, &port_descriptor);
-	PORT_Init(MDR_PORTF, &port_descriptor);
-
-	RST_CLK_PCLKcmd(ALL_PORTS_CLK, DISABLE);
 	/****************************************************/
 	/*Control*/
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA | RST_CLK_PCLK_PORTB | RST_CLK_PCLK_PORTD | RST_CLK_PCLK_PORTE, ENABLE);
 	port_descriptor.PORT_Pin   = (PORT_Pin_7);
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
@@ -200,17 +189,17 @@ void gpio_init(void)
 	/*PE0 KM.KB_CS*/
 	PORT_Init(MDR_PORTE, &port_descriptor);
 
-	port_descriptor.PORT_Pin   = (PORT_Pin_8);
-	/*PB8 KM.MS_CS*/
-	PORT_Init(MDR_PORTB, &port_descriptor);
+//	port_descriptor.PORT_Pin   = (PORT_Pin_8);
+//	/*PB8 KM.MS_CS*/
+//	PORT_Init(MDR_PORTB, &port_descriptor);
 
 	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
+//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 
 	/****************************************************/
 	/*SPI*/
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
+
 	port_descriptor.PORT_Pin   = (PORT_Pin_3);
 	port_descriptor.PORT_OE    = PORT_OE_IN;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_ALTER;
@@ -223,7 +212,7 @@ void gpio_init(void)
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
 
 	PORT_Init(MDR_PORTF, &port_descriptor);
-
+//
 //	port_descriptor.PORT_Pin   = (PORT_Pin_2);
 //	port_descriptor.PORT_OE    = PORT_OE_OUT;
 //	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
@@ -231,8 +220,8 @@ void gpio_init(void)
 //	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
 //
 //	PORT_Init(MDR_PORTF, &port_descriptor);
-
-	/****************************************************/
+//
+//	/****************************************************/
 	/*USART 1,2*/
 
 	port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
@@ -253,16 +242,16 @@ void gpio_init(void)
 	port_descriptor.PORT_OE = PORT_OE_IN;
 	port_descriptor.PORT_Pin = PORT_Pin_6;
 	PORT_Init(MDR_PORTB, &port_descriptor);
-
-	/* Configure PORTD pins 1 (UART2_TX) as output */
-	port_descriptor.PORT_OE = PORT_OE_OUT;
-	port_descriptor.PORT_Pin = PORT_Pin_1;
-	PORT_Init(MDR_PORTD, &port_descriptor);
-
-	/* Configure PORTD pins 0 (UART1_RX) as input */
-	port_descriptor.PORT_OE = PORT_OE_IN;
-	port_descriptor.PORT_Pin = PORT_Pin_0;
-	PORT_Init(MDR_PORTD, &port_descriptor);
+//
+//	/* Configure PORTD pins 1 (UART2_TX) as output */
+//	port_descriptor.PORT_OE = PORT_OE_OUT;
+//	port_descriptor.PORT_Pin = PORT_Pin_1;
+//	PORT_Init(MDR_PORTD, &port_descriptor);
+//
+//	/* Configure PORTD pins 0 (UART2_RX) as input */
+//	port_descriptor.PORT_OE = PORT_OE_IN;
+//	port_descriptor.PORT_Pin = PORT_Pin_0;
+//	PORT_Init(MDR_PORTD, &port_descriptor);
 }
 
 /**
@@ -271,45 +260,53 @@ void gpio_init(void)
   * @retval None
   */
 
+void clock_init(void)
+{
+	//	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
+
+//	  /* Select CPUPLL source */
+//	uint32_t temp = MDR_RST_CLK->CPU_CLOCK;
+//	/* Clear CPU_C1_SEL bits */
+//	temp &= ~RST_CLK_CPU_CLOCK_CPU_C1_SEL_Msk;
+//	/* Set the CPU_C1_SEL bits */
+//	temp |= RST_CLK_CPU_PLLsrcHSIdiv1;
+//	/* Store the new value */
+//	MDR_RST_CLK->CPU_CLOCK = temp;
+//
+//	/* Set CPUPLL multiplier */
+//	temp = MDR_RST_CLK->PLL_CONTROL;
+//	/* Clear PLLMUL[3:0] bits */
+//	temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Msk;
+//	/* Set the PLLMUL[3:0] bits */
+//	temp |= (RST_CLK_CPU_PLLmul8 << RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos);
+//	/* Store the new value */
+//	MDR_RST_CLK->PLL_CONTROL = temp;
+//
+//	if ((MDR_RST_CLK->PLL_CONTROL & RST_CLK_PLL_CONTROL_PLL_CPU_ON) == RST_CLK_PLL_CONTROL_PLL_CPU_ON ) {
+//		temp = MDR_RST_CLK->PLL_CONTROL;
+//		temp |= RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
+//		MDR_RST_CLK->PLL_CONTROL = temp;
+//		temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
+//		MDR_RST_CLK->PLL_CONTROL = temp;
+//	}
+
+	LL_InitTick(HCLKFrequency, 1000U);
+}
+
 int main(void)
 {
-//	RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
 
-	  /* Select CPUPLL source */
-	uint32_t temp = MDR_RST_CLK->CPU_CLOCK;
-	/* Clear CPU_C1_SEL bits */
-	temp &= ~RST_CLK_CPU_CLOCK_CPU_C1_SEL_Msk;
-	/* Set the CPU_C1_SEL bits */
-	temp |= RST_CLK_CPU_PLLsrcHSIdiv1;
-	/* Store the new value */
-	MDR_RST_CLK->CPU_CLOCK = temp;
-
-	/* Set CPUPLL multiplier */
-	temp = MDR_RST_CLK->PLL_CONTROL;
-	/* Clear PLLMUL[3:0] bits */
-	temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Msk;
-	/* Set the PLLMUL[3:0] bits */
-	temp |= (RST_CLK_CPU_PLLmul8 << RST_CLK_PLL_CONTROL_PLL_CPU_MUL_Pos);
-	/* Store the new value */
-	MDR_RST_CLK->PLL_CONTROL = temp;
-
-	if( (MDR_RST_CLK->PLL_CONTROL & RST_CLK_PLL_CONTROL_PLL_CPU_ON) == RST_CLK_PLL_CONTROL_PLL_CPU_ON ) {
-		temp = MDR_RST_CLK->PLL_CONTROL;
-		temp |= RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
-		MDR_RST_CLK->PLL_CONTROL = temp;
-		temp &= ~RST_CLK_PLL_CONTROL_PLL_CPU_PLD;
-		MDR_RST_CLK->PLL_CONTROL = temp;
-	}
 /*****************************************************************************************/
-	LL_InitTick(HCLKFrequency, 1000U);
-/*****************************************************************************************/
+	clock_init();
+
 	gpio_init();
 
 	console_init();
 
 	spi_init();
-	spi_fullduplex();
-	spi_test();
+
+	kb_usb_fullduplex_spi_set();
+
 /*****************************************************************************************/
 
 /*****************************************************************************************/
@@ -323,14 +320,16 @@ int main(void)
 	7. BULK-IN
 	*/
 /*****************************************************************************************/
-
+	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 	while(1)
 	{
 		PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 		LL_mDelay(500);
+
 		PORT_ResetBits(MDR_PORTD, PORT_Pin_7);
 		LL_mDelay(500);
-		spi_test();
+
+		kb_usb_revision_read();
 	}
 
 	return 0;

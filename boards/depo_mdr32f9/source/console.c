@@ -55,11 +55,11 @@ static void console_usart1_init(void)
 	UART_InitTypeDef UART_InitStructure;
 	/* Enables the CPU_CLK clock on UART1,UART2 */
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART1, ENABLE);
-	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART2, ENABLE);
+//	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART2, ENABLE);
 
 	/* Set the HCLK division factor = 1 for UART1,UART2*/
 	UART_BRGInit(MDR_UART1, UART_HCLKdiv1);
-	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
+//	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
 
 	/* Initialize UART_InitStructure */
 	UART_InitStructure.UART_BaudRate                = 500000;
@@ -76,10 +76,10 @@ static void console_usart1_init(void)
 	UART_Cmd(MDR_UART1,ENABLE);
 
 	/* Configure UART2 parameters*/
-	UART_Init (MDR_UART2,&UART_InitStructure);
+//	UART_Init (MDR_UART2,&UART_InitStructure);
 
 	/* Enables UART2 peripheral */
-	UART_Cmd(MDR_UART2,ENABLE);
+//	UART_Cmd(MDR_UART2,ENABLE);
 }
 
 /*
