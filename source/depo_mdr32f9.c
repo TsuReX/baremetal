@@ -98,20 +98,48 @@ static uint32_t spi_receive_byte(uint8_t *data)
 	return 1;
 }
 
-void spi_test(void)
+void spi_fullduplex(void)
 {
 #define USB_REV_BYTES		0x01
 #define SPI_USB_REVREG		0x12
+#define SPI_USB_PINCTLREG	0x11
 #define SPI_USB_REGNUMOFF	0x03
 #define SPI_USB_WROP		(0x01 << 1)
 #define SPI_USB_RDOP		(0x00 << 1)
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
 
-	uint8_t	buffer[USB_REV_BYTES + 1] = {SPI_CMD_RDREV, 0xA5};
+	uint8_t	buffer[2] = {SPI_CMD_WRPINCTL, 0x1F};
 	size_t	byte_idx;
 
-	buffer[0] = SPI_CMD_RDREV;
-	d_print("SPI_CMD_RDREV: 0x%01X\r\n", buffer[0]);
+
+//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
+
+	for (byte_idx = 0; byte_idx < sizeof(buffer) / sizeof(buffer[0]); ++byte_idx) {
+
+		if (spi_transmit_byte(buffer[byte_idx]) == 0) {
+			d_print("spi transmit error\r\n");
+			break;
+		}
+	}
+//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
+}
+
+void spi_test(void)
+{
+#define USB_REV_BYTES		0x01
+#define SPI_USB_REVREG		0x12
+#define SPI_USB_PINCTLREG	0x11
+#define SPI_USB_REGNUMOFF	0x03
+#define SPI_USB_WROP		(0x01 << 1)
+#define SPI_USB_RDOP		(0x00 << 1)
+#define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRPINCTL	((SPI_USB_PINCTLREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+	uint8_t	buffer[2] = {SPI_CMD_RDREV, 0xFF};
+	size_t	byte_idx;
 
 //	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
@@ -153,9 +181,10 @@ void gpio_init(void)
 	PORT_Init(MDR_PORTE, &port_descriptor);
 	PORT_Init(MDR_PORTF, &port_descriptor);
 
+	RST_CLK_PCLKcmd(ALL_PORTS_CLK, DISABLE);
 	/****************************************************/
 	/*Control*/
-
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA | RST_CLK_PCLK_PORTB | RST_CLK_PCLK_PORTD | RST_CLK_PCLK_PORTE, ENABLE);
 	port_descriptor.PORT_Pin   = (PORT_Pin_7);
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
@@ -181,7 +210,7 @@ void gpio_init(void)
 
 	/****************************************************/
 	/*SPI*/
-
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
 	port_descriptor.PORT_Pin   = (PORT_Pin_3);
 	port_descriptor.PORT_OE    = PORT_OE_IN;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_ALTER;
@@ -279,7 +308,7 @@ int main(void)
 	console_init();
 
 	spi_init();
-
+	spi_fullduplex();
 	spi_test();
 /*****************************************************************************************/
 
@@ -301,6 +330,7 @@ int main(void)
 		LL_mDelay(500);
 		PORT_ResetBits(MDR_PORTD, PORT_Pin_7);
 		LL_mDelay(500);
+		spi_test();
 	}
 
 	return 0;
