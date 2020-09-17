@@ -5,6 +5,12 @@
 #define SPI_USB_WROP			0x02
 #define SPI_USB_RDOP			0x00
 
+#define SPI_USB_RCVFIFOREG		0x01
+#define SPI_USB_SNDFIFOREG		0x02
+#define SPI_USB_SUDFIFOREG		0x04
+#define SPI_USB_RCVBCREG		0x06
+#define SPI_USB_SNDBCREG		0x07
+
 #define SPI_USB_USBIRQREG		0x0D
 #define SPI_USB_USBCTLREG		0x0F
 #define SPI_USB_PINCTLREG		0x11
@@ -19,6 +25,21 @@
 #define SPI_USB_HRSLREG			0x1F
 
 //#define SPI_USB_HIENREG			0x1A
+
+#define SPI_CMD_RDRCVFIFO	((SPI_USB_RCVFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRRCVFIFO	((SPI_USB_RCVFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+#define SPI_CMD_RDSNDFIFO	((SPI_USB_SNDFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRSNDFIFO	((SPI_USB_SNDFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+#define SPI_CMD_RDSUDFIFO	((SPI_USB_SUDFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRSUDFIFO	((SPI_USB_SUDFIFOREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+#define SPI_CMD_RDRCVBC		((SPI_USB_RCVBCREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRRCVBC		((SPI_USB_RCVBCREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
+
+#define SPI_CMD_RDSNDBC		((SPI_USB_SNDBCREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_WRSNDBC		((SPI_USB_SNDBCREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
 
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
@@ -74,23 +95,20 @@ __STATIC_INLINE void LL_InitTick(uint32_t HCLKFreq, uint32_t Ticks)
                    SysTick_CTRL_ENABLE_Msk;                   /* Enable the Systick Timer */
 }
 
-void LL_mDelay(uint32_t Delay)
+void mdelay(uint32_t delay)
 {
   __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
   /* Add this code to indicate that local variable is not used */
   ((void)tmp);
 
   /* Add a period to guaranty minimum wait */
-  if (Delay < LL_MAX_DELAY)
-  {
-    Delay++;
+  if (delay < LL_MAX_DELAY) {
+    delay++;
   }
 
-  while (Delay)
-  {
-    if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U)
-    {
-      Delay--;
+  while (delay) {
+    if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
+      delay--;
     }
   }
 }
@@ -125,22 +143,66 @@ void spi_init()
 static uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
 {
 	size_t byte_idx = 0;
-	for (; byte_idx < data_size; ++byte_idx) {
-		size_t i = 1000;
+	if (src_buf == NULL && dst_buf == NULL)
+		return 0;
 
-		while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_TFE) == RESET && i-- != 0);
-		if (i == 0)
-			return byte_idx;
+	if (src_buf == NULL) {
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
 
-		SSP_SendData(MDR_SSP1, src_buf[byte_idx]);
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_TFE) == RESET && i-- != 0);
+			if (i == 0)
+				return byte_idx;
 
-		i = 1000;
-		while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET && i-- != 0);
+			SSP_SendData(MDR_SSP1, 0x0);
 
-		if (i == 0)
-			return byte_idx;
+			i = 1000;
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET && i-- != 0);
 
-		dst_buf[byte_idx] = SSP_ReceiveData(MDR_SSP1);
+			if (i == 0)
+				return byte_idx;
+
+			dst_buf[byte_idx] = SSP_ReceiveData(MDR_SSP1);
+		}
+	} else if (dst_buf == NULL) {
+
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
+
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_TFE) == RESET && i-- != 0);
+			if (i == 0)
+				return byte_idx;
+
+			SSP_SendData(MDR_SSP1, 0x0);
+
+			i = 1000;
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET && i-- != 0);
+
+			if (i == 0)
+				return byte_idx;
+
+			SSP_ReceiveData(MDR_SSP1);
+		}
+	} else {
+
+
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
+
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_TFE) == RESET && i-- != 0);
+			if (i == 0)
+				return byte_idx;
+
+			SSP_SendData(MDR_SSP1, src_buf[byte_idx]);
+
+			i = 1000;
+			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET && i-- != 0);
+
+			if (i == 0)
+				return byte_idx;
+
+			dst_buf[byte_idx] = SSP_ReceiveData(MDR_SSP1);
+		}
 	}
 	return data_size;
 }
@@ -248,12 +310,6 @@ void gpio_init(void)
 //	port_descriptor.PORT_Pin = PORT_Pin_0;
 //	PORT_Init(MDR_PORTD, &port_descriptor);
 }
-
-/**
-  * @brief  Main program.
-  * @param  None
-  * @retval None
-  */
 
 void clock_init(void)
 {
@@ -554,6 +610,138 @@ uint8_t hrsl_read(void)
 	return buffer[1];
 }
 
+uint8_t rcvfifo_write(uint8_t *src_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_WRRCVFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(src_buf, NULL, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+uint8_t rcvfifo_read(uint8_t *dst_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_RDRCVFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+uint8_t sndfifo_write(uint8_t *src_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_WRSNDFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(src_buf, NULL, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+uint8_t sndfifo_read(uint8_t *dst_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_RDSNDFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+uint8_t sudfifo_write(uint8_t *src_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_WRSUDFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(src_buf, NULL, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+uint8_t sudfifo_read(uint8_t *dst_buf, size_t data_size)
+{
+	uint8_t	cmd = SPI_CMD_RDSUDFIFO;
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(&cmd, NULL, 1);
+	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return size;
+}
+
+void rcvbc_write(uint8_t size)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRRCVBC, size};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t rcvbc_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDRCVBC, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void sndbc_write(uint8_t size)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRSNDBC, size};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t sndbc_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDSNDBC, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
 void kb_usb_fullduplex_spi_set(void)
 {
 	d_print("Set full duplex SPI transmission\r\n");
@@ -573,7 +761,7 @@ void kb_usb_chip_reset(void)
 
 	d_print("Reset chip\r\n");
 	usbctl_write(val | (0x1 << 5));
-	LL_mDelay(1);
+	mdelay(1);
 	usbctl_write(val);
 
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
@@ -581,7 +769,7 @@ void kb_usb_chip_reset(void)
 
 	d_print("Waiting the oscillator stabilization\r\n");
 	while((usbirq_read() & 0x1) != 0x1)
-		LL_mDelay(1);
+		mdelay(1);
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
 	usbirq_write(0x1);
@@ -624,10 +812,10 @@ int main(void)
 	while(1)
 	{
 		PORT_SetBits(MDR_PORTD, PORT_Pin_7);
-		LL_mDelay(500);
+		mdelay(500);
 
 		PORT_ResetBits(MDR_PORTD, PORT_Pin_7);
-		LL_mDelay(500);
+		mdelay(500);
 
 	}
 
