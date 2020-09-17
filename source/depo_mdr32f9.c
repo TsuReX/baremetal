@@ -11,14 +11,14 @@
 #define SPI_USB_REVREG			0x12
 #define SPI_USB_IOPINS1REG		0x14
 #define SPI_USB_IOPINS2REG		0x15
-
 #define SPI_USB_HIRQREG			0x19
-//#define SPI_USB_HIENREG			0x1A
 #define SPI_USB_MODEREG			0x1B
 #define SPI_USB_PERADDRREG		0x1C
 #define SPI_USB_HCTLREG			0x1D
 #define SPI_USB_HXFRREG			0x1E
 #define SPI_USB_HRSLREG			0x1F
+
+//#define SPI_USB_HIENREG			0x1A
 
 #define SPI_CMD_RDREV		((SPI_USB_REVREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
@@ -52,7 +52,7 @@
 #define SPI_CMD_WRHXFR	((SPI_USB_HXFRREG << SPI_USB_REGNUMOFF) | SPI_USB_WROP)
 #define SPI_CMD_RDHXFR	((SPI_USB_HXFRREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
-#define SPI_CMD_RDHXFR	((SPI_USB_HXFRREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
+#define SPI_CMD_RDHRSL	((SPI_USB_HRSLREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
 #define BufferSize         32
 
@@ -443,6 +443,115 @@ void hirq_write(uint8_t hirq)
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t mode_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDMODE, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void mode_write(uint8_t mode)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRMODE, mode};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t peraddr_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDPERADDR, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void peraddr_write(uint8_t peraddr)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRPERADDR, peraddr};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t hctl_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDHCTL, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void hctl_write(uint8_t hctl)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRHCTL, hctl};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t hxfr_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDHXFR, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
+}
+
+void hxfr_write(uint8_t hxfr)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRHXFR, hxfr};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+}
+
+uint8_t hrsl_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDHRSL, 0x00};
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	return buffer[1];
 }
 
 void kb_usb_fullduplex_spi_set(void)
