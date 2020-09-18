@@ -814,6 +814,27 @@ void kb_usb_chip_reset(void)
 
 }
 
+void kb_usb_power_enable(void)
+{
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	uint8_t iopins1 = iopins1_read();
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	d_print("IOPINS1: 0x%02X\r\n", iopins1);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+//	iopins1_write(iopins1 & ~0x1);
+	iopins1_write(iopins1 | 0x1);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	d_print("USB power is enabled\r\n");
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	iopins1 = iopins1_read();
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	d_print("IOPINS1: 0x%02X\r\n", iopins1);
+}
+
 int main(void)
 {
 
@@ -831,6 +852,8 @@ int main(void)
 	kb_usb_revision_read();
 
 	kb_usb_chip_reset();
+
+	kb_usb_power_enable();
 
 /*****************************************************************************************/
 
