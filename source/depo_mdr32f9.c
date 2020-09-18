@@ -756,28 +756,59 @@ void kb_usb_revision_read(void)
 	d_print("REVISION 0x%02X\r\n", revision_read());
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 }
+
 void kb_usb_chip_reset(void)
 {
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	uint8_t val = usbctl_read();
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBCTL: 0x%02X\r\n", val);
 
 	d_print("Reset chip\r\n");
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	usbctl_write(val | (0x1 << 5));
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 	mdelay(1);
-	usbctl_write(val);
 
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	usbctl_write(val);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
 	d_print("Waiting the oscillator stabilization\r\n");
-	while((usbirq_read() & 0x1) != 0x1)
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	while((usbirq_read() & 0x1) != 0x1) {
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 		mdelay(1);
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	usbirq_write(0x1);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
