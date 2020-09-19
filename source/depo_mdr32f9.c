@@ -902,6 +902,7 @@ void kb_usb_bus_reset(void)
 
 void kb_usb_device_detection_cycle(void)
 {
+
 	while(1) {
 		d_print("----------------------\r\n");
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
@@ -960,8 +961,24 @@ void kb_usb_device_detect(void)
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	d_print("HRSL: 0x%02X\r\n", hrsl_read());
+	uint8_t hrsl = hrsl_read();
+	d_print("HRSL: 0x%02X\r\n", hrsl);
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	switch(hrsl & 0xD0){
+	case 0x40:
+			d_print("Low speed device connected\r\n");
+			break;
+	case 0x80:
+			d_print("High speed device connected\r\n");
+			break;
+	case 0xD0:
+			d_print("Bus illegal state\r\n");
+			break;
+	case 0x00:
+			d_print("Device not connected\r\n");
+			break;
+	}
 }
 
 int main(void)
@@ -993,11 +1010,18 @@ int main(void)
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	kb_usb_bus_reset();
 
-//	mdelay(7000);
+	mdelay(7000);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
-//	kb_usb_device_detect();
-	kb_usb_device_detection_cycle();
+	/*
+		(J,K)
+		(0,0) - Single Ended Zero
+		(0,1) - Low Speed
+		(1,0) - Full Speed
+		(1,1) - Single Ended One (Illegal state)
+	*/
+	kb_usb_device_detect();
+//	kb_usb_device_detection_cycle();
 
 	/* 6. SETUP HS-IN */
 	/* 7. BULK-IN */
