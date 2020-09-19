@@ -900,6 +900,46 @@ void kb_usb_bus_reset(void)
 	d_print("USB bus was reset\r\n");
 }
 
+void kb_usb_device_detection_cycle(void)
+{
+	while(1) {
+		d_print("----------------------\r\n");
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		while((hirq_read() & 0x20) == 0x0) {
+			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			mdelay(1000);
+			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		}
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HIRQ: 0x%02X\r\n", hirq_read());
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		hirq_write(0x20);
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HIRQ: 0x%02X\r\n", hirq_read());
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HRSL: 0x%02X\r\n", hrsl_read());
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HIRQ: 0x%02X\r\n", hirq_read());
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		mdelay(1000);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HIRQ: 0x%02X\r\n", hirq_read());
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	}
+}
+
 void kb_usb_device_detect(void)
 {
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
@@ -922,7 +962,6 @@ void kb_usb_device_detect(void)
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	d_print("HRSL: 0x%02X\r\n", hrsl_read());
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
 }
 
 int main(void)
@@ -954,10 +993,11 @@ int main(void)
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	kb_usb_bus_reset();
 
-	mdelay(7000);
+//	mdelay(7000);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
-	kb_usb_device_detect();
+//	kb_usb_device_detect();
+	kb_usb_device_detection_cycle();
 
 	/* 6. SETUP HS-IN */
 	/* 7. BULK-IN */
