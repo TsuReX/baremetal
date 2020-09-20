@@ -97,6 +97,25 @@ __STATIC_INLINE void LL_InitTick(uint32_t HCLKFreq, uint32_t Ticks)
 
 void mdelay(uint32_t delay)
 {
+	delay *= 10;
+  __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
+  /* Add this code to indicate that local variable is not used */
+  ((void)tmp);
+
+  /* Add a period to guaranty minimum wait */
+  if (delay < LL_MAX_DELAY) {
+    delay++;
+  }
+
+  while (delay) {
+    if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
+      delay--;
+    }
+  }
+}
+
+void u100delay(uint32_t delay)
+{
   __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
   /* Add this code to indicate that local variable is not used */
   ((void)tmp);
@@ -341,404 +360,224 @@ void clock_init(void)
 //		MDR_RST_CLK->PLL_CONTROL = temp;
 //	}
 
-	LL_InitTick(HCLKFrequency, 1000U);
+	LL_InitTick(HCLKFrequency, 10000U);
 }
 
 uint8_t usbirq_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDUSBIRQ, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void usbirq_write(uint8_t usbirq)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRUSBIRQ, usbirq};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t usbctl_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDUSBCTL, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void usbctl_write(uint8_t usbctl)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRUSBCTL, usbctl};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t pinctl_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDPINCTL, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void pinctl_write(uint8_t pinctl)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRPINCTL, pinctl};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t iopins1_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDIOPINS1, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void iopins1_write(uint8_t iopins1)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRIOPINS1, iopins1};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t iopins2_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDIOPINS2, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void iopins2_write(uint8_t iopins1)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRIOPINS2, iopins1};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t revision_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDREV, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 uint8_t hirq_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDHIRQ, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void hirq_write(uint8_t hirq)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRHIRQ, hirq};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t mode_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDMODE, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void mode_write(uint8_t mode)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRMODE, mode};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t peraddr_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDPERADDR, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void peraddr_write(uint8_t peraddr)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRPERADDR, peraddr};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t hctl_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDHCTL, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void hctl_write(uint8_t hctl)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRHCTL, hctl};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t hxfr_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDHXFR, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void hxfr_write(uint8_t hxfr)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRHXFR, hxfr};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t hrsl_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDHRSL, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 uint8_t rcvfifo_write(uint8_t *src_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_WRRCVFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(src_buf, NULL, data_size);
-
-
-
 	return size;
 }
 
 uint8_t rcvfifo_read(uint8_t *dst_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_RDRCVFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
-
-
-
 	return size;
 }
 
 uint8_t sndfifo_write(uint8_t *src_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_WRSNDFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(src_buf, NULL, data_size);
-
-
-
 	return size;
 }
 
 uint8_t sndfifo_read(uint8_t *dst_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_RDSNDFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
-
-
-
 	return size;
 }
 
 uint8_t sudfifo_write(uint8_t *src_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_WRSUDFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(src_buf, NULL, data_size);
-
-
-
 	return size;
 }
 
 uint8_t sudfifo_read(uint8_t *dst_buf, size_t data_size)
 {
 	uint8_t	cmd = SPI_CMD_RDSUDFIFO;
-
-
-
 	spi_data_xfer(&cmd, NULL, 1);
 	size_t size = spi_data_xfer(NULL, dst_buf, data_size);
-
-
-
 	return size;
 }
 
 void rcvbc_write(uint8_t size)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRRCVBC, size};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t rcvbc_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDRCVBC, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
 void sndbc_write(uint8_t size)
 {
 	uint8_t	buffer[2] = {SPI_CMD_WRSNDBC, size};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
 }
 
 uint8_t sndbc_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDSNDBC, 0x00};
-
-
-
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-
-
 	return buffer[1];
 }
 
@@ -964,10 +803,23 @@ void kb_usb_device_detect(void)
 	uint8_t hrsl = hrsl_read();
 	d_print("HRSL: 0x%02X\r\n", hrsl);
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
+	/*
+		(J,K)
+		(0,0) - Single Ended Zero
+		(0,1) - Low Speed
+		(1,0) - Full Speed
+		(1,1) - Single Ended One (Illegal state)
+	*/
 	switch(hrsl & 0xD0){
 	case 0x40:
 			d_print("Low speed device connected\r\n");
+			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			uint8_t mode = mode_read();
+			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			mode_write(mode | 0x02);
+			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 			break;
 	case 0x80:
 			d_print("High speed device connected\r\n");
@@ -979,6 +831,80 @@ void kb_usb_device_detect(void)
 			d_print("Device not connected\r\n");
 			break;
 	}
+}
+
+void kb_usb_setup_send(void)
+{
+	struct std_request {
+		uint8_t		bm_request_type;
+		uint8_t		b_request;
+		uint16_t	w_value;
+		uint16_t	w_index;
+		uint16_t	w_length;
+	};
+	struct std_request set_addr = {0x0, 0x5, 0x34, 0x0, 0x0};
+
+	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	sudfifo_read((uint8_t*)&set_addr, sizeof(set_addr));
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	peraddr_write(0x00);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	hxfr_write(0x10);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	while((hirq_read() & 0x80) != 0x80) {
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//		u100delay(1);
+		__DSB();
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	peraddr_write(0x00);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	hxfr_write(0x80);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	while((hirq_read() & 0x80) != 0x80) {
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//		u100delay(1);
+		__DSB();
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	}
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 }
 
 int main(void)
@@ -1013,17 +939,12 @@ int main(void)
 	mdelay(7000);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
-	/*
-		(J,K)
-		(0,0) - Single Ended Zero
-		(0,1) - Low Speed
-		(1,0) - Full Speed
-		(1,1) - Single Ended One (Illegal state)
-	*/
 	kb_usb_device_detect();
 //	kb_usb_device_detection_cycle();
 
 	/* 6. SETUP HS-IN */
+	kb_usb_setup_send();
+
 	/* 7. BULK-IN */
 /*****************************************************************************************/
 
