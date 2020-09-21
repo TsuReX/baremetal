@@ -192,7 +192,7 @@ static uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_si
 			if (i == 0)
 				return byte_idx;
 
-			SSP_SendData(MDR_SSP1, 0x0);
+			SSP_SendData(MDR_SSP1, src_buf[byte_idx]);
 
 			i = 1000;
 			while (SSP_GetFlagStatus(MDR_SSP1, SSP_FLAG_RNE) == RESET && i-- != 0);
@@ -822,7 +822,7 @@ void kb_usb_device_detect(void)
 			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 			break;
 	case 0x80:
-			d_print("High speed device connected\r\n");
+			d_print("Full speed device connected\r\n");
 			break;
 	case 0xD0:
 			d_print("Bus illegal state\r\n");
@@ -843,26 +843,26 @@ void kb_usb_setup_send(void)
 		uint16_t	w_length;
 	};
 	struct std_request set_addr = {0x0, 0x5, 0x34, 0x0, 0x0};
-
-	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
-	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
-	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
-	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
-	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+//
+//	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+//	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+//	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+//	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+//	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	sudfifo_read((uint8_t*)&set_addr, sizeof(set_addr));
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
-	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
-	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
-	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
-	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+//	sudfifo_read((uint8_t*)&set_addr, sizeof(set_addr));
+//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//
+//	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+//	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+//	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+//	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+//	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	peraddr_write(0x00);
@@ -875,8 +875,7 @@ void kb_usb_setup_send(void)
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	while((hirq_read() & 0x80) != 0x80) {
 		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-//		u100delay(1);
-		__DSB();
+		u100delay(1);
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	}
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
@@ -896,8 +895,7 @@ void kb_usb_setup_send(void)
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	while((hirq_read() & 0x80) != 0x80) {
 		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-//		u100delay(1);
-		__DSB();
+		u100delay(1);
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	}
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
