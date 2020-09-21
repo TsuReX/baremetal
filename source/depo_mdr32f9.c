@@ -261,13 +261,19 @@ void gpio_init(void)
 	/*PD7 DEBUG_LED*/
 	PORT_Init(MDR_PORTD, &port_descriptor);
 
-	port_descriptor.PORT_Pin   = (PORT_Pin_0);
 	/*PE0 KM.KB_CS*/
+	port_descriptor.PORT_Pin   = (PORT_Pin_0);
 	PORT_Init(MDR_PORTE, &port_descriptor);
 
-//	port_descriptor.PORT_Pin   = (PORT_Pin_8);
 //	/*PB8 KM.MS_CS*/
+//	port_descriptor.PORT_Pin   = (PORT_Pin_8);
 //	PORT_Init(MDR_PORTB, &port_descriptor);
+
+	/*PB6 DEBUG*/
+	port_descriptor.PORT_Pin   = (PORT_Pin_6);
+	PORT_Init(MDR_PORTB, &port_descriptor);
+	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
+
 
 	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
 
@@ -315,9 +321,9 @@ void gpio_init(void)
 	PORT_Init(MDR_PORTB, &port_descriptor);
 
 	/* Configure PORTB pins 6 (UART1_RX) as input */
-	port_descriptor.PORT_OE = PORT_OE_IN;
-	port_descriptor.PORT_Pin = PORT_Pin_6;
-	PORT_Init(MDR_PORTB, &port_descriptor);
+//	port_descriptor.PORT_OE = PORT_OE_IN;
+//	port_descriptor.PORT_Pin = PORT_Pin_6;
+//	PORT_Init(MDR_PORTB, &port_descriptor);
 //
 //	/* Configure PORTD pins 1 (UART2_TX) as output */
 //	port_descriptor.PORT_OE = PORT_OE_OUT;
@@ -736,7 +742,7 @@ void kb_usb_bus_reset(void)
 	}
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-	d_print("USB bus was reset\r\n");
+//	d_print("USB bus was reset\r\n");
 }
 
 void kb_usb_device_detection_cycle(void)
@@ -782,17 +788,17 @@ void kb_usb_device_detection_cycle(void)
 
 void kb_usb_device_detect(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	uint8_t hirq = hirq_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-	d_print("HIRQ: 0x%02X\r\n", hirq);
+//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+//	uint8_t hirq = hirq_read();
+//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//	d_print("HIRQ: 0x%02X\r\n", hirq);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	uint8_t hctl = hctl_read();
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	d_print("HRSL: 0x%02X\r\n", hrsl_read());
+//	d_print("HRSL: 0x%02X\r\n", hrsl_read());
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
@@ -801,7 +807,7 @@ void kb_usb_device_detect(void)
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	uint8_t hrsl = hrsl_read();
-	d_print("HRSL: 0x%02X\r\n", hrsl);
+//	d_print("HRSL: 0x%02X\r\n", hrsl);
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 	/*
 		(J,K)
@@ -812,7 +818,7 @@ void kb_usb_device_detect(void)
 	*/
 	switch(hrsl & 0xD0){
 	case 0x40:
-			d_print("Low speed device connected\r\n");
+//			d_print("Low speed device connected\r\n");
 			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 			uint8_t mode = mode_read();
 			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
@@ -822,7 +828,7 @@ void kb_usb_device_detect(void)
 			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 			break;
 	case 0x80:
-			d_print("Full speed device connected\r\n");
+//			d_print("Full speed device connected\r\n");
 			break;
 	case 0xD0:
 			d_print("Bus illegal state\r\n");
@@ -867,6 +873,8 @@ void kb_usb_setup_send(void)
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	peraddr_write(0x00);
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	hxfr_write(0x10);
@@ -931,10 +939,10 @@ int main(void)
 	/* 3. HOST, DPPULLDN, DMPULLDN */
 	kb_usb_mode_set();
 
+	mdelay(7000);
+
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	kb_usb_bus_reset();
-
-	mdelay(7000);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
 	kb_usb_device_detect();
