@@ -915,7 +915,10 @@ void kb_usb_setup_send(void)
 
 int main(void)
 {
-
+	uint32_t i = 0x000FFFFF;
+	for (; i != 0; --i) {
+		__ISB();
+	}
 /*****************************************************************************************/
 	clock_init();
 
@@ -943,6 +946,8 @@ int main(void)
 
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	kb_usb_bus_reset();
+
+	mdelay(300);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
 	kb_usb_device_detect();
