@@ -818,7 +818,7 @@ void kb_usb_device_detect(void)
 	*/
 	switch(hrsl & 0xD0){
 	case 0x40:
-//			d_print("Low speed device connected\r\n");
+			d_print("Low speed device connected\r\n");
 			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 			uint8_t mode = mode_read();
 			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
@@ -828,7 +828,7 @@ void kb_usb_device_detect(void)
 			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 			break;
 	case 0x80:
-//			d_print("Full speed device connected\r\n");
+			d_print("Full speed device connected\r\n");
 			break;
 	case 0xD0:
 			d_print("Bus illegal state\r\n");
@@ -849,26 +849,16 @@ void kb_usb_setup_send(void)
 		uint16_t	w_length;
 	};
 	struct std_request set_addr = {0x0, 0x5, 0x34, 0x0, 0x0};
-//
-//	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
-//	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
-//	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
-//	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
-//	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+
+	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
 	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-//	sudfifo_read((uint8_t*)&set_addr, sizeof(set_addr));
-//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-//
-//	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
-//	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
-//	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
-//	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
-//	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
 	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
 	peraddr_write(0x00);
@@ -876,46 +866,32 @@ void kb_usb_setup_send(void)
 
 	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	hxfr_write(0x10);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	size_t counter = 10;
+	for (; counter > 0; --counter) {
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	while((hirq_read() & 0x80) != 0x80) {
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-		u100delay(1);
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	peraddr_write(0x00);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	hxfr_write(0x80);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	while((hirq_read() & 0x80) != 0x80) {
+		hxfr_write(0x10);
 		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-		u100delay(1);
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		while((hirq_read() & 0x80) != 0x80) {
+			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			u100delay(1);
+			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		}
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		mdelay(20);
+	}
 }
 
 int main(void)
 {
-	uint32_t i = 0x000FFFFF;
+	uint32_t i = 0x004FFFFF;
 	for (; i != 0; --i) {
 		__ISB();
 	}
