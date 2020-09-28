@@ -839,8 +839,9 @@ void kb_usb_device_detect(void)
 	}
 }
 
-void kb_usb_setup_send(void)
+void kb_usb_setup_set_address(void)
 {
+	d_print("Setting up device address\r\n");
 	struct std_request {
 		uint8_t		bm_request_type;
 		uint8_t		b_request;
@@ -867,6 +868,57 @@ void kb_usb_setup_send(void)
 	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
 	size_t counter = 10;
+	for (; counter > 0; --counter) {
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		hxfr_write(0x10);
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		while((hirq_read() & 0x80) != 0x80) {
+			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			u100delay(1);
+			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		}
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+		mdelay(20);
+	}
+}
+
+void kb_usb_setup_get_dev_descr(void)
+{
+	d_print("Getting device descriptor\r\n");
+	struct std_request {
+		uint8_t		bm_request_type;
+		uint8_t		b_request;
+		uint16_t	w_value;
+		uint16_t	w_index;
+		uint16_t	w_length;
+	};
+	struct std_request set_addr = {0x80, 0x6, 0x01, 0x0, 0x0};
+
+	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
+	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
+	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
+	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	peraddr_write(0x00);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+
+	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
+
+	size_t counter = 3;
 	for (; counter > 0; --counter) {
 
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
@@ -930,7 +982,8 @@ int main(void)
 //	kb_usb_device_detection_cycle();
 
 	/* 6. SETUP HS-IN */
-	kb_usb_setup_send();
+	kb_usb_setup_set_address();
+	kb_usb_setup_get_dev_descr();
 
 	/* 7. BULK-IN */
 /*****************************************************************************************/
