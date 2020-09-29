@@ -18,7 +18,7 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/psu_stm32f030r8t6")
+set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/cpe_stm32f030r8t6")
 
 set(MAIN_INCLUDE		"${BRD_PATH}/include")
 
