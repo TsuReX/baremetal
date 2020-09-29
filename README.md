@@ -44,3 +44,4 @@ stellaris_lm4f120h5qr
 checkboard_lpc54618j512
 depo_mdr32f9
 psu_stm32f030r8t6
+cpe_stm32f030r8t6
