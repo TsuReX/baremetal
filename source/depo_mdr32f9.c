@@ -366,7 +366,40 @@ void clock_init(void)
 //		MDR_RST_CLK->PLL_CONTROL = temp;
 //	}
 
-	LL_InitTick(HCLKFrequency, 10000U);
+
+	RST_CLK_HSEconfig(RST_CLK_HSE_ON);
+	if (RST_CLK_HSEstatus() == SUCCESS) {
+		/* Good HSE clock */
+		/* Select HSE clock as CPU_PLL input clock source */
+
+		/* Set PLL multiplier to 8 */
+		RST_CLK_CPU_PLLconfig(RST_CLK_CPU_PLLsrcHSEdiv1, RST_CLK_CPU_PLLmul8);
+
+		/* Enable CPU_PLL */
+		RST_CLK_CPU_PLLcmd(ENABLE);
+
+		if (RST_CLK_HSEstatus() == SUCCESS) {
+			/* Good CPU PLL */
+			/* Set CPU_C3_prescaler to 1 */
+			RST_CLK_CPUclkPrescaler(RST_CLK_CPUclkDIV1);
+
+			/* Set CPU_C2_SEL to CPU_PLL output instead of CPU_C1 clock */
+			RST_CLK_CPU_PLLuse(ENABLE);
+
+			/* Select CPU_C3 clock on the CPU clock MUX */
+			RST_CLK_CPUclkSelection(RST_CLK_CPUclkCPU_C3);
+
+		} else {
+			/* CPU_PLL timeout */
+//			IndicateError();
+		}
+
+	} else {
+		/* HSE timeout */
+//		IndicateError();
+	}
+
+	LL_InitTick(HCLKFrequency * 8, 10000U);
 }
 
 uint8_t usbirq_read(void)
@@ -867,7 +900,7 @@ void kb_usb_setup_set_address(void)
 
 	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
-	size_t counter = 10;
+	size_t counter = 1;
 	for (; counter > 0; --counter) {
 
 		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
@@ -888,6 +921,8 @@ void kb_usb_setup_set_address(void)
 
 		mdelay(20);
 	}
+
+	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 
 void kb_usb_setup_get_dev_descr(void)
