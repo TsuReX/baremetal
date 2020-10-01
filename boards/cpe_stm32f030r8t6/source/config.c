@@ -198,7 +198,7 @@ void board_config(void)
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_10, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_10);
 
-	/** VDDQ_EN */
+	/** VDDQ_VTT_VCCREF_EN */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_11, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_11);
 
@@ -244,7 +244,7 @@ void board_config(void)
 	/** VPP_PG INPUT */
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
 
-	/** VDDQ_PG INPUT*/
+	/** VDDQ_VTT_PG INPUT*/
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_9, LL_GPIO_MODE_INPUT);
 
 	/** THERMTRIP_SHUTDOWN_N INPUT */
@@ -280,7 +280,7 @@ void board_config(void)
 	/** VNN_PG INPUT */
 	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_1, LL_GPIO_MODE_INPUT);
 
-	/** V1P8_PG */
+	/** V1P8_PG INPUT*/
 	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_4, LL_GPIO_MODE_INPUT);
 
 	/** NC */
