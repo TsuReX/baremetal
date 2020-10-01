@@ -474,7 +474,7 @@ void USART1_IRQHandler(void)
 	WRITE_REG(USART1->ISR, 0);
 }
 
-void scheduler_process(void)
-{
-	console_process();
-}
+//void scheduler_process(void)
+//{
+//	console_process();
+//}

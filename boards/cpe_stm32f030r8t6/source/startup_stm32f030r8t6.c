@@ -58,7 +58,7 @@ WEAK void ADC1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM1_BRK_UP_TRG_COM_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM1_CC_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM3_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void TIM6_IRQHandler(void) ALIAS(int_default_handler);
+WEAK void tim6_irq_handler(void) ALIAS(int_default_handler);
 WEAK void TIM14_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM15_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM16_IRQHandler(void) ALIAS(int_default_handler);
@@ -124,7 +124,7 @@ void (* const isr_vector_table[])(void) = {
 	TIM1_CC_IRQHandler,				/* TIM1 Capture Compare         */
 	0,								/* Reserved                     */
 	TIM3_IRQHandler,				/* TIM3                         */
-	TIM6_IRQHandler,				/* TIM6                         */
+	tim6_irq_handler,				/* TIM6                         */
 	0,								/* Reserved                     */
 	TIM14_IRQHandler,				/* TIM14                        */
 	TIM15_IRQHandler,				/* TIM15                        */

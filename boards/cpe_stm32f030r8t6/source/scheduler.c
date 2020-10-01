@@ -6,18 +6,18 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "../../cpe_stm32f030r8t6/include/scheduler.h"
+#include "scheduler.h"
 
-#include "../../cpe_stm32f030r8t6/include/drivers.h"
+#include "drivers.h"
 
 void scheduler_init(void)
 {
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
 
-	LL_TIM_SetPrescaler(TIM6, 50);
+	LL_TIM_SetPrescaler(TIM6, 100);
 
-	LL_TIM_SetAutoReload(TIM6, 48000);
+	LL_TIM_SetAutoReload(TIM6, 48);
 
 	/* Set TIM_CR1_URS = 0 */
 	LL_TIM_SetUpdateSource(TIM6, LL_TIM_UPDATESOURCE_REGULAR);
@@ -28,9 +28,9 @@ void scheduler_init(void)
 
 	LL_TIM_EnableIT_UPDATE(TIM6);
 
-	NVIC_SetPriority(TIM6_DAC1_IRQn, 0);
+	NVIC_SetPriority(TIM6_IRQn, 0);
 
-	NVIC_EnableIRQ(TIM6_DAC1_IRQn);
+	NVIC_EnableIRQ(TIM6_IRQn);
 
 	LL_TIM_EnableCounter(TIM6);
 
@@ -41,7 +41,7 @@ void scheduler_close(void)
 {
 	LL_TIM_DisableCounter(TIM6);
 	LL_TIM_DisableIT_UPDATE(TIM6);
-	NVIC_DisableIRQ(TIM6_DAC1_IRQn);
+	NVIC_DisableIRQ(TIM6_IRQn);
 }
 
 
@@ -52,7 +52,7 @@ void __attribute__((weak)) scheduler_process(void)
 /*
  *	Обработчик прерывания событий таймера TIM6.
  */
-void TIM6_DAC1_IRQHandler(void)
+void tim6_irq_handler(void)
 {
 	scheduler_process();
 	LL_TIM_ClearFlag_UPDATE(TIM6);
