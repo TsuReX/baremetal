@@ -221,18 +221,20 @@ int main(void)
 	scheduler_init();
 
 	v3p3_on(1);
+	d_print("PSU V3P3 is ON\r\n");
 
 	LL_mDelay(10);
 
-//	v1p8_v1p05_on(1);
-//	d_print("PSU V1P8 and V1P05 are ON\r\n");
+	vnn_on(1);
+	d_print("PSU VNN is ON\r\n");
 
 	LL_mDelay(10);
 
-//	vnn_on(1);
-//	d_print("PSU VNN is ON\r\n");
+	v1p8_v1p05_on(1);
+	d_print("PSU V1P8 and V1P05 are ON\r\n");
 
 	LL_mDelay(10);
+
 
 	/* RSMRST_N */
 
@@ -240,24 +242,23 @@ int main(void)
 
 	/* SLP_S45_N interrupt */
 
-//	vddq_vtt_vccref_on(1);
-//	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
+	vddq_vtt_vccref_on(1);
+	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
 
 	/* SLP_S3_N interrupt */
 
 	LL_mDelay(10);
 
-//	vccsram_on(1);
-//	d_print("PSU VCCSRAM is ON\r\n");
+	vccsram_on(1);
+	d_print("PSU VCCSRAM is ON\r\n");
 
 	LL_mDelay(10);
 
-//	vccp_on(1);
-//	d_print("PSU VCCP is ON\r\n");
+	vccp_on(1);
+	d_print("PSU VCCP is ON\r\n");
 
 	/* COREPWEROR interrupt */
 	/* PMU_PLTRST_N interrupt */
-//	d_print("PSU VCCP is ON\r\n");
 	/* CPU_PWRGD interrupt */
 
 	while (1) {
