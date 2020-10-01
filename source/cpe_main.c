@@ -13,6 +13,50 @@
 
 volatile uint32_t timer_ticks = 0;
 
+void exti_0_1_irq_handler(void)
+{
+	d_print("%s()\r\n", __func__);
+	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1 | LL_EXTI_LINE_0);
+}
+
+void exti_2_3_irq_handler(void)
+{
+	d_print("%s()\r\n", __func__);
+	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_3 | LL_EXTI_LINE_2);
+}
+
+void exti_4_15_irq_handler(void)
+{
+	d_print("%s()\r\n", __func__);
+	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_ALL_0_31 & ~(LL_EXTI_LINE_3 | LL_EXTI_LINE_2 | LL_EXTI_LINE_1 | LL_EXTI_LINE_0));
+}
+
+void gpio_irq_config(void)
+{
+	LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
+
+	/** FP_RST_BTN_N */
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
+	LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_13, LL_GPIO_PULL_UP);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
+	LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_13);
+
+	/** FP_PWR_BTN_N */
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE14);
+	LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_14, LL_GPIO_PULL_UP);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
+	LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_14);
+
+	NVIC_EnableIRQ(EXTI0_1_IRQn);
+	NVIC_SetPriority(EXTI0_1_IRQn, 0);
+
+	NVIC_EnableIRQ(EXTI2_3_IRQn);
+	NVIC_SetPriority(EXTI2_3_IRQn, 0);
+
+	NVIC_EnableIRQ(EXTI4_15_IRQn);
+	NVIC_SetPriority(EXTI4_15_IRQn, 0);
+}
+
 void scheduler_process(void)
 {
 	++timer_ticks;
@@ -170,9 +214,51 @@ int main(void)
 	/** Configure board's peripherals. */
 	board_config();
 
+	gpio_irq_config();
+
 	console_init();
 
 	scheduler_init();
+
+	v3p3_on(1);
+
+	LL_mDelay(10);
+
+//	v1p8_v1p05_on(1);
+//	d_print("PSU V1P8 and V1P05 are ON\r\n");
+
+	LL_mDelay(10);
+
+//	vnn_on(1);
+//	d_print("PSU VNN is ON\r\n");
+
+	LL_mDelay(10);
+
+	/* RSMRST_N */
+
+	/* PWRBTN_N interrupt */
+
+	/* SLP_S45_N interrupt */
+
+//	vddq_vtt_vccref_on(1);
+//	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
+
+	/* SLP_S3_N interrupt */
+
+	LL_mDelay(10);
+
+//	vccsram_on(1);
+//	d_print("PSU VCCSRAM is ON\r\n");
+
+	LL_mDelay(10);
+
+//	vccp_on(1);
+//	d_print("PSU VCCP is ON\r\n");
+
+	/* COREPWEROR interrupt */
+	/* PMU_PLTRST_N interrupt */
+//	d_print("PSU VCCP is ON\r\n");
+	/* CPU_PWRGD interrupt */
 
 	while (1) {
 		d_print("Elapsed time %ld x 0.1ms\r\n", timer_ticks);

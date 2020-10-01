@@ -22,9 +22,9 @@ WEAK void WWDG_IRQHandler(void);
 WEAK void RTC_IRQHandler(void);
 WEAK void FLASH_IRQHandler(void);
 WEAK void RCC_IRQHandler(void);
-WEAK void EXTI0_1_IRQHandler(void);
-WEAK void EXTI2_3_IRQHandler(void);
-WEAK void EXTI4_15_IRQHandler(void);
+WEAK void exti_0_1_irq_handler(void);
+WEAK void exti_2_3_irq_handler(void);
+WEAK void exti_4_15_irq_handler(void);
 WEAK void DMA1_Channel1_IRQHandler(void);
 WEAK void DMA1_Channel2_3_IRQHandler(void);
 WEAK void DMA1_Channel4_5_IRQHandler(void);
@@ -32,7 +32,7 @@ WEAK void ADC1_IRQHandler(void);
 WEAK void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
 WEAK void TIM1_CC_IRQHandler(void);
 WEAK void TIM3_IRQHandler(void);
-WEAK void TIM6_IRQHandler(void);
+WEAK void tim6_irq_handler(void);
 WEAK void TIM14_IRQHandler(void);
 WEAK void TIM15_IRQHandler(void);
 WEAK void TIM16_IRQHandler(void);
@@ -48,9 +48,9 @@ WEAK void WWDG_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void RTC_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void FLASH_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void RCC_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void EXTI0_1_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void EXTI2_3_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void EXTI4_15_IRQHandler(void) ALIAS(int_default_handler);
+WEAK void exti_0_1_irq_handler(void) ALIAS(int_default_handler);
+WEAK void exti_2_3_irq_handler(void) ALIAS(int_default_handler);
+WEAK void exti_4_15_irq_handler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel2_3_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel4_5_IRQHandler(void) ALIAS(int_default_handler);
@@ -112,9 +112,9 @@ void (* const isr_vector_table[])(void) = {
 	RTC_IRQHandler,					/* RTC through the EXTI line    */
 	FLASH_IRQHandler,				/* FLASH                        */
 	RCC_IRQHandler,					/* RCC                          */
-	EXTI0_1_IRQHandler,				/* EXTI Line 0 and 1            */
-	EXTI2_3_IRQHandler,				/* EXTI Line 2 and 3            */
-	EXTI4_15_IRQHandler,			/* EXTI Line 4 to 15            */
+	exti_0_1_irq_handler,				/* EXTI Line 0 and 1            */
+	exti_2_3_irq_handler,				/* EXTI Line 2 and 3            */
+	exti_4_15_irq_handler,			/* EXTI Line 4 to 15            */
 	0,								/* Reserved                     */
 	DMA1_Channel1_IRQHandler,		/* DMA1 Channel 1               */
 	DMA1_Channel2_3_IRQHandler,		/* DMA1 Channel 2 and Channel 3 */
