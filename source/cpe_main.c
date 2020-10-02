@@ -235,27 +235,36 @@ int main(void)
 
 	LL_mDelay(10);
 
+//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_8);
+//	d_print("SOC_SRTCRST_N is DEASSERTED\r\n");
+//
+//	LL_mDelay(10);
 
 	/* RSMRST_N */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_1);
+	d_print("RSMRST_N is DEASSERTED\r\n");
 
 	/* PWRBTN_N interrupt */
 
 	/* SLP_S45_N interrupt */
 
-	vddq_vtt_vccref_on(1);
-	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
-
-	/* SLP_S3_N interrupt */
-
-	LL_mDelay(10);
-
-	vccsram_on(1);
-	d_print("PSU VCCSRAM is ON\r\n");
-
-	LL_mDelay(10);
-
-	vccp_on(1);
-	d_print("PSU VCCP is ON\r\n");
+//	vpp_on(1);
+//	d_print("PSU VPP is ON\r\n");
+//
+//	vddq_vtt_vccref_on(1);
+//	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
+//
+//	/* SLP_S3_N interrupt */
+//
+//	LL_mDelay(10);
+//
+//	vccsram_on(1);
+//	d_print("PSU VCCSRAM is ON\r\n");
+//
+//	LL_mDelay(10);
+//
+//	vccp_on(1);
+//	d_print("PSU VCCP is ON\r\n");
 
 	/* COREPWEROR interrupt */
 	/* PMU_PLTRST_N interrupt */

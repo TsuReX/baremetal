@@ -134,8 +134,9 @@ void board_config(void)
 //	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
 
 	/** SOC_SRTCRST_N */
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_8);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_INPUT);
+//	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_8);
 
 	/** STM32_UART1 TX/RX */
 //	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_OUTPUT);
@@ -270,6 +271,7 @@ void board_config(void)
 
 	/** SPI_BUF_EN_N */
 	LL_GPIO_SetPinMode(GPIOD, LL_GPIO_PIN_2, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOD, LL_GPIO_PIN_2);
 
 	/***************************************************/
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
