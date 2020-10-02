@@ -309,157 +309,157 @@ uint8_t sndbc_read(void)
 void kb_usb_fullduplex_spi_set(void)
 {
 	d_print("Set full duplex SPI transmission\r\n");
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	pinctl_write(0x1E);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 }
 
 void kb_usb_revision_read(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("REVISION 0x%02X\r\n", revision_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 }
 
 void kb_usb_chip_reset(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t val = usbctl_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	d_print("USBCTL: 0x%02X\r\n", val);
 
 	d_print("Reset chip\r\n");
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	usbctl_write(val | (0x1 << 5));
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	mdelay(1);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	usbctl_write(val);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 	d_print("Waiting the oscillator stabilization\r\n");
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	while((usbirq_read() & 0x1) != 0x1) {
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 		mdelay(1);
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBCTL: 0x%02X\r\n", usbctl_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	usbirq_write(0x1);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("USBIRQ: 0x%02X\r\n", usbirq_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 }
 
 void kb_usb_power_enable(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t iopins1 = iopins1_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 	d_print("IOPINS1: 0x%02X\r\n", iopins1);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	iopins1_write(iopins1 | 0x1);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 	d_print("USB power is enabled\r\n");
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	iopins1 = iopins1_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	d_print("IOPINS1: 0x%02X\r\n", iopins1);
 }
 
 void kb_usb_mode_set(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t mode = mode_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 	d_print("MODE: 0x%02X\r\n", mode);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	mode_write(mode |0x80 | 0x40 |0x1);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 	d_print("HOST mode, DPPULLDN and DNPULLDN are set\r\n");
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("MODE: 0x%02X\r\n", mode_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 }
 
 void kb_usb_bus_reset(void)
 {
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t hctl = hctl_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	d_print("HCTL: 0x%02X\r\n", hctl);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	mode_write(hctl |0x1);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("HCTL: 0x%02X\r\n", hctl_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	while((hctl_read() & 0x1) == 0x1) {
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 		mdelay(1);
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t mode = mode_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	d_print("MODE: 0x%02X\r\n", mode);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	mode_write(mode |0x08);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	d_print("MODE: 0x%02X\r\n", mode_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	while((hirq_read() & 0x40) != 0x40) {
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 		mdelay(1);
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 	}
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
 //	d_print("USB bus was reset\r\n");
 }
@@ -469,65 +469,65 @@ void kb_usb_device_detection_cycle(void)
 
 	while(1) {
 		d_print("----------------------\r\n");
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		while((hirq_read() & 0x20) == 0x0) {
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_deactivate();
 			mdelay(1000);
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_activate();
 		}
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		hirq_write(0x20);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HRSL: 0x%02X\r\n", hrsl_read());
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
 		mdelay(1000);
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 	}
 }
 
 void kb_usb_device_detect(void)
 {
-//	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+//	spi_chip_activate();
 //	uint8_t hirq = hirq_read();
-//	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+//	spi_chip_deactivate();
 //	d_print("HIRQ: 0x%02X\r\n", hirq);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t hctl = hctl_read();
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 //	d_print("HRSL: 0x%02X\r\n", hrsl_read());
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	hctl_write(hctl | 0x04);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	uint8_t hrsl = hrsl_read();
 //	d_print("HRSL: 0x%02X\r\n", hrsl);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 	/*
 		(J,K)
 		(0,0) - Single Ended Zero
@@ -538,13 +538,13 @@ void kb_usb_device_detect(void)
 	switch(hrsl & 0xD0){
 	case 0x40:
 			d_print("Low speed device connected\r\n");
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_activate();
 			uint8_t mode = mode_read();
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_deactivate();
 
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_activate();
 			mode_write(mode | 0x02);
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_deactivate();
 			break;
 	case 0x80:
 			d_print("Full speed device connected\r\n");
@@ -576,39 +576,39 @@ void kb_usb_setup_set_address(void)
 	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
 	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	peraddr_write(0x00);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
+//	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
 	size_t counter = 1;
 	for (; counter > 0; --counter) {
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		hxfr_write(0x10);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		while((hirq_read() & 0x80) != 0x80) {
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_deactivate();
 			u100delay(1);
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_activate();
 		}
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
 		mdelay(20);
 	}
 
-	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
+//	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 
 void kb_usb_setup_get_dev_descr(void)
@@ -629,34 +629,34 @@ void kb_usb_setup_get_dev_descr(void)
 	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
 	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_activate();
 	peraddr_write(0x00);
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+	spi_chip_deactivate();
 
-	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
+//	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
 	size_t counter = 3;
 	for (; counter > 0; --counter) {
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		hxfr_write(0x10);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		while((hirq_read() & 0x80) != 0x80) {
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_deactivate();
 			u100delay(1);
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+			spi_chip_activate();
 		}
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
-		PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_activate();
 		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
+		spi_chip_deactivate();
 
 		mdelay(20);
 	}

@@ -54,7 +54,7 @@ void spi_flash_test(void) {
 
 	buffer[0] = SPI_CMD_RDID;
 
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+	spi_chip_activate();
 
 	for (i = 0; i < sizeof(buffer) / sizeof(buffer[0]); ++i) {
 
@@ -65,7 +65,7 @@ void spi_flash_test(void) {
 		buffer[i] = LL_SPI_ReceiveData8(SPI1);
 	}
 
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+	spi_chip_deactivate();
 
 	d_print("MC_SPI_FLASH_ID (Hex) ");
 	for (i = 1; i < sizeof(buffer) / sizeof(buffer[0]); ++i)

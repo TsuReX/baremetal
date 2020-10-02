@@ -33,6 +33,16 @@ void spi_init(void) {
 	LL_SPI_Enable(SPI1);
 }
 
+void spi_chip_activate(void)
+{
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+}
+
+void spi_chip_deactivate(void)
+{
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+}
+
 uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
 {
 	size_t byte_idx = 0;
