@@ -7,28 +7,9 @@
 
 #include "spi.h"
 #include "console.h"
+#include "drivers.h"
 
-/** Количество байтов идентификатора SPI Flash. */
-#define SPI_ID_BYTES		64
-/** Количество байтов в одной странице данных SPI Flash. */
-#define SPI_PAGE_SIZE		256
-
-/** Код команды чтения идентификатора SPI Flash. */
-#define SPI_CMD_RDID		0x9F
-/** Код команды включения записи SPI Flash. */
-#define SPI_CMD_WREN		0x06
-/** Код команды полного стирания SPI Flash. */
-#define SPI_CMD_BE		0x60
-/** Код команды чтения статусного регистра SPI Flash. */
-#define SPI_CMD_RDSR1		0x05
-/** Код команды выключения записи SPI Flash. */
-#define SPI_CMD_WRDI		0x04
-/** Код команды записи одной страницы данных в SPI Flash. */
-#define SPI_CMD_PP		0x02
-/** Код команды чтения данных SPI Flash. */
-#define SPI_CMD_READ		0x03
-
-void spi1_init(void) {
+void spi_init(void) {
 
 	NVIC_SetPriority(SPI1_IRQn, 0);
 	NVIC_EnableIRQ(SPI1_IRQn);
@@ -52,29 +33,71 @@ void spi1_init(void) {
 	LL_SPI_Enable(SPI1);
 }
 
-void spi1_test(void) {
+uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
+{
+	size_t byte_idx = 0;
+	if (src_buf == NULL && dst_buf == NULL)
+		return 0;
 
-	uint8_t buffer[SPI_ID_BYTES + 1] = {0,0,0,0};
-	size_t i = 0;
+	if (src_buf == NULL) {
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
 
-	buffer[0] = SPI_CMD_RDID;
+			while (!LL_SPI_IsActiveFlag_TXE(SPI1) && i-- != 0);
+			if (i == 0)
+				return byte_idx;
 
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+			LL_SPI_TransmitData8(SPI1, 0x0);
 
-	for (i = 0; i < sizeof(buffer) / sizeof(buffer[0]); ++i) {
+			i = 1000;
+			while (!LL_SPI_IsActiveFlag_RXNE(SPI1) && i-- != 0);
 
-		while (!LL_SPI_IsActiveFlag_TXE(SPI1));
-		LL_SPI_TransmitData8(SPI1, buffer[i]);
+			if (i == 0)
+				return byte_idx;
 
-		while (!LL_SPI_IsActiveFlag_RXNE(SPI1));
-		buffer[i] = LL_SPI_ReceiveData8(SPI1);
+			dst_buf[byte_idx] = LL_SPI_ReceiveData8(SPI1);
+		}
+	} else if (dst_buf == NULL) {
+
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
+
+			while (!LL_SPI_IsActiveFlag_TXE(SPI1) && i-- != 0);
+			if (i == 0)
+				return byte_idx;
+
+			LL_SPI_TransmitData8(SPI1, src_buf[byte_idx]);
+
+			i = 1000;
+			while (!LL_SPI_IsActiveFlag_RXNE(SPI1) && i-- != 0);
+
+			if (i == 0)
+				return byte_idx;
+
+			LL_SPI_ReceiveData8(SPI1);
+		}
+	} else {
+
+
+		for (; byte_idx < data_size; ++byte_idx) {
+			size_t i = 1000;
+
+			while (!LL_SPI_IsActiveFlag_TXE(SPI1) && i-- != 0);
+			if (i == 0)
+				return byte_idx;
+
+			LL_SPI_TransmitData8(SPI1, src_buf[byte_idx]);
+
+			i = 1000;
+			while (!LL_SPI_IsActiveFlag_RXNE(SPI1) && i-- != 0);
+
+			if (i == 0)
+				return byte_idx;
+
+			dst_buf[byte_idx] = LL_SPI_ReceiveData8(SPI1);
+		}
 	}
-
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-
-	d_print("MC_SPI_FLASH_ID (Hex) ");
-	for (i = 1; i < sizeof(buffer) / sizeof(buffer[0]); ++i)
-		d_print("%02X ", buffer[i]);
+	return data_size;
 }
 
 

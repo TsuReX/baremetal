@@ -12,12 +12,8 @@
 #include "scheduler.h"
 #include "spi.h"
 #include "communication.h"
-
-/*#include "i2c.h"
-#include "ds3231m.h"
-#include "ina3221.h"
-#include "gpio.h"
-*/
+#include "max3421e.h"
+#include "utils.h"
 
 #include "usb_core.h"
 
@@ -30,6 +26,84 @@ DEVICE_INFO	device_info;
 USER_STANDARD_REQUESTS  *usb_standard_requests;
 
 uint8_t comm_buff[16] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF};
+
+/** Количество байтов идентификатора SPI Flash. */
+#define SPI_ID_BYTES		64
+/** Количество байтов в одной странице данных SPI Flash. */
+#define SPI_PAGE_SIZE		256
+
+/** Код команды чтения идентификатора SPI Flash. */
+#define SPI_CMD_RDID		0x9F
+/** Код команды включения записи SPI Flash. */
+#define SPI_CMD_WREN		0x06
+/** Код команды полного стирания SPI Flash. */
+#define SPI_CMD_BE		0x60
+/** Код команды чтения статусного регистра SPI Flash. */
+#define SPI_CMD_RDSR1		0x05
+/** Код команды выключения записи SPI Flash. */
+#define SPI_CMD_WRDI		0x04
+/** Код команды записи одной страницы данных в SPI Flash. */
+#define SPI_CMD_PP		0x02
+/** Код команды чтения данных SPI Flash. */
+#define SPI_CMD_READ		0x03
+
+void spi_flash_test(void) {
+
+	uint8_t buffer[SPI_ID_BYTES + 1] = {0,0,0,0};
+	size_t i = 0;
+
+	buffer[0] = SPI_CMD_RDID;
+
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+
+	for (i = 0; i < sizeof(buffer) / sizeof(buffer[0]); ++i) {
+
+		while (!LL_SPI_IsActiveFlag_TXE(SPI1));
+		LL_SPI_TransmitData8(SPI1, buffer[i]);
+
+		while (!LL_SPI_IsActiveFlag_RXNE(SPI1));
+		buffer[i] = LL_SPI_ReceiveData8(SPI1);
+	}
+
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+
+	d_print("MC_SPI_FLASH_ID (Hex) ");
+	for (i = 1; i < sizeof(buffer) / sizeof(buffer[0]); ++i)
+		d_print("%02X ", buffer[i]);
+}
+
+void spi_usb_test(void)
+{
+	/* 0. FDUPSPI */
+	kb_usb_fullduplex_spi_set();
+
+	/* 1. REVISON */
+	kb_usb_revision_read();
+
+	/* 2. CHIPRES, OSCOKIRQ */
+	kb_usb_chip_reset();
+
+	/* 2.1 GPOUT0 */
+	kb_usb_power_enable();
+
+	/* 3. HOST, DPPULLDN, DMPULLDN */
+	kb_usb_mode_set();
+
+	mdelay(7000);
+
+	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
+	kb_usb_bus_reset();
+
+	mdelay(300);
+
+	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
+	kb_usb_device_detect();
+//	kb_usb_device_detection_cycle();
+
+	/* 6. SETUP HS-IN */
+	kb_usb_setup_set_address();
+	kb_usb_setup_get_dev_descr();
+}
 
 void usb_init(void)
 {
@@ -70,15 +144,17 @@ int main(void)
 
 	board_init();
 
-//	console_init();
+	console_init();
 
 //	scheduler_init();
 
-//	spi1_init();
-//	spi1_test();
+	spi_init();
+//	spi_flash_test();
+	spi_usb_test();
 
-	comm_init(&comm_buff, sizeof(comm_buff));
-	comm_start();
+
+//	comm_init(&comm_buff, sizeof(comm_buff));
+//	comm_start();
 
 //	usb_init();
 

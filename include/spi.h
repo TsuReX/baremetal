@@ -9,6 +9,7 @@
 #define SPI_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 void spi_init(void);
 uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size);

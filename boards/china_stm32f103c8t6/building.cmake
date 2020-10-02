@@ -24,7 +24,7 @@ set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include"
-
+						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 #						"${BOARD_SRC_PATH}/usb/include"
 
 						"${BOARD_SRC_PATH}/usblib/include"
@@ -33,6 +33,7 @@ set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/startup_stm32f103xb.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/small_china_main.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
 						"${BOARD_SRC_PATH}/source/system_stm32f103xb.c"
 						"${BOARD_SRC_PATH}/source/config.c"
