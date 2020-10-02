@@ -425,6 +425,17 @@ void kb_usb_bus_reset(void)
 	d_print("HCTL: 0x%02X\r\n", hctl);
 
 	spi_chip_activate();
+	uint8_t mode = mode_read();
+	spi_chip_deactivate();
+	d_print("MODE: 0x%02X\r\n", mode);
+
+	/* SOFKAENAB */
+	spi_chip_activate();
+	mode_write(mode & ~0x08);
+	spi_chip_deactivate();
+
+	/* BUSRST */
+	spi_chip_activate();
 	mode_write(hctl |0x1);
 	spi_chip_deactivate();
 
@@ -441,10 +452,11 @@ void kb_usb_bus_reset(void)
 	spi_chip_deactivate();
 
 	spi_chip_activate();
-	uint8_t mode = mode_read();
+	mode = mode_read();
 	spi_chip_deactivate();
 	d_print("MODE: 0x%02X\r\n", mode);
 
+	/* SOFKAENAB */
 	spi_chip_activate();
 	mode_write(mode |0x08);
 	spi_chip_deactivate();

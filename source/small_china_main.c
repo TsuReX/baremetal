@@ -96,7 +96,11 @@ void spi_usb_test(void)
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	kb_usb_bus_reset();
 
-	mdelay(300);
+	mdelay(30);
+
+	kb_usb_bus_reset();
+
+	mdelay(30);
 
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
 	kb_usb_device_detect();
