@@ -1,0 +1,16 @@
+/*
+ * spi.h
+ *
+ *  Created on: Oct 2, 2020
+ *      Author: user
+ */
+
+#ifndef SPI_H_
+#define SPI_H_
+
+#include <stdint.h>
+
+void spi_init(void);
+uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size);
+
+#endif /* SPI_H_ */

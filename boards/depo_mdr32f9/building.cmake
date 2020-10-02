@@ -23,14 +23,19 @@ set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/")
 #set(MAIN_ASM_SOURCES    "${BRD_PATH}/source/startup_MDR32F9Qx.s")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 						"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 						"${BRD_PATH}/source/startup_MDR32F9Qx.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
 						"${BRD_PATH}/source/system_MDR32F9Qx.c"
 						"${BRD_PATH}/source/console.c"
+						"${BRD_PATH}/source/spi.c"
+						"${BRD_PATH}/source/utils.c"
+						"${BRD_PATH}/source/config.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
