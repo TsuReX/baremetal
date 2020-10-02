@@ -585,6 +585,7 @@ void kb_usb_setup_set_address(void)
 	spi_chip_deactivate();
 
 //	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
 	size_t counter = 1;
 	for (; counter > 0; --counter) {
@@ -605,9 +606,9 @@ void kb_usb_setup_set_address(void)
 		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
 		spi_chip_deactivate();
 
-		mdelay(20);
+//		mdelay(20);
 	}
-
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 //	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 

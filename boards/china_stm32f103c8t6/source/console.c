@@ -79,7 +79,7 @@ static void console_usart1_init(void)
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, /*115200*8*/1500000);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, /*115200*8*/500000);
 
 	/*LL_USART_EnableOverrunDetect(USART1);*/
 	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/

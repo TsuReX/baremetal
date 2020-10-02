@@ -163,37 +163,23 @@ static void systick_init(uint32_t hclk_freq)
  */
 void board_init(void)
 {
-//	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_14);
-//	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_15);
-
-	/* PA7 set low level. */
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
-	/* Green led */
-	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
-	/* MCO output enable. */
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
-
-}
-
-/**
- * @brief	Настройка внутренних подсистем системы на кристалле.
- */
-void soc_init(void)
-{
-	/* Настройка внутренней флеш памяти. */
-	flash_init();
-	/* Настройка подсистемы тактирования. */
-	rcc_init();
-	/* Настройка вспомогательных параметров. */
-	LL_SetSystemCoreClock(HCLK_FREQ);
-	/* Настраивает системный таймер ядра. */
-	systick_init(HCLK_FREQ);
-
 	/** Configuring GPIO. */
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOC);
-	LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_13,LL_GPIO_SPEED_FREQ_HIGH);
+
+	LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_13, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
+
+	/* MAX3421E RESET */
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_0, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_0);
+
+	/* USB SETUP PACKET TRIGGER */
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_1, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
 	/* Configure SS# Pin connected to pin 4 */
 	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_4, LL_GPIO_SPEED_FREQ_HIGH);
@@ -218,5 +204,28 @@ void soc_init(void)
 	LL_RCC_SetUSBClockSource(LL_RCC_USB_CLKSOURCE_PLL);
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USB);
 
+
+	/* PA7 set low level. */
+//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
+	/* Green led */
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
+	/* MCO output enable. */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
+
+}
+
+/**
+ * @brief	Настройка внутренних подсистем системы на кристалле.
+ */
+void soc_init(void)
+{
+	/* Настройка внутренней флеш памяти. */
+	flash_init();
+	/* Настройка подсистемы тактирования. */
+	rcc_init();
+	/* Настройка вспомогательных параметров. */
+	LL_SetSystemCoreClock(HCLK_FREQ);
+	/* Настраивает системный таймер ядра. */
+	systick_init(HCLK_FREQ);
 }
 
