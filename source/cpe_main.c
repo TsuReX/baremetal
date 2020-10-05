@@ -11,6 +11,8 @@
 #include "console.h"
 #include "scheduler.h"
 
+volatile uint32_t power_btn_pressed = 0;
+volatile uint32_t reset_btn_pressed = 0;
 volatile uint32_t timer_ticks = 0;
 
 void exti_0_1_irq_handler(void)
@@ -28,6 +30,19 @@ void exti_2_3_irq_handler(void)
 void exti_4_15_irq_handler(void)
 {
 	d_print("%s()\r\n", __func__);
+
+	/* FP_PWR_BTN_N */
+	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) == 1) {
+		LL_EXTI_DisableRisingTrig_0_31(LL_EXTI_LINE_14);
+		power_btn_pressed = 1;
+	}
+
+	/* FP_RST_BTN_N */
+	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) == 1) {
+		LL_EXTI_DisableRisingTrig_0_31(LL_EXTI_LINE_13);
+		reset_btn_pressed = 1;
+	}
+
 	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_ALL_0_31 & ~(LL_EXTI_LINE_3 | LL_EXTI_LINE_2 | LL_EXTI_LINE_1 | LL_EXTI_LINE_0));
 }
 
@@ -245,30 +260,41 @@ int main(void)
 	d_print("RSMRST_N is DEASSERTED\r\n");
 
 	/* PWRBTN_N interrupt */
+	while (1) {
+		if (power_btn_pressed == 1)
+			break;
+	}
 
 	/* SLP_S45_N interrupt */
+	while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_2) != 1);
+	d_print("SLP_S45_N is DEASSERTED\r\n");
 
-//	vpp_on(1);
-//	d_print("PSU VPP is ON\r\n");
-//
-//	vddq_vtt_vccref_on(1);
-//	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
-//
-//	/* SLP_S3_N interrupt */
-//
-//	LL_mDelay(10);
-//
-//	vccsram_on(1);
-//	d_print("PSU VCCSRAM is ON\r\n");
-//
-//	LL_mDelay(10);
-//
-//	vccp_on(1);
-//	d_print("PSU VCCP is ON\r\n");
+	LL_mDelay(10);
 
-	/* COREPWEROR interrupt */
-	/* PMU_PLTRST_N interrupt */
-	/* CPU_PWRGD interrupt */
+	vpp_on(1);
+	d_print("PSU VPP is ON\r\n");
+
+	LL_mDelay(10);
+
+	vddq_vtt_vccref_on(1);
+	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
+
+	/* SLP_S3_N interrupt */
+	while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_3) != 1);
+	d_print("SLP_S3_N is DEASSERTED\r\n");
+
+	LL_mDelay(10);
+
+	vccsram_on(1);
+	d_print("PSU VCCSRAM is ON\r\n");
+
+	LL_mDelay(10);
+
+	vccp_on(1);
+	d_print("PSU VCCP is ON\r\n");
+
+	/* COREPWEROR */
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_1);
 
 	while (1) {
 		d_print("Elapsed time %ld x 0.1ms\r\n", timer_ticks);

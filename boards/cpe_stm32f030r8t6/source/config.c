@@ -6,9 +6,9 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "../../cpe_stm32f030r8t6/include/config.h"
+#include "config.h"
 
-#include "../../cpe_stm32f030r8t6/include/drivers.h"
+#include "drivers.h"
 
 /** Частота шины HCLK (работы ядра процессора). */
 #define HCLK_FREQ	48000000
@@ -222,8 +222,9 @@ void board_config(void)
 	/** 12V_FALLING ANALOG INPUT */
 //	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
 
-	/** SOC_COREPWROK INPUT*/
-	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_1, LL_GPIO_MODE_INPUT);
+	/** SOC_COREPWROK*/
+	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_1);
 
 	/** SLP_S45_N INPUT */
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_2, LL_GPIO_MODE_INPUT);
@@ -271,7 +272,7 @@ void board_config(void)
 
 	/** SPI_BUF_EN_N */
 	LL_GPIO_SetPinMode(GPIOD, LL_GPIO_PIN_2, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOD, LL_GPIO_PIN_2);
+	LL_GPIO_SetOutputPin(GPIOD, LL_GPIO_PIN_2);
 
 	/***************************************************/
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
