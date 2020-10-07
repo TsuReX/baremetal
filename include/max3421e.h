@@ -83,9 +83,15 @@ void kb_usb_power_enable(void);
 
 void kb_usb_mode_set(void);
 
+void kb_usb_sof_start(void);
+
+void kb_usb_sof_stop(void);
+
 void kb_usb_bus_reset(void);
 
-void kb_usb_device_detection_cycle(void);
+void kb_usb_device_poll_detection_cycle(void);
+
+void kb_usb_device_irq_detection_cycle(void);
 
 void kb_usb_device_detect(void);
 

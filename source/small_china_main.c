@@ -91,24 +91,33 @@ void spi_usb_test(void)
 	/* 3. HOST, DPPULLDN, DMPULLDN */
 	kb_usb_mode_set();
 
-	mdelay(4000);
+//	mdelay(4000);
+
+
+	kb_usb_device_detect();
+//	kb_usb_device_poll_detection_cycle();
+//	kb_usb_device_irq_detection_cycle();
+
+	kb_usb_bus_reset();
+
+//
+//	kb_usb_sof_start();
+//
+//	kb_usb_setup_set_address();
+//
+//	kb_usb_sof_stop();
+
+//	while (1) {
+//		kb_usb_bus_reset();
+//		mdelay(100);
+//	}
+
+//	kb_usb_setup_get_dev_descr();
 
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
-	kb_usb_bus_reset();
-
-	mdelay(30);
-
-	kb_usb_bus_reset();
-
-	mdelay(30);
-
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
-	kb_usb_device_detect();
-//	kb_usb_device_detection_cycle();
-
 	/* 6. SETUP HS-IN */
-	kb_usb_setup_set_address();
-//	kb_usb_setup_get_dev_descr();
+
 }
 
 void usb_init(void)

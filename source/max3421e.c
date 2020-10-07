@@ -446,51 +446,32 @@ void kb_usb_mode_set(void)
 	spi_chip_deactivate();
 }
 
-void kb_usb_bus_reset(void)
+void kb_usb_sof_stop(void)
 {
-	spi_chip_activate();
-	uint8_t hctl = hctl_read();
-	spi_chip_deactivate();
-	d_print("HCTL: 0x%02X\r\n", hctl);
-
 	spi_chip_activate();
 	uint8_t mode = mode_read();
 	spi_chip_deactivate();
-	d_print("MODE: 0x%02X\r\n", mode);
 
+	/* Start SOF */
 	spi_chip_activate();
 	mode_write(mode & ~MODE_SOFKAENAB);
 	spi_chip_deactivate();
 
+	d_print("SOF stopped\r\n");
+}
+
+void kb_usb_sof_start(void)
+{
 	spi_chip_activate();
-	hctl_write(hctl | HCTL_BUSRST);
+	uint8_t mode = mode_read();
 	spi_chip_deactivate();
 
-	spi_chip_activate();
-	d_print("HCTL: 0x%02X\r\n", hctl_read());
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	while((hctl_read() & HCTL_BUSRST) == HCTL_BUSRST) {
-		spi_chip_deactivate();
-		mdelay(1);
-		spi_chip_activate();
-	}
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	mode = mode_read();
-	spi_chip_deactivate();
-	d_print("MODE: 0x%02X\r\n", mode);
-
+	/* Start SOF */
 	spi_chip_activate();
 	mode_write(mode | MODE_SOFKAENAB);
 	spi_chip_deactivate();
 
-	spi_chip_activate();
-	d_print("MODE: 0x%02X\r\n", mode_read());
-	spi_chip_deactivate();
-
+	/* Wait first SOF */
 	spi_chip_activate();
 	while((hirq_read() & HIRQ_FRAMEIRQ) != HIRQ_FRAMEIRQ) {
 		spi_chip_deactivate();
@@ -499,72 +480,138 @@ void kb_usb_bus_reset(void)
 	}
 	spi_chip_deactivate();
 
-//	d_print("USB bus was reset\r\n");
+	d_print("SOF started\r\n");
 }
 
-void kb_usb_device_detection_cycle(void)
+void kb_usb_bus_reset(void)
 {
+	spi_chip_activate();
+	uint8_t hctl = hctl_read();
+	spi_chip_deactivate();
 
+	/* Start bus reset */
+	spi_chip_activate();
+	hctl_write(hctl | HCTL_BUSRST);
+	spi_chip_deactivate();
 
-	while(1) {
-		d_print("----------------------\r\n");
+	/* Wait end of bus reset */
+	spi_chip_activate();
+	while((hctl_read() & HCTL_BUSRST) == HCTL_BUSRST) {
+		spi_chip_deactivate();
+		mdelay(1);
 		spi_chip_activate();
-		while((hirq_read() & HIRQ_CONDETIRQ) == 0x0) {
+	}
+	spi_chip_deactivate();
+
+	mdelay(200);
+
+	d_print("USB bus was reset\r\n");
+}
+
+void kb_usb_device_poll_detection_cycle(void)
+{
+	while(1) {
+		spi_chip_activate();
+		uint8_t hctl = hctl_read();
+		spi_chip_deactivate();
+
+		/* Update bus state */
+		spi_chip_activate();
+		hctl_write(hctl | HCTL_SAMPLEBUS);
+		spi_chip_deactivate();
+
+		spi_chip_activate();
+		uint16_t hrsl = hrsl_read();
+		spi_chip_deactivate();
+
+		switch(hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)){
+		case HRSL_KSTATUS:
+				d_print("Low speed device connected\r\n");
+				spi_chip_activate();
+				uint8_t mode = mode_read();
+				spi_chip_deactivate();
+
+				spi_chip_activate();
+				mode_write(mode | MODE_LOWSPEED);
+				spi_chip_deactivate();
+				break;
+		case HRSL_JSTATUS:
+				d_print("Full speed device connected\r\n");
+				break;
+		case (HRSL_JSTATUS | HRSL_KSTATUS):
+				d_print("Bus illegal state\r\n");
+				break;
+		case 0x00:
+				d_print("Device not connected\r\n");
+				break;
+		}
+
+		mdelay(1000);
+	}
+}
+
+void kb_usb_device_irq_detection_cycle(void)
+{
+	while(1) {
+		spi_chip_activate();
+		uint16_t hirq = hirq_read();
+		while((hirq & HIRQ_CONDETIRQ) == 0x0) {
 			spi_chip_deactivate();
+
 			mdelay(1000);
+
 			spi_chip_activate();
+			hirq = hirq_read();
 		}
 		spi_chip_deactivate();
 
-		spi_chip_activate();
-		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		spi_chip_deactivate();
-
+		/* Deassert CONDETIRQ */
 		spi_chip_activate();
 		hirq_write(HIRQ_CONDETIRQ);
 		spi_chip_deactivate();
 
 		spi_chip_activate();
-		d_print("HIRQ: 0x%02X\r\n", hirq_read());
+		uint16_t hrsl = hrsl_read();
 		spi_chip_deactivate();
 
-		spi_chip_activate();
-		d_print("HRSL: 0x%02X\r\n", hrsl_read());
-		spi_chip_deactivate();
+		switch(hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)){
+		case HRSL_KSTATUS:
+				d_print("Low speed device connected\r\n");
+				spi_chip_activate();
+				uint8_t mode = mode_read();
+				spi_chip_deactivate();
 
-		spi_chip_activate();
-		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		spi_chip_deactivate();
+				spi_chip_activate();
+				mode_write(mode | MODE_LOWSPEED);
+				spi_chip_deactivate();
+				break;
+		case HRSL_JSTATUS:
+				d_print("Full speed device connected\r\n");
+				break;
+		case (HRSL_JSTATUS | HRSL_KSTATUS):
+				d_print("Bus illegal state\r\n");
+				break;
+		case 0x00:
+				d_print("Device not connected\r\n");
+				break;
+		}
 
 		mdelay(1000);
-
-		spi_chip_activate();
-		d_print("HIRQ: 0x%02X\r\n", hirq_read());
-		spi_chip_deactivate();
 	}
 }
 
 void kb_usb_device_detect(void)
 {
-//	spi_chip_activate();
-//	uint8_t hirq = hirq_read();
-//	spi_chip_deactivate();
-//	d_print("HIRQ: 0x%02X\r\n", hirq);
-
 	spi_chip_activate();
 	uint8_t hctl = hctl_read();
 	spi_chip_deactivate();
 
-	spi_chip_activate();
-//	d_print("HRSL: 0x%02X\r\n", hrsl_read());
-	spi_chip_deactivate();
 	spi_chip_activate();
 	hctl_write(hctl | HCTL_SAMPLEBUS);
 	spi_chip_deactivate();
 
 	spi_chip_activate();
 	uint8_t hrsl = hrsl_read();
-//	d_print("HRSL: 0x%02X\r\n", hrsl);
 	spi_chip_deactivate();
 	/*
 		(J,K)
