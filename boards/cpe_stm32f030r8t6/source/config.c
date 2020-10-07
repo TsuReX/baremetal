@@ -154,8 +154,10 @@ void board_config(void)
 //	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
 	/** SWCLK */
 //	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_14, LL_GPIO_MODE_OUTPUT);
-	/** CON TO GND */
-//	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_15, LL_GPIO_MODE_OUTPUT);
+
+	/** VCCREF */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_15, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_15);
 
 	/***************************************************/
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
@@ -163,7 +165,7 @@ void board_config(void)
 	/** CON TO GND */
 //	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
 
-	/** V1P8_V1P05_EN */
+	/** V1P8 */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
@@ -171,8 +173,10 @@ void board_config(void)
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_2, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_2);
 
-	/** CON TO GND */
-//	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_OUTPUT);
+	/** V1P05_PG */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_INPUT);
+	/** TEMPORAL! Until pull up resistor will be placed */
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_3, LL_GPIO_PULL_UP);
 
 	/** VCCSRAM_EN */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_4, LL_GPIO_MODE_OUTPUT);
@@ -252,8 +256,9 @@ void board_config(void)
 	/** THERMTRIP_SHUTDOWN_N INPUT */
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_10, LL_GPIO_MODE_INPUT);
 
-	/** CON TO GND */
-//	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_11, LL_GPIO_MODE_OUTPUT);
+	/** V1P05 */
+	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_11, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_11);
 
 	/** SOC_RTEST_N INPUT*/
 	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_12, LL_GPIO_MODE_INPUT);

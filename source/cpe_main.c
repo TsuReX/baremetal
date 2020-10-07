@@ -186,9 +186,9 @@ void vccp_off(uint32_t waiting)
 		while (LL_GPIO_IsInputPinSet(GPIOF, LL_GPIO_PIN_0) == 1);
 }
 
-void vddq_vtt_vccref_on(uint32_t waiting)
+void vddq_vtt_on(uint32_t waiting)
 {
-	/** VDDQ_VTT_VCCREF_EN */
+	/** VDDQ_VTT_EN */
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_11);
 
 	/** VDDQ_VTT_PG */
@@ -196,14 +196,26 @@ void vddq_vtt_vccref_on(uint32_t waiting)
 		while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_9) != 1);
 }
 
-void vddq_vtt_vccref_off(uint32_t waiting)
+void vddq_vtt_off(uint32_t waiting)
 {
-	/** VDDQ_VTT_VCCREF_EN */
+	/** VDDQ_VTT_EN */
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_11);
 
 	/** VDDQ_VTT_PG */
 	if (waiting != 0)
 		while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_9) == 1);
+}
+
+void vccref_on()
+{
+	/** VCCREF_EN */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_15);
+}
+
+void vccref_off()
+{
+	/** VCCREF_EN */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_15);
 }
 
 void vpp_on(uint32_t waiting)
@@ -226,9 +238,9 @@ void vpp_off(uint32_t waiting)
 		while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_8) == 1);
 }
 
-void v1p8_v1p05_on(uint32_t waiting)
+void v1p8_on(uint32_t waiting)
 {
-	/** V1P8_V1P05_EN */
+	/** V1P8_EN */
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
 	/** V1P8_PG */
@@ -236,14 +248,34 @@ void v1p8_v1p05_on(uint32_t waiting)
 		while (LL_GPIO_IsInputPinSet(GPIOF, LL_GPIO_PIN_4) != 1);
 }
 
-void v1p8_v1p05_off(uint32_t waiting)
+void v1p8_off(uint32_t waiting)
 {
-	/** V1P8_V1P05_EN */
+	/** V1P8_EN */
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
 	/** V1P8_PG */
 	if (waiting != 0)
 		while (LL_GPIO_IsInputPinSet(GPIOF, LL_GPIO_PIN_4) == 1);
+}
+
+void v1p05_on(uint32_t waiting)
+{
+	/** V1P05_EN */
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_11);
+
+	/** V1P05_PG */
+	if (waiting != 0)
+		while (LL_GPIO_IsInputPinSet(GPIOB, LL_GPIO_PIN_3) != 1);
+}
+
+void v1p05_off(uint32_t waiting)
+{
+	/** V1P05_EN */
+	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_11);
+
+	/** V1P05_PG */
+	if (waiting != 0)
+		while (LL_GPIO_IsInputPinSet(GPIOB, LL_GPIO_PIN_3) == 1);
 }
 
 void vnn_on(uint32_t waiting)
@@ -287,67 +319,51 @@ int main(void)
 	v3p3_on(1);
 	d_print("PSU V3P3 is ON\r\n");
 
-//	/* RSMRST_N */
-//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_1);
-//	LL_mDelay(10);
-//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_1);
-//	d_print("RSMRST_N is DEASSERTED\r\n");
+	v1p8_on(1);
+	d_print("PSU V1P8 is ON\r\n");
 
-	LL_mDelay(1);
+	LL_mDelay(15);
 
 	vnn_on(1);
 	d_print("PSU VNN is ON\r\n");
 
-	LL_mDelay(1);
+	LL_mDelay(5);
 
-	v1p8_v1p05_on(1);
-	d_print("PSU V1P8 and V1P05 are ON\r\n");
+	v1p05_on(1);
+	d_print("PSU V1P05 is ON\r\n");
 
-	LL_mDelay(1);
-
-//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_8);
-//	d_print("SOC_SRTCRST_N is DEASSERTED\r\n");
-//
-//	LL_mDelay(10);
+	LL_mDelay(10);
 
 	/* RSMRST_N */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_1);
 	d_print("RSMRST_N is DEASSERTED\r\n");
-	LL_mDelay(200);
-//	/* PWRBTN_N interrupt */
-//	while (1) {
-//		if (power_btn_pressed == 1) {
-//			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_11);
-//			LL_mDelay(100);
-//			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_11);
-//			break;
-//		}
-//	}
 
-	/* SLP_S45_N interrupt */
+	LL_mDelay(200);
+
+	/* SLP_S45_N */
 	while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_2) != 1);
 	d_print("SLP_S45_N is DEASSERTED\r\n");
 
-	LL_mDelay(1);
+	vddq_vtt_on(1);
+	d_print("PSU VDDQ and VTT are ON\r\n");
 
-	vpp_on(1);
-	d_print("PSU VPP is ON\r\n");
-
-	LL_mDelay(1);
-
-	vddq_vtt_vccref_on(1);
-	d_print("PSU VDDQ, VTT and VCCREF are ON\r\n");
-
-	/* SLP_S3_N interrupt */
+	/* SLP_S3_N */
 	while (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_3) != 1);
 	d_print("SLP_S3_N is DEASSERTED\r\n");
 
-	LL_mDelay(1);
+	LL_mDelay(5);
+
+	vccref_on();
+	d_print("PSU VCCREF is ON\r\n");
+
+	LL_mDelay(5);
 
 	vccsram_on(1);
 	d_print("PSU VCCSRAM is ON\r\n");
+	vpp_on(1);
+	d_print("PSU VPP is ON\r\n");
 
-	LL_mDelay(1);
+	LL_mDelay(5);
 
 	vccp_on(1);
 	d_print("PSU VCCP is ON\r\n");
@@ -358,38 +374,7 @@ int main(void)
 
 	d_print("BIOS should start working\r\n");
 
-//	while (1) {
-//		d_print("Elapsed time %ld x 0.1ms\r\n", timer_ticks);
-//		LL_mDelay(DELAY_500_MS);
-//		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_5);
-//		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//		LL_mDelay(DELAY_500_MS);
-//		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_5);
-//		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//	}
-
 	while (1) {
-//		if (power_btn_pressed == 1) {
-//			d_print("PWRBTN is pressed\r\n");
-//			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_11);
-//			LL_mDelay(100);
-//			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_11);
-//
-//			LL_mDelay(200);
-//			LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
-//			power_btn_pressed = 0;
-//		}
-//		if (reset_btn_pressed == 1) {
-//
-//			d_print("RSTBTN is pressed\r\n");
-//			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_12);
-//			LL_mDelay(100);
-//			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
-//
-//			LL_mDelay(200);
-//			LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
-//			reset_btn_pressed = 0;
-//		}
 		LL_mDelay(1);
 	}
 
