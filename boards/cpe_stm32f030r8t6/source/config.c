@@ -109,7 +109,7 @@ void board_config(void)
 
 	/** PS_ON */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_0);
 
 	/** RSMRST_N */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
