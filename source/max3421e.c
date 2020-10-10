@@ -94,6 +94,7 @@
 
 #define HCTL_BUSRST		0x01
 #define HCTL_SAMPLEBUS	0x04
+#define HCTL_RCVTOG1	0x20
 
 #define MODE_HOST		0x01
 #define MODE_LOWSPEED	0x02
@@ -755,7 +756,7 @@ void kb_usb_setup_get_dev_descr(void)
 		uint16_t	w_index;
 		uint16_t	w_length;
 	};
-	struct std_request get_dev_descr = {0x80, 0x6, 0x01, 0x0, 0x0};
+	struct std_request get_dev_descr = {0x80, 0x06, 0x0100, 0x0000, 0x0000};
 
 	d_print("bm_request_type: 0x%02X\r\n", get_dev_descr.bm_request_type);
 	d_print("b_request: 0x%02X\r\n", get_dev_descr.b_request);
@@ -788,9 +789,25 @@ void kb_usb_setup_get_dev_descr(void)
 	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
 	spi_chip_deactivate();
 
-	kb_usb_hs_in_send();
+
+
+	/* It needs time to process request */
+	mdelay(10);
+//	kb_usb_hs_in_send();
+	spi_chip_activate();
+	uint8_t hctl = hctl_read();
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	hctl_write(hctl | HCTL_RCVTOG1);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	peraddr_write(0x34);
+	spi_chip_deactivate();
 
 	d_print("Send BULK/INTERRUPT IN\r\n");
+
 	spi_chip_activate();
 	hxfr_write(HXFR_BULKIN);
 	spi_chip_deactivate();
@@ -834,7 +851,7 @@ void kb_usb_setup_get_dev_descr(void)
 		uint8_t		i_serial_number;
 		uint8_t		b_num_configurations;
 	};
-	struct device_descriptor dev_descr;
+	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
 
 	rcvfifo_read((uint8_t*)&dev_descr, sizeof(dev_descr));
 
