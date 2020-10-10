@@ -91,7 +91,7 @@ void spi_usb_test(void)
 	/* 3. HOST, DPPULLDN, DMPULLDN */
 	kb_usb_mode_set();
 
-//	mdelay(4000);
+	mdelay(4000);
 
 
 	kb_usb_device_detect();
@@ -100,19 +100,17 @@ void spi_usb_test(void)
 
 	kb_usb_bus_reset();
 
-//
-//	kb_usb_sof_start();
-//
-//	kb_usb_setup_set_address();
-//
-//	kb_usb_sof_stop();
+	kb_usb_sof_start();
 
-//	while (1) {
-//		kb_usb_bus_reset();
-//		mdelay(100);
-//	}
+	kb_usb_bus_reset();
 
-//	kb_usb_setup_get_dev_descr();
+	kb_usb_setup_set_address();
+
+	kb_usb_hs_in_send();
+
+	kb_usb_setup_get_dev_descr();
+
+	kb_usb_hs_out_send();
 
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */

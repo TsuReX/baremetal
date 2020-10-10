@@ -87,8 +87,10 @@
 
 #define SPI_CMD_RDHRSL	((SPI_USB_HRSLREG << SPI_USB_REGNUMOFF) | SPI_USB_RDOP)
 
+#define HIRQ_RCVDAVIRQ	0x04
 #define HIRQ_CONDETIRQ	0x20
 #define HIRQ_FRAMEIRQ	0x40
+#define HIRQ_HXFRDNIRQ	0x80
 
 #define HCTL_BUSRST		0x01
 #define HCTL_SAMPLEBUS	0x04
@@ -101,6 +103,12 @@
 
 #define HRSL_KSTATUS	0x40
 #define HRSL_JSTATUS	0x80
+
+#define HXFR_BULKIN		0x00
+#define HXFR_SETUP		0x10
+#define HXFR_BULK_OUT	0x20
+#define HXFR_HSIN		0x80
+#define HXFR_HSOUT		0xA0
 
 #define IOPINS1_GPOUT1 0x1
 
@@ -671,31 +679,70 @@ void kb_usb_setup_set_address(void)
 	spi_chip_deactivate();
 
 //	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+//	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
-	size_t counter = 1;
-	for (; counter > 0; --counter) {
+	spi_chip_activate();
+	hxfr_write(HXFR_SETUP);
+	spi_chip_deactivate();
 
-		spi_chip_activate();
-		hxfr_write(0x10);
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
 		spi_chip_deactivate();
-
+		u100delay(1);
 		spi_chip_activate();
-		while((hirq_read() & 0x80) != 0x80) {
-			spi_chip_deactivate();
-			u100delay(1);
-			spi_chip_activate();
-		}
-		spi_chip_deactivate();
-
-		spi_chip_activate();
-		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-		spi_chip_deactivate();
-
-//		mdelay(20);
 	}
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
+//	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 //	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
+}
+
+void kb_usb_hs_in_send(void)
+{
+	d_print("Send HS IN\r\n");
+
+	spi_chip_activate();
+	hxfr_write(HXFR_HSIN);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
+}
+
+void kb_usb_hs_out_send(void)
+{
+	d_print("Send HS OUT\r\n");
+
+	spi_chip_activate();
+	hxfr_write(HXFR_HSOUT);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
 }
 
 void kb_usb_setup_get_dev_descr(void)
@@ -708,43 +755,95 @@ void kb_usb_setup_get_dev_descr(void)
 		uint16_t	w_index;
 		uint16_t	w_length;
 	};
-	struct std_request set_addr = {0x80, 0x6, 0x01, 0x0, 0x0};
+	struct std_request get_dev_descr = {0x80, 0x6, 0x01, 0x0, 0x0};
 
-	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
-	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
-	d_print("w_value: 0x%04X\r\n", set_addr.w_value);
-	d_print("w_index: 0x%04X\r\n", set_addr.w_index);
-	d_print("w_length: 0x%04X\r\n", set_addr.w_length);
+	d_print("bm_request_type: 0x%02X\r\n", get_dev_descr.bm_request_type);
+	d_print("b_request: 0x%02X\r\n", get_dev_descr.b_request);
+	d_print("w_value: 0x%04X\r\n", get_dev_descr.w_value);
+	d_print("w_index: 0x%04X\r\n", get_dev_descr.w_index);
+	d_print("w_length: 0x%04X\r\n", get_dev_descr.w_length);
 
 	spi_chip_activate();
-	sudfifo_write((uint8_t*)&set_addr, sizeof(set_addr));
+	sudfifo_write((uint8_t*)&get_dev_descr, sizeof(get_dev_descr));
 	spi_chip_deactivate();
 
 	spi_chip_activate();
-	peraddr_write(0x00);
+	peraddr_write(0x34);
 	spi_chip_deactivate();
 
-//	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 
-	size_t counter = 3;
-	for (; counter > 0; --counter) {
+	spi_chip_activate();
+	hxfr_write(HXFR_SETUP);
+	spi_chip_deactivate();
 
-		spi_chip_activate();
-		hxfr_write(0x10);
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
 		spi_chip_deactivate();
-
+		u100delay(1);
 		spi_chip_activate();
-		while((hirq_read() & 0x80) != 0x80) {
-			spi_chip_deactivate();
-			u100delay(1);
-			spi_chip_activate();
-		}
-		spi_chip_deactivate();
-
-		spi_chip_activate();
-		d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-		spi_chip_deactivate();
-
-		mdelay(20);
 	}
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
+	kb_usb_hs_in_send();
+
+	d_print("Send BULK/INTERRUPT IN\r\n");
+	spi_chip_activate();
+	hxfr_write(HXFR_BULKIN);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+
+	uint8_t rcvbc = rcvbc_read();
+	d_print("rcvbc: 0x%02X\r\n", rcvbc);
+
+	struct device_descriptor {
+		uint8_t		b_length;
+		uint8_t		b_descriptor_type;
+		uint16_t	bcd_usb;
+		uint8_t		b_device_class;
+		uint8_t		b_device_sub_class;
+		uint8_t		b_device_protocol;
+		uint8_t		b_max_packet_size;
+		uint16_t	id_vendor;
+		uint16_t	id_product;
+		uint16_t	bcd_device;
+		uint8_t		i_manufacturer;
+		uint8_t		i_product;
+		uint8_t		i_serial_number;
+		uint8_t		b_num_configurations;
+	};
+	struct device_descriptor dev_descr;
+
+	rcvfifo_read((uint8_t*)&dev_descr, sizeof(dev_descr));
+
+	d_print("b_length: 0x%02X\r\n", dev_descr.b_length);
+	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr.b_descriptor_type);
+	d_print("bcd_usb: 0x%04X\r\n", dev_descr.bcd_usb);
+	d_print("b_device_class: 0x%02X\r\n", dev_descr.b_device_class);
+	d_print("b_device_sub_class: 0x%02X\r\n", dev_descr.b_device_sub_class);
+	d_print("b_device_protocol: 0x%02X\r\n", dev_descr.b_device_protocol);
+	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr.b_max_packet_size);
+
 }

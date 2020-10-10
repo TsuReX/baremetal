@@ -99,5 +99,8 @@ void kb_usb_setup_set_address(void);
 
 void kb_usb_setup_get_dev_descr(void);
 
+void kb_usb_hs_out_send(void);
+
+void kb_usb_hs_in_send(void);
 
 #endif /* MAX3421E_H_ */
