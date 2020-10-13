@@ -106,11 +106,17 @@ void spi_usb_test(void)
 
 	kb_usb_setup_set_address();
 
+	mdelay(2);
+
 	kb_usb_hs_in_send();
 
-	kb_usb_setup_get_dev_descr();
+//	kb_usb_bus_reset();
 
+	kb_usb_setup_get_dev_descr();
+	mdelay(2);
 	kb_usb_hs_out_send();
+
+//	kb_usb_setup_get_int_data();
 
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
