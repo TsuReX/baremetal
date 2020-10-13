@@ -832,7 +832,9 @@ void kb_usb_setup_get_dev_descr(void)
 	}
 	spi_chip_deactivate();
 
+	spi_chip_activate();
 	uint8_t rcvbc = rcvbc_read();
+	spi_chip_deactivate();
 	d_print("rcvbc: 0x%02X\r\n", rcvbc);
 
 	struct device_descriptor {
@@ -853,7 +855,9 @@ void kb_usb_setup_get_dev_descr(void)
 	};
 	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
 
+	spi_chip_activate();
 	rcvfifo_read((uint8_t*)&dev_descr, sizeof(dev_descr));
+	spi_chip_deactivate();
 
 	d_print("b_length: 0x%02X\r\n", dev_descr.b_length);
 	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr.b_descriptor_type);
@@ -863,4 +867,7 @@ void kb_usb_setup_get_dev_descr(void)
 	d_print("b_device_protocol: 0x%02X\r\n", dev_descr.b_device_protocol);
 	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr.b_max_packet_size);
 
+	spi_chip_activate();
+	hirq_write(HIRQ_RCVDAVIRQ);
+	spi_chip_deactivate();
 }
