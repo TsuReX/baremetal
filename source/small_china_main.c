@@ -74,7 +74,7 @@ void spi_flash_test(void) {
 
 void spi_usb_test(void)
 {
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_0);
+//	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_0);
 
 	/* 0. FDUPSPI */
 	kb_usb_fullduplex_spi_set();
@@ -104,17 +104,17 @@ void spi_usb_test(void)
 
 	kb_usb_bus_reset();
 
-	kb_usb_setup_set_address();
+	kb_usb_setup_set_address(0x34);
 
-	mdelay(2);
+//	mdelay(2);
 
-	kb_usb_hs_in_send();
+	kb_usb_hs_in_send(0x00);
 
 //	kb_usb_bus_reset();
 
 	kb_usb_setup_get_dev_descr();
-	mdelay(2);
-	kb_usb_hs_out_send();
+//	mdelay(2);
+//	kb_usb_hs_out_send();
 
 //	kb_usb_setup_get_int_data();
 

@@ -97,7 +97,10 @@
 
 #define HCTL_BUSRST		0x01
 #define HCTL_SAMPLEBUS	0x04
+#define HCTL_RCVTOG0	0x10
 #define HCTL_RCVTOG1	0x20
+#define HCTL_SNDTOG0	0x40
+#define HCTL_SNDTOG1	0x80
 
 #define MODE_HOST		0x01
 #define MODE_LOWSPEED	0x02
@@ -656,7 +659,7 @@ void kb_usb_device_detect(void)
 	}
 }
 
-void kb_usb_setup_set_address(void)
+void kb_usb_setup_set_address(uint8_t dev_addr)
 {
 	d_print("Setting up device address\r\n");
 	struct std_request {
@@ -666,7 +669,7 @@ void kb_usb_setup_set_address(void)
 		uint16_t	w_index;
 		uint16_t	w_length;
 	};
-	struct std_request set_addr = {0x0, 0x5, 0x34, 0x0, 0x0};
+	struct std_request set_addr = {0x0, 0x5, dev_addr, 0x0, 0x0};
 
 	d_print("bm_request_type: 0x%02X\r\n", set_addr.bm_request_type);
 	d_print("b_request: 0x%02X\r\n", set_addr.b_request);
@@ -709,9 +712,21 @@ void kb_usb_setup_set_address(void)
 //	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 
-void kb_usb_hs_in_send(void)
+void kb_usb_hs_in_send(uint8_t dev_addr)
 {
-	d_print("Send HS IN\r\n");
+//	spi_chip_activate();
+//	uint8_t hctl = hctl_read();
+//	spi_chip_deactivate();
+//
+//	spi_chip_activate();
+//	hctl_write(hctl | HCTL_RCVTOG1);
+//	spi_chip_deactivate();
+
+	d_print("Status IN\r\n");
+
+	spi_chip_activate();
+	peraddr_write(dev_addr);
+	spi_chip_deactivate();
 
 	spi_chip_activate();
 	hxfr_write(HXFR_HSIN);
@@ -733,6 +748,19 @@ void kb_usb_hs_in_send(void)
 	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
 	spi_chip_deactivate();
 
+//	spi_chip_activate();
+//	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
+//		spi_chip_deactivate();
+//		u100delay(1);
+//		spi_chip_activate();
+//	}
+//	spi_chip_deactivate();
+//
+//	spi_chip_activate();
+//	hirq_write(HIRQ_RCVDAVIRQ);
+//	spi_chip_deactivate();
+
+	d_print("Performed\r\n");
 }
 
 void kb_usb_hs_out_send(void)
@@ -771,14 +799,14 @@ void kb_usb_setup_get_dev_descr(void)
 		uint16_t	w_index;
 		uint16_t	w_length;
 	};
-	struct std_request get_dev_descr = {0x80, 0x06, 0x0100, 0x0000, 0x0000};
+	struct std_request get_dev_descr = {0x80, 0x06, 0x0100, 0x0000, 0x0012};
 
 	d_print("bm_request_type: 0x%02X\r\n", get_dev_descr.bm_request_type);
 	d_print("b_request: 0x%02X\r\n", get_dev_descr.b_request);
 	d_print("w_value: 0x%04X\r\n", get_dev_descr.w_value);
 	d_print("w_index: 0x%04X\r\n", get_dev_descr.w_index);
 	d_print("w_length: 0x%04X\r\n", get_dev_descr.w_length);
-
+	mdelay(10);
 	spi_chip_activate();
 	sudfifo_write((uint8_t*)&get_dev_descr, sizeof(get_dev_descr));
 	spi_chip_deactivate();
@@ -786,7 +814,6 @@ void kb_usb_setup_get_dev_descr(void)
 	spi_chip_activate();
 	peraddr_write(0x34);
 	spi_chip_deactivate();
-
 
 	spi_chip_activate();
 	hxfr_write(HXFR_SETUP);
@@ -809,8 +836,10 @@ void kb_usb_setup_get_dev_descr(void)
 	spi_chip_deactivate();
 
 	/* It needs time to process request */
-	mdelay(200);
+	mdelay(20);
+
 //	kb_usb_hs_in_send();
+
 	spi_chip_activate();
 	uint8_t hctl = hctl_read();
 	spi_chip_deactivate();
@@ -819,46 +848,46 @@ void kb_usb_setup_get_dev_descr(void)
 	hctl_write(hctl | HCTL_RCVTOG1);
 	spi_chip_deactivate();
 
-	spi_chip_activate();
-	peraddr_write(0x34);
-	spi_chip_deactivate();
+//	spi_chip_activate();
+//	hctl_write(hctl | HCTL_SNDTOG1);
+//	spi_chip_deactivate();
+//
+//	spi_chip_activate();
+//	peraddr_write(0x34);
+//	spi_chip_deactivate();
 
 	d_print("Send BULK/INTERRUPT IN\r\n");
-//	spi_chip_activate();
-//	hirq_write(0xFF);
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hirq_write(HIRQ_RCVDAVIRQ);
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hxfr_write(HXFR_BULKIN);
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
-//		spi_chip_deactivate();
-//		u100delay(1);
-//		spi_chip_activate();
-//	}
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hirq_write(HIRQ_HXFRDNIRQ);
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
-//		spi_chip_deactivate();
-//		u100delay(1);
-//		spi_chip_activate();
-//	}
-//	spi_chip_deactivate();
+
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+
+	spi_chip_activate();
+	hxfr_write(HXFR_BULKIN);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	hirq_write(HIRQ_HXFRDNIRQ);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
+		spi_chip_deactivate();
+		u100delay(1);
+		spi_chip_activate();
+	}
+	spi_chip_deactivate();
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
 	uint8_t rcvbc = 0x00;
 
@@ -868,69 +897,69 @@ void kb_usb_setup_get_dev_descr(void)
 
 	d_print("rcvbc: 0x%02X\r\n", rcvbc);
 
-//	__PACKED_STRUCT device_descriptor {
-//		uint8_t		b_length;
-//		uint8_t		b_descriptor_type;
-//		uint16_t	bcd_usb;
-//		uint8_t		b_device_class;
-//		uint8_t		b_device_sub_class;
-//		uint8_t		b_device_protocol;
-//		uint8_t		b_max_packet_size;
-//		uint16_t	id_vendor;
-//		uint16_t	id_product;
-//		uint16_t	bcd_device;
-//		uint8_t		i_manufacturer;
-//		uint8_t		i_product;
-//		uint8_t		i_serial_number;
-//		uint8_t		b_num_configurations;
-//	};
-//	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
+	__PACKED_STRUCT device_descriptor {
+		uint8_t		b_length;
+		uint8_t		b_descriptor_type;
+		uint16_t	bcd_usb;
+		uint8_t		b_device_class;
+		uint8_t		b_device_sub_class;
+		uint8_t		b_device_protocol;
+		uint8_t		b_max_packet_size;
+		uint16_t	id_vendor;
+		uint16_t	id_product;
+		uint16_t	bcd_device;
+		uint8_t		i_manufacturer;
+		uint8_t		i_product;
+		uint8_t		i_serial_number;
+		uint8_t		b_num_configurations;
+	};
+	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
+
+	spi_chip_activate();
+	rcvfifo_read((uint8_t*)&dev_descr, sizeof(dev_descr));
+	spi_chip_deactivate();
+
+	d_print("b_length: 0x%02X\r\n", dev_descr.b_length);
+	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr.b_descriptor_type);
+	d_print("bcd_usb: 0x%04X\r\n", dev_descr.bcd_usb);
+	d_print("b_device_class: 0x%02X\r\n", dev_descr.b_device_class);
+	d_print("b_device_sub_class: 0x%02X\r\n", dev_descr.b_device_sub_class);
+	d_print("b_device_protocol: 0x%02X\r\n", dev_descr.b_device_protocol);
+	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr.b_max_packet_size);
+
+	spi_chip_activate();
+	hirq_write(HIRQ_RCVDAVIRQ);
+	spi_chip_deactivate();
+//
+//
+//	uint8_t array[64];
 //
 //	spi_chip_activate();
-//	rcvfifo_read((uint8_t*)&dev_descr, sizeof(dev_descr));
+//	rcvfifo_read(array, sizeof(array));
 //	spi_chip_deactivate();
 //
-//	d_print("b_length: 0x%02X\r\n", dev_descr.b_length);
-//	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr.b_descriptor_type);
-//	d_print("bcd_usb: 0x%04X\r\n", dev_descr.bcd_usb);
-//	d_print("b_device_class: 0x%02X\r\n", dev_descr.b_device_class);
-//	d_print("b_device_sub_class: 0x%02X\r\n", dev_descr.b_device_sub_class);
-//	d_print("b_device_protocol: 0x%02X\r\n", dev_descr.b_device_protocol);
-//	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr.b_max_packet_size);
+//	d_print("Data: ");
+//	size_t idx = 0;
+//	for (; idx < sizeof(array); ++idx)
+//		d_print("%02X ", array[idx]);
+//	d_print("\r\n");
 //
 //	spi_chip_activate();
 //	hirq_write(HIRQ_RCVDAVIRQ);
 //	spi_chip_deactivate();
-
-
-	uint8_t array[64];
-
-	spi_chip_activate();
-	rcvfifo_read(array, sizeof(array));
-	spi_chip_deactivate();
-
-	d_print("Data: ");
-	size_t idx = 0;
-	for (; idx < sizeof(array); ++idx)
-		d_print("%02X ", array[idx]);
-	d_print("\r\n");
-
-	spi_chip_activate();
-	hirq_write(HIRQ_RCVDAVIRQ);
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	rcvfifo_read(array, sizeof(array));
-	spi_chip_deactivate();
-
-	d_print("Data: ");
-	for (idx = 0; idx < sizeof(array); ++idx)
-		d_print("%02X ", array[idx]);
-	d_print("\r\n");
-
-	spi_chip_activate();
-	hirq_write(HIRQ_RCVDAVIRQ);
-	spi_chip_deactivate();
+//
+////	spi_chip_activate();
+////	rcvfifo_read(array, sizeof(array));
+////	spi_chip_deactivate();
+////
+////	d_print("Data: ");
+////	for (idx = 0; idx < sizeof(array); ++idx)
+////		d_print("%02X ", array[idx]);
+////	d_print("\r\n");
+//
+//	spi_chip_activate();
+//	hirq_write(HIRQ_RCVDAVIRQ);
+//	spi_chip_deactivate();
 }
 
 void kb_usb_setup_get_int_data(void)

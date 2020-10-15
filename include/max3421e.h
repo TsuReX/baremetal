@@ -95,7 +95,7 @@ void kb_usb_device_irq_detection_cycle(void);
 
 void kb_usb_device_detect(void);
 
-void kb_usb_setup_set_address(void);
+void kb_usb_setup_set_address(uint8_t dev_addr);
 
 void kb_usb_setup_get_dev_descr(void);
 
@@ -103,6 +103,6 @@ void kb_usb_setup_get_int_data(void);
 
 void kb_usb_hs_out_send(void);
 
-void kb_usb_hs_in_send(void);
+void kb_usb_hs_in_send(uint8_t dev_addr);
 
 #endif /* MAX3421E_H_ */
