@@ -712,18 +712,8 @@ void kb_usb_setup_set_address(uint8_t dev_addr)
 //	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 
-void kb_usb_hs_in_send(uint8_t dev_addr)
+int16_t kb_usb_hs_in_send(uint8_t dev_addr)
 {
-//	spi_chip_activate();
-//	uint8_t hctl = hctl_read();
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hctl_write(hctl | HCTL_RCVTOG1);
-//	spi_chip_deactivate();
-
-	d_print("Status IN\r\n");
-
 	spi_chip_activate();
 	peraddr_write(dev_addr);
 	spi_chip_deactivate();
@@ -745,27 +735,18 @@ void kb_usb_hs_in_send(uint8_t dev_addr)
 	spi_chip_deactivate();
 
 	spi_chip_activate();
-	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	uint8_t hrslt = hrsl_read() & 0x0F;
 	spi_chip_deactivate();
 
-//	spi_chip_activate();
-//	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
-//		spi_chip_deactivate();
-//		u100delay(1);
-//		spi_chip_activate();
-//	}
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hirq_write(HIRQ_RCVDAVIRQ);
-//	spi_chip_deactivate();
+	return -1 * hrslt;
 
-	d_print("Performed\r\n");
 }
 
-void kb_usb_hs_out_send(void)
+int16_t kb_usb_hs_out_send(uint8_t dev_addr)
 {
-	d_print("Send HS OUT\r\n");
+	spi_chip_activate();
+	peraddr_write(dev_addr);
+	spi_chip_deactivate();
 
 	spi_chip_activate();
 	hxfr_write(HXFR_HSOUT);
@@ -784,9 +765,10 @@ void kb_usb_hs_out_send(void)
 	spi_chip_deactivate();
 
 	spi_chip_activate();
-	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
+	uint8_t hrslt = hrsl_read() & 0x0F;
 	spi_chip_deactivate();
 
+	return -1 * hrslt;
 }
 
 int16_t kb_usb_setup_send(uint8_t dev_addr, struct std_request* request)
@@ -829,83 +811,120 @@ int16_t kb_usb_setup_send(uint8_t dev_addr, struct std_request* request)
 	return -1 * (hrsl & 0x0F);
 }
 
-int16_t kb_usb_bulk_receive(uint8_t dev_addr, void* dst_buf, size_t buf_size)
+void kb_usb_recv_tog_set(uint32_t recv_tog)
+{
+	/* Read HCTL register */
+	spi_chip_activate();
+	uint8_t hctl = hctl_read();
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	if (recv_tog == 0){
+		/* Notice master to wait DATA0 */
+		hctl_write(hctl | HCTL_RCVTOG0);
+	} else {
+		/* Notice master to wait DATA1 */
+		hctl_write(hctl | HCTL_RCVTOG1);
+	}
+	spi_chip_deactivate();
+}
+
+void kb_usb_send_tog_set(uint32_t send_tog)
+{
+	/* Read HCTL register */
+	spi_chip_activate();
+	uint8_t hctl = hctl_read();
+	spi_chip_deactivate();
+
+	spi_chip_activate();
+	if (send_tog == 0){
+		/* Notice master to send DATA0 */
+		hctl_write(hctl | HCTL_SNDTOG0);
+	} else {
+		/* Notice master to send DATA1 */
+		hctl_write(hctl | HCTL_SNDTOG1);
+	}
+	spi_chip_deactivate();
+}
+
+int16_t kb_usb_bulk_receive(uint8_t dev_addr, uint8_t ep_addr, void* dst_buf, size_t buf_size)
 {
 	/* Set device address */
 	spi_chip_activate();
 	peraddr_write(dev_addr);
 	spi_chip_deactivate();
 
-	/* Read HCTL register */
-	spi_chip_activate();
-	uint8_t hctl = hctl_read();
-	spi_chip_deactivate();
+	size_t size_to_recv = buf_size;
 
-	/* Notice master to wait DATA1 */
-	spi_chip_activate();
-	hctl_write(hctl | HCTL_RCVTOG1);
-	spi_chip_deactivate();
-
-	/* Initiate BULK-IN transaction */
-	spi_chip_activate();
-	hxfr_write(HXFR_BULKIN);
-	spi_chip_deactivate();
-
-	/* Check ending of the package transmission */
-	spi_chip_activate();
-	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
-		spi_chip_deactivate();
-		u100delay(1);
+	do {
+//		d_print("Size to receive %d\r\n", size_to_recv);
+		/* Initiate BULK-IN transaction */
 		spi_chip_activate();
-	}
-	spi_chip_deactivate();
-
-	/* Clear flag of the transmission ending */
-	spi_chip_activate();
-	hirq_write(HIRQ_HXFRDNIRQ);
-	spi_chip_deactivate();
-
-	/* Check result of the BULK-IN transmission */
-	spi_chip_activate();
-	uint8_t hrslt = hrsl_read() & 0x0F;
-	spi_chip_deactivate();
-
-	if (hrslt != 0){
-//		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n", hrslt);
-		return -1 * hrslt;
-	}
-
-	/* Check flag of successful data reception */
-	spi_chip_activate();
-	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
+		hxfr_write(HXFR_BULKIN | ep_addr);
 		spi_chip_deactivate();
-		u100delay(1);
+
+		/* Check ending of the package transmission */
 		spi_chip_activate();
-	}
-	spi_chip_deactivate();
+		while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
+			spi_chip_deactivate();
+			u100delay(1);
+			spi_chip_activate();
+		}
+		spi_chip_deactivate();
 
-	uint8_t rcvbc = 0x00;
+		/* Clear flag of the transmission ending */
+		spi_chip_activate();
+		hirq_write(HIRQ_HXFRDNIRQ);
+		spi_chip_deactivate();
 
-	/* Read data form reception byte counter */
-	spi_chip_activate();
-	rcvbc = rcvbc_read();
-	spi_chip_deactivate();
+		/* Check result of the BULK-IN transmission */
+		spi_chip_activate();
+		uint8_t hrslt = hrsl_read() & 0x0F;
+		spi_chip_deactivate();
 
-//	d_print("rcvbc: 0x%02X\r\n", rcvbc);
+		if (hrslt != 0){
+	//		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n", hrslt);
+			return -1 * hrslt;
+		}
 
-	uint8_t size_to_receive = (rcvbc > buf_size) ? buf_size : rcvbc;
+		/* Check flag of successful data reception */
+		spi_chip_activate();
+		while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
+			spi_chip_deactivate();
+			u100delay(1);
+			spi_chip_activate();
+		}
+		spi_chip_deactivate();
 
-	/* Read data from reception FIFO */
-	spi_chip_activate();
-	rcvfifo_read((uint8_t*)dst_buf, size_to_receive);
-	spi_chip_deactivate();
+		uint8_t rcvbc = 0x00;
 
-	/* Clear flag of successful reception */
-	spi_chip_activate();
-	hirq_write(HIRQ_RCVDAVIRQ);
-	spi_chip_deactivate();
+		/* Read data form reception byte counter */
+		spi_chip_activate();
+		rcvbc = rcvbc_read();
+		spi_chip_deactivate();
 
-	return size_to_receive;
+	//	d_print("rcvbc: 0x%02X\r\n", rcvbc);
+
+		/* Read data from reception FIFO */
+		spi_chip_activate();
+		if (size_to_recv >= rcvbc) {
+			rcvfifo_read((uint8_t*)(dst_buf + buf_size - size_to_recv), rcvbc);
+			size_to_recv -= rcvbc;
+		} else {
+			rcvfifo_read((uint8_t*)(dst_buf + buf_size - size_to_recv), size_to_recv);
+			size_to_recv -= size_to_recv;
+		}
+		spi_chip_deactivate();
+
+
+		/* Clear flag of successful reception */
+		spi_chip_activate();
+		hirq_write(HIRQ_RCVDAVIRQ);
+		spi_chip_deactivate();
+
+	} while(size_to_recv > 0);
+
+	return buf_size;
 }
 
 void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
@@ -931,18 +950,19 @@ void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
 	/* It needs time to process request */
 	mdelay(20);
 
-	d_print("Send BULK/INTERRUPT IN\r\n");
+	d_print("The first reading of the descriptor\r\n");
+
+	kb_usb_recv_tog_set(1);
 
 	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
+	hrslt = kb_usb_bulk_receive(dev_addr, 0, &dev_descr, 8);
 
-	hrslt = kb_usb_bulk_receive(dev_addr, &dev_descr, 8);
+	kb_usb_hs_out_send(0x34);
 
 	if (hrslt < 0) {
 		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
 		return;
 	}
-
-	kb_usb_hs_out_send();
 
 	d_print("b_length: 0x%02X\r\n", dev_descr.b_length);
 	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr.b_descriptor_type);
@@ -952,14 +972,55 @@ void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
 	d_print("b_device_protocol: 0x%02X\r\n", dev_descr.b_device_protocol);
 	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr.b_max_packet_size);
 
+	mdelay(1000);
+	d_print("\n\n\n");
+	d_print("The second reading of the descriptor\r\n");
+
+	get_dev_descr.w_length = 0x12;
+	hrslt = kb_usb_setup_send(dev_addr, &get_dev_descr);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+	kb_usb_recv_tog_set(1);
+
+	struct device_descriptor dev_descr1 = {0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE};
+	hrslt = kb_usb_bulk_receive(dev_addr, 0, &dev_descr1, sizeof(dev_descr1));
+
+	kb_usb_hs_out_send(0x34);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	d_print("b_length: 0x%02X\r\n", dev_descr1.b_length);
+	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr1.b_descriptor_type);
+	d_print("bcd_usb: 0x%04X\r\n", dev_descr1.bcd_usb);
+	d_print("b_device_class: 0x%02X\r\n", dev_descr1.b_device_class);
+	d_print("b_device_sub_class: 0x%02X\r\n", dev_descr1.b_device_sub_class);
+	d_print("b_device_protocol: 0x%02X\r\n", dev_descr1.b_device_protocol);
+	d_print("b_max_packet_size: 0x%02X\r\n", dev_descr1.b_max_packet_size);
+	d_print("id_vendor: 0x%04X\r\n", dev_descr1.id_vendor);
+	d_print("id_product: 0x%04X\r\n", dev_descr1.id_product);
+	d_print("bcd_device: 0x%04X\r\n", dev_descr1.bcd_device);
+	d_print("i_manufacturer: 0x%02X\r\n", dev_descr1.i_manufacturer);
+	d_print("i_product: 0x%02X\r\n", dev_descr1.i_product);
+	d_print("i_serial_number: 0x%02X\r\n", dev_descr1.i_serial_number);
+	d_print("b_num_configurations: 0x%02X\r\n", dev_descr1.b_num_configurations);
 }
 
-void kb_usb_setup_get_int_data(void)
+void kb_usb_int_receive(uint8_t dev_addr)
 {
 	d_print("Getting interrupt data\r\n");
 
 	spi_chip_activate();
-	peraddr_write(0x34);
+	peraddr_write(dev_addr);
 	spi_chip_deactivate();
 
 //	spi_chip_activate();
@@ -969,10 +1030,6 @@ void kb_usb_setup_get_int_data(void)
 //	spi_chip_activate();
 //	hctl_write(hctl | HCTL_RCVTOG1);
 //	spi_chip_deactivate();
-
-	spi_chip_activate();
-	peraddr_write(0x34);
-	spi_chip_deactivate();
 
 	d_print("Send BULK/INTERRUPT IN\r\n");
 

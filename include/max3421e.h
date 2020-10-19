@@ -123,12 +123,12 @@ void kb_usb_setup_set_address(uint8_t dev_addr);
 
 void kb_usb_setup_get_dev_descr(uint8_t dev_addr);
 
-void kb_usb_setup_get_int_data(void);
+void kb_usb_int_receive(uint8_t dev_addr);
 
-void kb_usb_hs_out_send(void);
+int16_t kb_usb_hs_out_send(uint8_t dev_addr);
 
 int16_t kb_usb_setup_send(uint8_t dev_addr, struct std_request* request);
 
-void kb_usb_hs_in_send(uint8_t dev_addr);
+int16_t kb_usb_hs_in_send(uint8_t dev_addr);
 
 #endif /* MAX3421E_H_ */
