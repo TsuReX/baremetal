@@ -1015,6 +1015,55 @@ void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
 	d_print("b_num_configurations: 0x%02X\r\n", dev_descr1.b_num_configurations);
 }
 
+void kb_usb_setup_get_conf_descr(uint8_t dev_addr)
+{
+	d_print("\n\n\n");
+	d_print("Getting configuration descriptor\r\n");
+
+	struct configuration_descriptor conf_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8};
+	struct std_request get_dev_descr = {0x80, 0x06, 0x0200, 0x0000, sizeof(conf_descr)};
+
+//	d_print("bm_request_type: 0x%02X\r\n", get_dev_descr.bm_request_type);
+//	d_print("b_request: 0x%02X\r\n", get_dev_descr.b_request);
+//	d_print("w_value: 0x%04X\r\n", get_dev_descr.w_value);
+//	d_print("w_index: 0x%04X\r\n", get_dev_descr.w_index);
+//	d_print("w_length: 0x%04X\r\n", get_dev_descr.w_length);
+//	mdelay(10);
+
+	int16_t hrslt = kb_usb_setup_send(dev_addr, &get_dev_descr);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+
+
+	kb_usb_recv_tog_set(1);
+
+	hrslt = kb_usb_bulk_receive(dev_addr, 0, &conf_descr, sizeof(conf_descr));
+
+	kb_usb_hs_out_send(0x34);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	d_print("b_length: 0x%02X\r\n", conf_descr.b_length);
+	d_print("b_descriptor_type: 0x%02X\r\n", conf_descr.b_descriptor_type);
+	d_print("w_total_length: 0x%04X\r\n", conf_descr.w_total_length);
+	d_print("b_num_interfaces: 0x%02X\r\n", conf_descr.b_num_interfaces);
+	d_print("b_configuration_value: 0x%02X\r\n", conf_descr.b_configuration_value);
+	d_print("i_configuration: 0x%02X\r\n", conf_descr.i_configuration);
+	d_print("bm_attributes: 0x%02X\r\n", conf_descr.bm_attributes);
+	d_print("b_max_power: 0x%02X\r\n", conf_descr.b_max_power);
+
+}
+
 void kb_usb_int_receive(uint8_t dev_addr)
 {
 	d_print("Getting interrupt data\r\n");

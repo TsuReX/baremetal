@@ -33,6 +33,17 @@ __PACKED_STRUCT device_descriptor {
 	uint8_t		b_num_configurations;
 };
 
+__PACKED_STRUCT configuration_descriptor {
+	uint8_t		b_length;
+	uint8_t		b_descriptor_type;
+	uint16_t	w_total_length;
+	uint8_t		b_num_interfaces;
+	uint8_t		b_configuration_value;
+	uint8_t		i_configuration;
+	uint8_t		bm_attributes;
+	uint8_t		b_max_power;
+};
+
 uint8_t usbirq_read(void);
 
 void usbirq_write(uint8_t usbirq);
@@ -122,6 +133,8 @@ void kb_usb_device_detect(void);
 void kb_usb_setup_set_address(uint8_t dev_addr);
 
 void kb_usb_setup_get_dev_descr(uint8_t dev_addr);
+
+void kb_usb_setup_get_conf_descr(uint8_t dev_addr);
 
 void kb_usb_int_receive(uint8_t dev_addr);
 
