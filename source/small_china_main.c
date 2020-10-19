@@ -112,7 +112,7 @@ void spi_usb_test(void)
 
 //	kb_usb_bus_reset();
 
-	kb_usb_setup_get_dev_descr();
+	kb_usb_setup_get_dev_descr(0x34);
 //	mdelay(2);
 //	kb_usb_hs_out_send();
 

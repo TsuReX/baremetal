@@ -8,6 +8,30 @@
 #ifndef MAX3421E_H_
 #define MAX3421E_H_
 
+__PACKED_STRUCT std_request {
+		uint8_t		bm_request_type;
+		uint8_t		b_request;
+		uint16_t	w_value;
+		uint16_t	w_index;
+		uint16_t	w_length;
+	};
+
+__PACKED_STRUCT device_descriptor {
+	uint8_t		b_length;
+	uint8_t		b_descriptor_type;
+	uint16_t	bcd_usb;
+	uint8_t		b_device_class;
+	uint8_t		b_device_sub_class;
+	uint8_t		b_device_protocol;
+	uint8_t		b_max_packet_size;
+	uint16_t	id_vendor;
+	uint16_t	id_product;
+	uint16_t	bcd_device;
+	uint8_t		i_manufacturer;
+	uint8_t		i_product;
+	uint8_t		i_serial_number;
+	uint8_t		b_num_configurations;
+};
 
 uint8_t usbirq_read(void);
 
@@ -97,11 +121,13 @@ void kb_usb_device_detect(void);
 
 void kb_usb_setup_set_address(uint8_t dev_addr);
 
-void kb_usb_setup_get_dev_descr(void);
+void kb_usb_setup_get_dev_descr(uint8_t dev_addr);
 
 void kb_usb_setup_get_int_data(void);
 
 void kb_usb_hs_out_send(void);
+
+int16_t kb_usb_setup_send(uint8_t dev_addr, struct std_request* request);
 
 void kb_usb_hs_in_send(uint8_t dev_addr);
 
