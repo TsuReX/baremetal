@@ -113,6 +113,10 @@ void spi_usb_test(void)
 
 	kb_usb_setup_get_conf_descr(0x34);
 
+	mdelay(500);
+
+	kb_usb_setup_get_full_conf(0x34);
+
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
 	/* 6. SETUP HS-IN */

@@ -44,6 +44,27 @@ __PACKED_STRUCT configuration_descriptor {
 	uint8_t		b_max_power;
 };
 
+__PACKED_STRUCT interface_descriptor {
+	uint8_t		b_length;
+	uint8_t		b_descriptor_type;
+	uint8_t		b_interface_number;
+	uint8_t		b_alternate_setting;
+	uint8_t		b_num_endpoints;
+	uint8_t		b_interface_class;
+	uint8_t		b_interface_subclass;
+	uint8_t		b_interface_protocol;
+	uint8_t		i_interface;
+};
+
+__PACKED_STRUCT endpoint_descriptor {
+	uint8_t		b_length;
+	uint8_t		b_descriptor_type;
+	uint8_t		b_endpoint_address;
+	uint8_t		bm_attributes;
+	uint16_t	w_max_packet_size;
+	uint8_t		b_interval;
+};
+
 uint8_t usbirq_read(void);
 
 void usbirq_write(uint8_t usbirq);
@@ -135,6 +156,8 @@ void kb_usb_setup_set_address(uint8_t dev_addr);
 void kb_usb_setup_get_dev_descr(uint8_t dev_addr);
 
 void kb_usb_setup_get_conf_descr(uint8_t dev_addr);
+
+void kb_usb_setup_get_full_conf(uint8_t dev_addr);
 
 void kb_usb_int_receive(uint8_t dev_addr);
 
