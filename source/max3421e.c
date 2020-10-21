@@ -1055,6 +1055,39 @@ void kb_usb_setup_get_conf_descr(uint8_t dev_addr)
 
 }
 
+void kb_usb_setup_get_ep_status(uint8_t dev_addr, uint8_t ep_addr)
+{
+	d_print("\n\n\n");
+	d_print("Getting endpoint %d status\r\n", ep_addr);
+
+	uint8_t status[2];
+	struct std_request get_ep_status = {0x82, 0x00, 0x0000, ep_addr, sizeof(status)};
+
+	int16_t hrslt = kb_usb_setup_send(dev_addr, &get_ep_status);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+	kb_usb_recv_tog_set(1);
+
+	hrslt = kb_usb_bulk_receive(dev_addr, 0, status, get_ep_status.w_length);
+
+	kb_usb_hs_out_send(dev_addr);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	d_print("status[0]: 0x%02X\r\n", status[0]);
+	d_print("status[1]: 0x%02X\r\n", status[1]);
+}
+
 void kb_usb_setup_get_full_conf(uint8_t dev_addr)
 {
 	d_print("\r\n\n\n");
@@ -1192,74 +1225,20 @@ void kb_usb_setup_get_full_conf(uint8_t dev_addr)
 
 }
 
-
-void kb_usb_int_receive(uint8_t dev_addr)
+void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("Getting interrupt data\r\n");
+	d_print("\n\n\n");
+	d_print("Getting data from %d endpoint\r\n", ep_addr);
 
-	spi_chip_activate();
-	peraddr_write(dev_addr);
-	spi_chip_deactivate();
+	uint8_t data[8];
+	int8_t ret_val = kb_usb_bulk_receive(dev_addr, ep_addr, data, sizeof(data));
 
-//	spi_chip_activate();
-//	uint8_t hctl = hctl_read();
-//	spi_chip_deactivate();
-//
-//	spi_chip_activate();
-//	hctl_write(hctl | HCTL_RCVTOG1);
-//	spi_chip_deactivate();
-
-	d_print("Send BULK/INTERRUPT IN\r\n");
-
-	spi_chip_activate();
-	hxfr_write(HXFR_BULKIN | USB_EP1);
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	while((hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
-		spi_chip_deactivate();
-		u100delay(1);
-		spi_chip_activate();
+	if (ret_val < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+		return;
 	}
-	spi_chip_deactivate();
 
-	spi_chip_activate();
-	hirq_write(HIRQ_HXFRDNIRQ);
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
-	spi_chip_deactivate();
-
-	spi_chip_activate();
-	while((hirq_read() & HIRQ_RCVDAVIRQ) != HIRQ_RCVDAVIRQ) {
-		spi_chip_deactivate();
-		u100delay(1);
-		spi_chip_activate();
-	}
-	spi_chip_deactivate();
-
-	uint8_t rcvbc = 0x00;
-
-	spi_chip_activate();
-	rcvbc = rcvbc_read();
-	spi_chip_deactivate();
-
-	d_print("rcvbc: 0x%02X\r\n", rcvbc);
-
-	uint8_t array[8];
-
-	spi_chip_activate();
-	rcvfifo_read(array, sizeof(array));
-	spi_chip_deactivate();
-
-	d_print("Data: ");
 	size_t idx = 0;
-	for (; idx < sizeof(array); ++idx)
-		d_print("%02X ", array[idx]);
-	d_print("\r\n");
-
-	spi_chip_activate();
-	hirq_write(HIRQ_RCVDAVIRQ);
-	spi_chip_deactivate();
+	for (;idx < sizeof(data); ++idx)
+		d_print("data[%d]: 0x%02X\r\n", idx, data[idx]);
 }
