@@ -165,6 +165,8 @@ void kb_usb_setup_get_ep_status(uint8_t dev_addr, uint8_t ep_addr);
 
 void kb_usb_setup_get_full_conf(uint8_t dev_addr);
 
+void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr);
+
 void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr);
 
 int16_t usb_hs_out_send(uint8_t dev_addr);

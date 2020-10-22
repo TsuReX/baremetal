@@ -135,25 +135,11 @@ void spi_usb_test(void)
 
 	mdelay(50);
 
-	kb_usb_setup_get_ep_status(0x34, 0x02);
-
-	mdelay(50);
-
-	kb_usb_setup_get_ep_status(0x34, 0x03);
-
-	usb_hs_out_send(0x34);
-
-	mdelay(50);
+//	ms_usb_data_read(0x34, 0x1);
 
 	kb_usb_data_read(0x34, 0x1);
 
-	mdelay(50);
 
-	kb_usb_data_read(0x34, 0x2);
-
-	mdelay(50);
-
-	kb_usb_data_read(0x34, 0x3);
 
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */

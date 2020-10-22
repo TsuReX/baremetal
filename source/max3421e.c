@@ -1274,20 +1274,66 @@ void kb_usb_setup_get_full_conf(uint8_t dev_addr)
 
 }
 
+void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
+{
+	d_print("\n\n\n");
+	d_print("Getting data from %d endpoint\r\n", ep_addr);
+
+	uint8_t data[4];
+	int8_t ret_val;
+
+	do {
+		mdelay(100);
+		ret_val = usb_bulk_receive(dev_addr, ep_addr, data, sizeof(data));
+		if ((-1 * ret_val) == 0x04)
+			continue;
+
+		if ((-1 * ret_val) == 0x06){
+			usb_recv_tog_set(0);
+			continue;
+		}
+
+		if (ret_val < 0) {
+			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+			return;
+		}
+
+		size_t idx = 0;
+		for (; idx < sizeof(data); ++idx)
+			d_print("0x%02X ", data[idx]);
+		d_print("\r\n");
+
+	} while(1);
+}
+
 void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
 	d_print("\n\n\n");
 	d_print("Getting data from %d endpoint\r\n", ep_addr);
 
 	uint8_t data[8];
-	int8_t ret_val = usb_bulk_receive(dev_addr, ep_addr, data, sizeof(data));
+	int8_t ret_val;
 
-	if (ret_val < 0) {
-		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
-		return;
-	}
+	do {
+		mdelay(100);
+		ret_val = usb_bulk_receive(dev_addr, ep_addr, data, sizeof(data));
+		if ((-1 * ret_val) == 0x04)
+			continue;
 
-	size_t idx = 0;
-	for (;idx < sizeof(data); ++idx)
-		d_print("data[%d]: 0x%02X\r\n", idx, data[idx]);
+		if ((-1 * ret_val) == 0x06){
+			usb_recv_tog_set(0);
+			continue;
+		}
+
+		if (ret_val < 0) {
+			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+			return;
+		}
+
+		size_t idx = 0;
+		for (; idx < sizeof(data); ++idx)
+			d_print("0x%02X ", data[idx]);
+		d_print("\r\n");
+
+	} while(1);
 }
