@@ -923,13 +923,14 @@ void kb_usb_setup_set_address(uint8_t dev_addr)
 	d_print("HRSLT: 0x%01X\r\n", hrsl_read() & 0x0F);
 	spi_chip_deactivate();
 
+	usb_hs_in_send(0x00);
 //	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 //	PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
 }
 
 void kb_usb_setup_get_conf(uint8_t dev_addr)
 {
-	d_print("\n\n\n");
+	d_print("\r\n");
 	d_print("Getting configuration\r\n");
 
 	uint8_t configuration;
@@ -961,12 +962,14 @@ void kb_usb_setup_get_conf(uint8_t dev_addr)
 
 void kb_usb_setup_set_conf(uint8_t dev_addr, uint8_t conf_num)
 {
-	d_print("\n\n\n");
+	d_print("\r\n");
 	d_print("Setting up configuration\r\n");
 
 	struct std_request set_conf_req = {0x00, 0x09, conf_num, 0x0000, 0x0000};
 
 	int16_t hrslt = usb_setup_send(dev_addr, &set_conf_req);
+
+	usb_hs_in_send(dev_addr);
 
 	if (hrslt < 0) {
 		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
@@ -1006,7 +1009,7 @@ void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
 	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
 	hrslt = usb_bulk_receive(dev_addr, 0, &dev_descr, 8);
 
-	usb_hs_out_send(0x34);
+	usb_hs_out_send(dev_addr);
 
 	if (hrslt < 0) {
 		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
@@ -1041,7 +1044,7 @@ void kb_usb_setup_get_dev_descr(uint8_t dev_addr)
 	struct device_descriptor dev_descr1 = {0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE};
 	hrslt = usb_bulk_receive(dev_addr, 0, &dev_descr1, sizeof(dev_descr1));
 
-	usb_hs_out_send(0x34);
+	usb_hs_out_send(dev_addr);
 
 	if (hrslt < 0) {
 		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
@@ -1106,7 +1109,7 @@ void kb_usb_setup_get_conf_descr(uint8_t dev_addr)
 
 void kb_usb_setup_get_ep_status(uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("\n\n\n");
+	d_print("\r\n");
 	d_print("Getting endpoint %d status\r\n", ep_addr);
 
 	uint8_t status[2];
@@ -1308,7 +1311,7 @@ void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 
 void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("\n\n\n");
+	d_print("\r\n");
 	d_print("Getting keyboard data from %d endpoint\r\n", ep_addr);
 
 	uint8_t data[8];
