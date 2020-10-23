@@ -1277,7 +1277,7 @@ void kb_usb_setup_get_full_conf(uint8_t dev_addr)
 void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
 	d_print("\n\n\n");
-	d_print("Getting data from %d endpoint\r\n", ep_addr);
+	d_print("Getting mouse data from %d endpoint\r\n", ep_addr);
 
 	uint8_t data[4];
 	int8_t ret_val;
@@ -1309,7 +1309,7 @@ void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
 	d_print("\n\n\n");
-	d_print("Getting data from %d endpoint\r\n", ep_addr);
+	d_print("Getting keyboard data from %d endpoint\r\n", ep_addr);
 
 	uint8_t data[8];
 	int8_t ret_val;

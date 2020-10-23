@@ -139,8 +139,6 @@ void spi_usb_test(void)
 
 	kb_usb_data_read(0x34, 0x1);
 
-
-
 	/* 4. BUSRST, SOFKAENAB, FRAMEIRQ */
 	/* 5. CONDETIRQ, SAMPLEBUS, JSTATUS, KTATUS */
 	/* 6. SETUP HS-IN */
