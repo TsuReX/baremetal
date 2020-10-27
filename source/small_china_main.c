@@ -47,6 +47,9 @@ uint8_t comm_buff[16] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF};
 /** Код команды чтения данных SPI Flash. */
 #define SPI_CMD_READ		0x03
 
+#define KEYBOARD_CHANNEL	0x1
+#define MOUSE_CHANNEL		0x2
+
 void spi_flash_test(void) {
 
 	uint8_t buffer[SPI_ID_BYTES + 1] = {0,0,0,0};
@@ -72,20 +75,17 @@ void spi_flash_test(void) {
 		d_print("%02X ", buffer[i]);
 }
 
-#define KEYBOARD_CHANNEL	0x1
-#define MOUSE_CHANNEL		0x2
-
 void max3421e_chip_activate(uint32_t chip_num)
 {
 	switch(chip_num) {
 		case KEYBOARD_CHANNEL:
 			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-#warning "Implement"
+//#warning "Implement"
 			break;
 
 		case MOUSE_CHANNEL:
 //			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-#warning "Implement"
+//#warning "Implement"
 			break;
 	};
 }
@@ -95,37 +95,32 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 	switch(chip_num) {
 		case KEYBOARD_CHANNEL:
 			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-#warning "Implement"
+//#warning "Implement"
 
 			break;
 
 		case MOUSE_CHANNEL:
 //			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-#warning "Implement"
+//#warning "Implement"
 			break;
 	};
 }
-
 void max3421e_rev_print(uint32_t chip_num)
 {
-	max3421e_chip_activate();
+	max3421e_chip_activate(chip_num);
 	d_print("REVISION 0x%02X\r\n", max3421e_rev_read());
-	max3421e_chip_deactivate();
+	max3421e_chip_deactivate(chip_num);
 }
 
 void kb_ms_power_on(void)
 {
 	max3421e_chip_activate(KEYBOARD_CHANNEL);
 	uint8_t iopins1 = max3421e_iopins1_read();
-	max3421e_chip_deactivate();
+	max3421e_chip_deactivate(KEYBOARD_CHANNEL);
 
-	max3421e_chip_activate();
+	max3421e_chip_activate(KEYBOARD_CHANNEL);
 	max3421e_iopins1_write(iopins1 | IOPINS1_GPOUT1);
-	max3421e_chip_deactivate();
-
-	max3421e_chip_activate();
-	iopins1 = max3421e_iopins1_read();
-	max3421e_chip_deactivate();
+	max3421e_chip_deactivate(KEYBOARD_CHANNEL);
 }
 
 void usb_std_req_print(const struct std_request *std_req)
@@ -137,7 +132,7 @@ void usb_std_req_print(const struct std_request *std_req)
 	d_print("w_length: 0x%04X\r\n", std_req->w_length);
 }
 
-usb_dev_descr_print(const struct device_descriptor *dev_descr)
+void usb_dev_descr_print(const struct device_descriptor *dev_descr)
 {
 	d_print("b_length: 0x%02X\r\n", dev_descr->b_length);
 	d_print("b_descriptor_type: 0x%02X\r\n", dev_descr->b_descriptor_type);
@@ -155,64 +150,6 @@ usb_dev_descr_print(const struct device_descriptor *dev_descr)
 	d_print("b_num_configurations: 0x%02X\r\n", dev_descr->b_num_configurations);
 }
 
-void usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr)
-{
-	struct std_request get_dev_descr = {0x80, 0x06, 0x0100, 0x0000, 0x0008};
-
-	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
-
-	if (hrslt < 0) {
-		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
-		return;
-	}
-
-	/* It needs time to process request */
-	mdelay(20);
-
-	d_print("The first reading of the descriptor\r\n");
-
-	max3421e_usb_recv_tog_set(usb_channel, 1);
-
-	struct device_descriptor dev_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE};
-	hrslt = max3421e_usb_bulk_receive(dev_addr, 0, &dev_descr, 8);
-
-	max3421e_usb_status_out_send(usb_channel, dev_addr);
-
-	if (hrslt < 0) {
-		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
-		return;
-	}
-
-	mdelay(100);
-	d_print("\n\n\n");
-	d_print("The second reading of the descriptor\r\n");
-
-	get_dev_descr.w_length = 0x12;
-	hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
-
-	if (hrslt < 0) {
-		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
-		return;
-	}
-
-	/* It needs time to process request */
-	mdelay(20);
-
-	max3421e_usb_recv_tog_set(1);
-
-	struct device_descriptor dev_descr1;
-	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, &dev_descr1, sizeof(dev_descr1));
-
-	max3421e_usb_status_out_send(usb_channel, dev_addr);
-
-	if (hrslt < 0) {
-		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
-		return;
-	}
-
-	usb_dev_descr_print(&dev_descr1);
-}
-
 void usb_conf_descr_print(const struct configuration_descriptor *conf_descr)
 {
 	d_print("b_length: 0x%02X\r\n", conf_descr->b_length);
@@ -223,37 +160,6 @@ void usb_conf_descr_print(const struct configuration_descriptor *conf_descr)
 	d_print("i_configuration: 0x%02X\r\n", conf_descr->i_configuration);
 	d_print("bm_attributes: 0x%02X\r\n", conf_descr->bm_attributes);
 	d_print("b_max_power: 0x%02X\r\n", conf_descr->b_max_power);
-}
-
-void usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr)
-{
-	d_print("Getting configuration descriptor\r\n");
-
-	struct configuration_descriptor conf_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8};
-	struct std_request get_dev_descr = {0x80, 0x06, 0x0200, 0x0000, sizeof(conf_descr)};
-
-	int16_t hrslt = max3421e_usb_setup_send(dev_addr, &get_dev_descr);
-
-	if (hrslt < 0) {
-		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
-		return;
-	}
-
-	/* It needs time to process request */
-	mdelay(20);
-
-	max3421e_usb_recv_tog_set(1);
-
-	hrslt = max3421e_usb_bulk_receive(dev_addr, 0, &conf_descr, sizeof(conf_descr));
-
-	max3421e_usb_status_out_send(dev_addr);
-
-	if (hrslt < 0) {
-		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
-		return;
-	}
-
-	usb_conf_descr_print(&conf_descr);
 }
 
 void usb_iface_descr_print(const struct interface_descriptor *iface_descr)
@@ -279,11 +185,91 @@ void usb_endp_descr_print(const struct endpoint_descriptor *endp_descr)
 	d_print("b_interval: 0x%02X\r\n", endp_descr->b_interval);
 }
 
+void usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr)
+{
+	struct std_request get_dev_descr = {0x80, 0x06, 0x0100, 0x0000, 0x0008};
+
+	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+	max3421e_usb_recv_tog_set(usb_channel, 1);
+
+	struct device_descriptor dev_descr;
+	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, &dev_descr, 8);
+
+	max3421e_usb_status_out_send(usb_channel, dev_addr);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	mdelay(100);
+
+	get_dev_descr.w_length = sizeof(struct device_descriptor);
+	hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+	max3421e_usb_recv_tog_set(usb_channel, 1);
+
+	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, &dev_descr, get_dev_descr.w_length);
+
+	max3421e_usb_status_out_send(usb_channel, dev_addr);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	usb_dev_descr_print(&dev_descr);
+}
+
+void usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr)
+{
+	struct configuration_descriptor conf_descr;
+	struct std_request get_dev_descr = {0x80, 0x06, 0x0200, 0x0000, sizeof(conf_descr)};
+
+	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
+
+	if (hrslt < 0) {
+		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * hrslt);
+		return;
+	}
+
+	/* It needs time to process request */
+	mdelay(20);
+
+	max3421e_usb_recv_tog_set(usb_channel, 1);
+
+	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, &conf_descr, sizeof(conf_descr));
+
+	max3421e_usb_status_out_send(usb_channel, dev_addr);
+
+	if (hrslt < 0) {
+		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * hrslt);
+		return;
+	}
+
+	usb_conf_descr_print(&conf_descr);
+}
+
 void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 {
-	d_print("Getting full configuration \r\n");
-
-	struct configuration_descriptor conf_descr = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8};
+	struct configuration_descriptor conf_descr;
 	struct std_request get_dev_descr = {0x80, 0x06, 0x0200, 0x0000, sizeof(conf_descr)};
 
 	int16_t ret_val = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
@@ -307,12 +293,10 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 		return;
 	}
 
-	usb_conf_descr_print(usb_channel, &conf_descr);
-
-	/*******************************************/
+	usb_conf_descr_print(&conf_descr);
 
 	get_dev_descr.w_length = conf_descr.w_total_length;
-	ret_val = usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
+	ret_val = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
 
 	if (ret_val < 0) {
 		d_print("SETUP transmission error. HRSLT: 0x%01X\r\n", -1 * ret_val);
@@ -326,7 +310,7 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 
 	uint8_t configuration[512];
 
-	ret_val = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, configuration, get_dev_descr.w_length );
+	ret_val = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, configuration, get_dev_descr.w_length);
 
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
@@ -350,7 +334,6 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 			base += sizeof(struct configuration_descriptor);
 			remain_bytes -= sizeof(struct configuration_descriptor);
 
-			d_print("\r\n");
 			d_print("Configuration descriptor\r\n");
 			usb_conf_descr_print(p_conf_descr);
 			mdelay(20);
@@ -362,7 +345,6 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 			base += sizeof(struct interface_descriptor);
 			remain_bytes -= sizeof(struct interface_descriptor);
 
-			d_print("\r\n");
 			d_print("Interface descriptor\r\n");
 			usb_iface_descr_print(p_iface_descr);
 			mdelay(20);
@@ -374,7 +356,6 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 			base += sizeof(struct endpoint_descriptor);
 			remain_bytes -= sizeof(struct endpoint_descriptor);
 
-			d_print("\r\n");
 			d_print("Endpoint descriptor\r\n");
 			usb_endp_descr_print(p_endp_descr);
 			mdelay(20);
@@ -389,8 +370,6 @@ void usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr)
 
 void usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 {
-	d_print("Getting configuration\r\n");
-
 	uint8_t configuration;
 	struct std_request get_ep_status = {0x80, 0x08, 0x0000, 0x0000, 1};
 
@@ -420,8 +399,6 @@ void usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 
 void usb_device_set_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t conf_num)
 {
-	d_print("Setting up configuration\r\n");
-
 	struct std_request set_conf_req = {0x00, 0x09, conf_num, 0x0000, 0x0000};
 
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &set_conf_req);
@@ -436,8 +413,6 @@ void usb_device_set_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t conf_nu
 
 void usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("Getting endpoint %d status\r\n", ep_addr);
-
 	uint8_t status[2];
 	struct std_request get_ep_status = {0x82, 0x00, 0x0000, ep_addr, sizeof(status)};
 
@@ -549,7 +524,7 @@ void spi_usb_test(void)
 
 	max3421e_usb_bus_reset(KEYBOARD_CHANNEL);
 
-	usb_dev_descr_print(KEYBOARD_CHANNEL, 0x00);
+//	usb_dev_descr_print(KEYBOARD_CHANNEL, 0x00);
 
 	max3421e_usb_sof_start(KEYBOARD_CHANNEL);
 
@@ -579,7 +554,7 @@ void spi_usb_test(void)
 
 	mdelay(50);
 
-	usb_device_get_ep_status(0x34, 0x01);
+	usb_device_get_ep_status(KEYBOARD_CHANNEL, 0x34, 0x01);
 
 	mdelay(50);
 

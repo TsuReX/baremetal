@@ -270,7 +270,7 @@ void max3421e_usb_device_irq_detection_cycle(void);
 
 uint32_t max3421e_usb_device_detect(uint32_t chip_num);
 
-void max3421e_usb_device_set_address(uint8_t dev_addr);
+void max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr);
 
 int16_t max3421e_usb_setup_send(uint32_t usb_channel, uint8_t dev_addr, struct std_request* request);
 
@@ -279,5 +279,10 @@ int16_t max3421e_usb_status_out_send(uint32_t usb_channel, uint8_t dev_addr);
 int16_t max3421e_usb_setup_send(uint32_t usb_channel, uint8_t dev_addr, struct std_request* request);
 
 int16_t max3421e_usb_status_in_send(uint32_t usb_channel, uint8_t dev_addr);
+
+int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t ep_addr, void* dst_buf, size_t buf_size);
+
+void max3421e_usb_recv_tog_set(uint32_t chip_num, uint32_t recv_tog);
+void max3421e_usb_send_tog_set(uint32_t chip_num, uint32_t send_tog);
 
 #endif /* MAX3421E_H_ */
