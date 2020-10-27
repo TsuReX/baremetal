@@ -443,8 +443,6 @@ void usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t ep
 
 void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("Getting mouse data from %d endpoint\r\n", ep_addr);
-
 	uint8_t data[4];
 	int8_t ret_val;
 
@@ -460,9 +458,11 @@ void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 		}
 
 		if (ret_val < 0) {
-			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+//			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
 			return;
 		}
+
+		/* TODO: Call a function to process the received data */
 
 		size_t idx = 0;
 		for (; idx < sizeof(data); ++idx)
@@ -474,8 +474,6 @@ void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 
 void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 {
-	d_print("Getting keyboard data from %d endpoint\r\n", ep_addr);
-
 	uint8_t data[8];
 	int8_t ret_val;
 
@@ -491,9 +489,11 @@ void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 		}
 
 		if (ret_val < 0) {
-			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+//			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
 			return;
 		}
+
+		/* TODO: Call a function to process the received data */
 
 		size_t idx = 0;
 		for (; idx < sizeof(data); ++idx)
@@ -505,7 +505,6 @@ void kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
 
 void spi_usb_test(void)
 {
-
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 
 	max3421e_rev_print(KEYBOARD_CHANNEL);
@@ -519,12 +518,11 @@ void spi_usb_test(void)
 	mdelay(4000);
 
 	max3421e_usb_device_detect(KEYBOARD_CHANNEL);
+	/* TODO: Check return value */
 
 	max3421e_usb_sof_start(KEYBOARD_CHANNEL);
 
 	max3421e_usb_bus_reset(KEYBOARD_CHANNEL);
-
-//	usb_dev_descr_print(KEYBOARD_CHANNEL, 0x00);
 
 	max3421e_usb_sof_start(KEYBOARD_CHANNEL);
 
@@ -534,15 +532,21 @@ void spi_usb_test(void)
 
 	mdelay(50);
 
+	/* TODO: Pass pointer to descriptor via argument */
 	usb_device_get_conf_descr(KEYBOARD_CHANNEL, 0x34);
+	/* TODO: Check VID and PID */
 
 	mdelay(50);
 
+	/* TODO: Pass pointer to descriptor via argument */
 	usb_device_get_full_conf(KEYBOARD_CHANNEL, 0x34);
+	/* TODO: Print the descriptor for debugging  */
 
 	mdelay(50);
 
+	/* TODO: Pass pointer to descriptor via argument */
 	usb_device_get_conf(KEYBOARD_CHANNEL, 0x34);
+	/* TODO: Print the descriptor for debugging  */
 
 	mdelay(50);
 
@@ -551,16 +555,21 @@ void spi_usb_test(void)
 	mdelay(50);
 
 	usb_device_get_conf(KEYBOARD_CHANNEL, 0x34);
+	/* TODO: Print the configuration for debugging  */
 
 	mdelay(50);
 
+	/* TODO: Pass pointer to status via argument */
 	usb_device_get_ep_status(KEYBOARD_CHANNEL, 0x34, 0x01);
+	/* TODO: Print the status for debugging */
 
 	mdelay(50);
 
+	/* TODO: Call the functions in a cycle */
 //	ms_usb_data_read(0x34, 0x1);
-
+	/* TODO: Call a function to process the received data */
 	kb_usb_data_read(0x34, 0x1);
+	/* TODO: Call a function to process the received data */
 
 }
 
