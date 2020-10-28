@@ -17,6 +17,12 @@
 
 #include "usb_core.h"
 
+//#define KEYBOARD
+#define MOUSE
+
+#define USB_NAK		0x04
+#define USB_TOGERR	0x06
+
 uint8_t		ep_index;
 uint16_t	wInterrupt_Mask;
 DEVICE_INFO *usb_device_info;
@@ -84,7 +90,7 @@ void max3421e_chip_activate(uint32_t chip_num)
 			break;
 
 		case MOUSE_CHANNEL:
-//			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
 //#warning "Implement"
 			break;
 	};
@@ -100,7 +106,7 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 			break;
 
 		case MOUSE_CHANNEL:
-//			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
 //#warning "Implement"
 			break;
 	};
@@ -392,39 +398,25 @@ int32_t usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	return 0;
 }
 
-void ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr)
+int32_t ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, size_t dst_buf_size)
 {
-	uint8_t data[4];
-	int8_t ret_val;
+	int8_t ret_val = 0x0;
 
-	do {
-		mdelay(100);
-		ret_val = max3421e_usb_bulk_receive(KEYBOARD_CHANNEL, dev_addr, ep_addr, data, sizeof(data));
-		if ((-1 * ret_val) == 0x04)
-			continue;
+	ret_val = max3421e_usb_bulk_receive(MOUSE_CHANNEL, dev_addr, ep_addr, dst_buf, dst_buf_size);
+	if ((-1 * ret_val) == USB_NAK)
+		return -1;
 
-		if ((-1 * ret_val) == 0x06){
-			max3421e_usb_recv_tog_set(KEYBOARD_CHANNEL, 0);
-			continue;
-		}
+	if ((-1 * ret_val) == USB_TOGERR){
+		max3421e_usb_recv_tog_set(MOUSE_CHANNEL, 0);
+		return -2;
+	}
 
-		if (ret_val < 0) {
-//			d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
-			return;
-		}
-
-		/* TODO: Call a function to process the received data */
-
-		size_t idx = 0;
-		for (; idx < sizeof(data); ++idx)
-			d_print("0x%02X ", data[idx]);
-		d_print("\r\n");
-
-	} while(1);
+	if (ret_val < 0) {
+//		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+		return -3;
+	}
+	return ret_val;
 }
-
-#define USB_NAK		0x04
-#define USB_TOGERR	0x06
 
 int32_t kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, size_t dst_buf_size)
 {
@@ -510,10 +502,10 @@ int32_t kb_detect_init()
 	mdelay(50);
 
 	uint8_t status[2];
-	if (usb_device_get_ep_status(KEYBOARD_CHANNEL, kb_usb_addr, 0x01, status) != 0)
-		return -8;
-	d_print("status[0]: 0x%02X\r\n", status[0]);
-	d_print("status[1]: 0x%02X\r\n", status[1]);
+	if (usb_device_get_ep_status(KEYBOARD_CHANNEL, kb_usb_addr, 0x01, status) == 0) {
+		d_print("status[0]: 0x%02X\r\n", status[0]);
+		d_print("status[1]: 0x%02X\r\n", status[1]);
+	}
 
 	mdelay(50);
 	return 0;
@@ -521,49 +513,126 @@ int32_t kb_detect_init()
 
 uint32_t ms_detect_init()
 {
+	kb_ms_power_on();
+
+	max3421e_master_mode_set(MOUSE_CHANNEL);
+
+	mdelay(4000);
+
+	/* TODO: Check return value */
+	if (max3421e_usb_device_detect(MOUSE_CHANNEL) == 0)
+		return -1;
+
+	max3421e_usb_sof_start(MOUSE_CHANNEL);
+
+	max3421e_usb_bus_reset(MOUSE_CHANNEL);
+
+	uint8_t ms_usb_addr = 0x33;
+
+	max3421e_usb_device_set_address(MOUSE_CHANNEL, ms_usb_addr);
+
+	mdelay(50);
+
+	struct configuration_descriptor conf_descr;
+	if (usb_device_get_conf_descr(MOUSE_CHANNEL, ms_usb_addr, &conf_descr) != 0)
+		return -2;
+	usb_conf_descr_print(&conf_descr);
+
+	struct device_descriptor dev_descr;
+	if (usb_device_get_dev_descr(MOUSE_CHANNEL, ms_usb_addr, &dev_descr) != 0)
+		return -3;
+	usb_dev_descr_print(&dev_descr);
+
+	/* TODO: Check VID and PID dev_descr */
+
+	mdelay(50);
+
+	uint8_t full_conf[512];
+	if (usb_device_get_full_conf(MOUSE_CHANNEL, ms_usb_addr, full_conf, conf_descr.w_total_length) < 0)
+		return -4;
+	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+
+	mdelay(50);
+
+	int16_t conf = usb_device_get_conf(MOUSE_CHANNEL, ms_usb_addr);
+	if (conf < 0)
+		return -5;
+	d_print("configuration: 0x%02X\r\n", conf);
+
+	mdelay(50);
+
+	if (usb_device_set_conf(MOUSE_CHANNEL, ms_usb_addr, 0x1) != 0)
+		return -6;
+
+	mdelay(50);
+
+	conf = usb_device_get_conf(MOUSE_CHANNEL, ms_usb_addr);
+	if (conf < 0)
+		return -7;
+	d_print("configuration: 0x%02X\r\n", conf);
+
+	mdelay(50);
+
+	uint8_t status[2];
+	if (usb_device_get_ep_status(MOUSE_CHANNEL, ms_usb_addr, 0x01, status) == 0) {
+		d_print("status[0]: 0x%02X\r\n", status[0]);
+		d_print("status[1]: 0x%02X\r\n", status[1]);
+	}
+
+	mdelay(50);
 	return 0;
 }
 
 void spi_usb_test(void)
 {
+	int32_t ret_val = 0;
+	size_t idx = 0;
+#ifdef KEYBOARD
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
 
-	int32_t ret_val = kb_detect_init();
+	ret_val = kb_detect_init();
 	if (ret_val != 0) {
 		d_print("kb_detect_init(): %ld\r\n", ret_val);
 		return;
 	}
-
-//	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
-//	max3421e_rev_print(MOUSE_CHANNEL);
-//	max3421e_chip_reset(MOUSE_CHANNEL);
-//
-//	ret_val = ms_detect_init();
-//	if (ret_val != 0) {
-//		d_print("ms_detect_init(): %ld\r\n", ret_val);
-//		return;
-//	}
 	uint8_t kb_data[8];
-//	uint8_t ms_data[4];
-	while (1) {
-//		memset(ms_data, 0, sizeof(ms_data));
-//		ms_usb_data_read(0x33, 0x1, ms_data, sizeof(ms_data));
-		size_t idx = 0;
-//		d_print("ms_data: \r\n");
-//		for (; idx < sizeof(ms_data); ++idx)
-//			d_print("0x%02X ", ms_data[idx]);
-//		d_print("\r\n");
-	/* TODO: Call a function to process the received data */
+#endif
 
+#ifdef MOUSE
+	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
+	max3421e_rev_print(MOUSE_CHANNEL);
+	max3421e_chip_reset(MOUSE_CHANNEL);
+
+	ret_val = ms_detect_init();
+	if (ret_val != 0) {
+		d_print("ms_detect_init(): %ld\r\n", ret_val);
+		return;
+	}
+	uint8_t ms_data[4];
+#endif
+
+	while (1) {
+#ifdef KEYBOARD
 		memset(kb_data, 0, sizeof(kb_data));
 		kb_usb_data_read(0x34, 0x1, kb_data, sizeof(kb_data));
-		d_print("kb_data: \r\n");
+		d_print("kb_data: ");
 		for (idx = 0; idx < sizeof(kb_data); ++idx)
 			d_print("0x%02X ", kb_data[idx]);
 		d_print("\r\n");
-	/* TODO: Call a function to process the received data */
+		/* TODO: Call a function to process the received data */
+#endif
+
+#ifdef MOUSE
+		memset(ms_data, 0, sizeof(ms_data));
+		ms_usb_data_read(0x33, 0x1, ms_data, sizeof(ms_data));
+		d_print("ms_data: ");
+		for (idx = 0; idx < sizeof(ms_data); ++idx)
+			d_print("0x%02X ", ms_data[idx]);
+		d_print("\r\n");
+		/* TODO: Call a function to process the received data */
+#endif
 
 		mdelay(50);
 	}
