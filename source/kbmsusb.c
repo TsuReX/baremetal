@@ -21,6 +21,8 @@
 #define USB_NAK		0x04
 #define USB_TOGERR	0x06
 
+struct kbms_data kbms;
+
 void max3421e_rev_print(uint32_t chip_num)
 {
 	max3421e_chip_activate(chip_num);
@@ -364,7 +366,7 @@ int32_t kb_detect_init()
 
 	max3421e_usb_bus_reset(KEYBOARD_CHANNEL);
 
-	uint8_t kb_usb_addr = 0x34;
+	uint8_t kb_usb_addr = KB_USB_ADDR;
 
 	max3421e_usb_device_set_address(KEYBOARD_CHANNEL, kb_usb_addr);
 
@@ -436,7 +438,7 @@ uint32_t ms_detect_init()
 
 	max3421e_usb_bus_reset(MOUSE_CHANNEL);
 
-	uint8_t ms_usb_addr = 0x33;
+	uint8_t ms_usb_addr = MS_USB_ADDR;
 
 	max3421e_usb_device_set_address(MOUSE_CHANNEL, ms_usb_addr);
 
@@ -493,7 +495,8 @@ uint32_t ms_detect_init()
 }
 
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
-
+	memcpy(&kbms.kb_data, kb_buffer, sizeof(kbms.kb_data));
+	memcpy(&kbms.ms_data, ms_buffer, sizeof(kbms.ms_data));
 }
 
 void spi_usb_transmission_start(void)
@@ -529,7 +532,7 @@ void spi_usb_transmission_start(void)
 	while (1) {
 		memset(kb_data, 0, sizeof(kb_data));
 #ifdef KEYBOARD
-		kb_usb_data_read(0x34, 0x1, kb_data, sizeof(kb_data));
+		kb_usb_data_read(KB_USB_ADDR, 0x1, kb_data, sizeof(kb_data));
 		d_print("kb_data: ");
 		for (idx = 0; idx < sizeof(kb_data); ++idx)
 			d_print("0x%02X ", kb_data[idx]);
@@ -538,7 +541,7 @@ void spi_usb_transmission_start(void)
 
 		memset(ms_data, 0, sizeof(ms_data));
 #ifdef MOUSE
-		ms_usb_data_read(0x33, 0x1, ms_data, sizeof(ms_data));
+		ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
 		d_print("ms_data: ");
 		for (idx = 0; idx < sizeof(ms_data); ++idx)
 			d_print("0x%02X ", ms_data[idx]);

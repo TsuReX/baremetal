@@ -9,6 +9,11 @@
 #include "communication.h"
 #include "config.h"
 
+#include "kbmsusb.h"
+#include "usb_regs.h"
+#include "usb_desc.h"
+#include "usb_mem.h"
+
 static size_t	buffer_size;
 static void*	buffer;
 
@@ -114,20 +119,29 @@ void comm_stop(void)
 
 void dma1_channel5_irq_handler(void)
 {
-	uint32_t	ms_timeout = 10000;
-	size_t		i;
 
-	for (i = 0; i < buffer_size; ++i) {
-		LL_USART_TransmitData8(USART1, ((uint8_t*)buffer)[i]);
+	copy_to_usb((uint8_t*)&((struct kbms_data*)buffer)->kb_data, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
+	_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
+	_SetEPTxStatus(ENDP1, EP_TX_VALID);
 
-		do {
-//			LL_mDelay(1);
-			--ms_timeout;
-			if (ms_timeout == 0)
-				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
-				break;
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
-	}
+	copy_to_usb((uint8_t*)&((struct kbms_data*)buffer)->ms_data, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
+	_SetEPTxCount(ENDP2, EP2_MAX_PACKET_SIZE);
+	_SetEPTxStatus(ENDP2, EP_TX_VALID);
+
+//	uint32_t	ms_timeout = 10000;
+//	size_t		i;
+//
+//	for (i = 0; i < buffer_size; ++i) {
+//		LL_USART_TransmitData8(USART1, ((uint8_t*)buffer)[i]);
+//
+//		do {
+////			LL_mDelay(1);
+//			--ms_timeout;
+//			if (ms_timeout == 0)
+//				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
+//				break;
+//		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+//	}
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }

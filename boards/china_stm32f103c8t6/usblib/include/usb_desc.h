@@ -32,6 +32,24 @@
 #define EP1_MAX_PACKET_SIZE				0x8
 #define EP2_MAX_PACKET_SIZE				0x3
 
+struct keyboard_state {
+	uint8_t modifiers;
+	uint8_t reserved;
+	uint8_t keycode_1;
+	uint8_t keycode_2;
+	uint8_t keycode_3;
+	uint8_t keycode_4;
+	uint8_t keycode_5;
+	uint8_t keycode_6;
+} ;
+
+struct mouse_state {
+	uint8_t buttons;
+	uint8_t x_displacement;
+	uint8_t y_displacement;
+	uint8_t reserved[1];
+} ;
+
 /* Exported functions ------------------------------------------------------- */
 extern const uint8_t rhid_device_descriptor[DEV_DESCRIPTOR_SIZE];
 extern const uint8_t config_descriptor[CONFIG_DESCRIPTOR_SIZE];
