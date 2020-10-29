@@ -8,6 +8,8 @@
 #ifndef MAX3421E_H_
 #define MAX3421E_H_
 
+#include "drivers.h"
+
 __PACKED_STRUCT std_request {
 		uint8_t		bm_request_type;
 		uint8_t		b_request;
