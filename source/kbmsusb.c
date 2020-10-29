@@ -12,6 +12,9 @@
 #include "kbmsusb.h"
 #include "utils.h"
 
+#define MS_USB_ADDR	0x33
+#define KB_USB_ADDR 0x34
+
 //#define KEYBOARD
 #define MOUSE
 
@@ -489,6 +492,10 @@ uint32_t ms_detect_init()
 	return 0;
 }
 
+void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
+
+}
+
 void spi_usb_transmission_start(void)
 {
 	int32_t ret_val = 0;
@@ -503,7 +510,6 @@ void spi_usb_transmission_start(void)
 		d_print("kb_detect_init(): %ld\r\n", ret_val);
 		return;
 	}
-	uint8_t kb_data[8];
 #endif
 
 #ifdef MOUSE
@@ -516,30 +522,29 @@ void spi_usb_transmission_start(void)
 		d_print("ms_detect_init(): %ld\r\n", ret_val);
 		return;
 	}
-	uint8_t ms_data[4];
 #endif
 
+	uint8_t kb_data[8];
+	uint8_t ms_data[4];
 	while (1) {
-#ifdef KEYBOARD
 		memset(kb_data, 0, sizeof(kb_data));
+#ifdef KEYBOARD
 		kb_usb_data_read(0x34, 0x1, kb_data, sizeof(kb_data));
 		d_print("kb_data: ");
 		for (idx = 0; idx < sizeof(kb_data); ++idx)
 			d_print("0x%02X ", kb_data[idx]);
 		d_print("\r\n");
-		/* TODO: Call a function to process the received data */
 #endif
 
-#ifdef MOUSE
 		memset(ms_data, 0, sizeof(ms_data));
+#ifdef MOUSE
 		ms_usb_data_read(0x33, 0x1, ms_data, sizeof(ms_data));
 		d_print("ms_data: ");
 		for (idx = 0; idx < sizeof(ms_data); ++idx)
 			d_print("0x%02X ", ms_data[idx]);
 		d_print("\r\n");
-		/* TODO: Call a function to process the received data */
 #endif
-
+		kbms_data_send(kb_data, sizeof(kb_data), ms_data, sizeof(ms_data));
 		mdelay(50);
 	}
 }
