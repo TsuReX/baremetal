@@ -24,7 +24,7 @@ void spi_init(void)
 
 	MDR_RST_CLK->SSP_CLOCK = temp;
 
-	MDR_SSP1->CPSR = 0x08;
+	MDR_SSP1->CPSR = 0x04;
 
 	MDR_SSP1->CR0 = (0x00 << SSP_CR0_SCR_Pos)
 					| SSP_SPH_1Edge

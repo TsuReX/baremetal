@@ -134,12 +134,15 @@ void board_init(void)
 		PORT_Init(MDR_PORTD, &port_descriptor);
 
 		/*PE0 KM.KB_CS*/
+		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_ON;
 		port_descriptor.PORT_Pin   = (PORT_Pin_0);
 		PORT_Init(MDR_PORTE, &port_descriptor);
-
+		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 	//	/*PB8 KM.MS_CS*/
-	//	port_descriptor.PORT_Pin   = (PORT_Pin_8);
-	//	PORT_Init(MDR_PORTB, &port_descriptor);
+		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_ON;
+		port_descriptor.PORT_Pin   = (PORT_Pin_8);
+		PORT_Init(MDR_PORTB, &port_descriptor);
+		PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 
 		/*PB6 DEBUG*/
 		port_descriptor.PORT_Pin   = (PORT_Pin_6);
@@ -193,19 +196,19 @@ void board_init(void)
 		PORT_Init(MDR_PORTB, &port_descriptor);
 
 		/* Configure PORTB pins 6 (UART1_RX) as input */
-	//	port_descriptor.PORT_OE = PORT_OE_IN;
-	//	port_descriptor.PORT_Pin = PORT_Pin_6;
-	//	PORT_Init(MDR_PORTB, &port_descriptor);
-	//
-	//	/* Configure PORTD pins 1 (UART2_TX) as output */
-	//	port_descriptor.PORT_OE = PORT_OE_OUT;
-	//	port_descriptor.PORT_Pin = PORT_Pin_1;
-	//	PORT_Init(MDR_PORTD, &port_descriptor);
-	//
-	//	/* Configure PORTD pins 0 (UART2_RX) as input */
-	//	port_descriptor.PORT_OE = PORT_OE_IN;
-	//	port_descriptor.PORT_Pin = PORT_Pin_0;
-	//	PORT_Init(MDR_PORTD, &port_descriptor);
+		port_descriptor.PORT_OE = PORT_OE_IN;
+		port_descriptor.PORT_Pin = PORT_Pin_6;
+		PORT_Init(MDR_PORTB, &port_descriptor);
+
+		/* Configure PORTD pins 1 (UART2_TX) as output */
+		port_descriptor.PORT_OE = PORT_OE_OUT;
+		port_descriptor.PORT_Pin = PORT_Pin_1;
+		PORT_Init(MDR_PORTD, &port_descriptor);
+
+		/* Configure PORTD pins 0 (UART2_RX) as input */
+		port_descriptor.PORT_OE = PORT_OE_IN;
+		port_descriptor.PORT_Pin = PORT_Pin_0;
+		PORT_Init(MDR_PORTD, &port_descriptor);
 }
 
 /**

@@ -29,6 +29,7 @@ set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
 						"${BRD_PATH}/source/startup_MDR32F9Qx.c"
 						"${BRD_PATH}/source/system_MDR32F9Qx.c"
 						"${BRD_PATH}/source/console.c"
@@ -56,7 +57,7 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall -O2")
 	
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
 	

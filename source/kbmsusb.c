@@ -15,7 +15,7 @@
 #define MS_USB_ADDR	0x33
 #define KB_USB_ADDR 0x34
 
-//#define KEYBOARD
+#define KEYBOARD
 #define MOUSE
 
 #define USB_NAK		0x04
@@ -121,7 +121,7 @@ int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, dev_descr, sizeof(struct device_descriptor));
-
+	mdelay(20);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -143,12 +143,12 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	}
 
 	/* It needs time to process request */
-	mdelay(20);
+	mdelay(200);
 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, conf_descr, sizeof(struct configuration_descriptor));
-
+	mdelay(20);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -223,7 +223,7 @@ int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	}
 
 	/* It needs time to process request */
-	mdelay(20);
+	mdelay(200);
 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
@@ -251,7 +251,7 @@ int16_t usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 	}
 
 	/* It needs time to process request */
-	mdelay(20);
+	mdelay(200);
 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
@@ -356,7 +356,7 @@ int32_t kb_detect_init()
 
 	max3421e_master_mode_set(KEYBOARD_CHANNEL);
 
-	mdelay(4000);
+	mdelay(7000);
 
 	/* TODO: Check return value */
 	if (max3421e_usb_device_detect(KEYBOARD_CHANNEL) == 0)
@@ -370,12 +370,14 @@ int32_t kb_detect_init()
 
 	max3421e_usb_device_set_address(KEYBOARD_CHANNEL, kb_usb_addr);
 
-	mdelay(50);
+	mdelay(500);
 
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(KEYBOARD_CHANNEL, kb_usb_addr, &conf_descr) != 0)
 		return -2;
 	usb_conf_descr_print(&conf_descr);
+
+	mdelay(500);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(KEYBOARD_CHANNEL, kb_usb_addr, &dev_descr) != 0)
@@ -384,12 +386,12 @@ int32_t kb_detect_init()
 
 	/* TODO: Check VID and PID dev_descr */
 
-	mdelay(50);
+	mdelay(500);
 
-	uint8_t full_conf[512];
-	if (usb_device_get_full_conf(KEYBOARD_CHANNEL, kb_usb_addr, full_conf, conf_descr.w_total_length) < 0)
-		return -4;
-	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+//	uint8_t full_conf[512];
+//	if (usb_device_get_full_conf(KEYBOARD_CHANNEL, kb_usb_addr, full_conf, conf_descr.w_total_length) < 0)
+//		return -4;
+//	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
 
 	mdelay(50);
 
@@ -424,11 +426,11 @@ int32_t kb_detect_init()
 
 uint32_t ms_detect_init()
 {
-	kb_ms_power_on();
+//	kb_ms_power_on();
 
 	max3421e_master_mode_set(MOUSE_CHANNEL);
 
-	mdelay(4000);
+	mdelay(7000);
 
 	/* TODO: Check return value */
 	if (max3421e_usb_device_detect(MOUSE_CHANNEL) == 0)
@@ -442,12 +444,14 @@ uint32_t ms_detect_init()
 
 	max3421e_usb_device_set_address(MOUSE_CHANNEL, ms_usb_addr);
 
-	mdelay(50);
+	mdelay(500);
 
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(MOUSE_CHANNEL, ms_usb_addr, &conf_descr) != 0)
 		return -2;
 	usb_conf_descr_print(&conf_descr);
+
+	mdelay(500);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(MOUSE_CHANNEL, ms_usb_addr, &dev_descr) != 0)
@@ -495,6 +499,14 @@ uint32_t ms_detect_init()
 }
 
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
+	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x50) {
+		d_print("R_CTRL + <-\r\n");
+		return;
+	}
+	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x4F) {
+		d_print("R_CTRL + ->\r\n");
+		return;
+	}
 	memcpy(&kbms.kb_data, kb_buffer, sizeof(kbms.kb_data));
 	memcpy(&kbms.ms_data, ms_buffer, sizeof(kbms.ms_data));
 }

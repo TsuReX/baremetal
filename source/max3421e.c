@@ -671,7 +671,7 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 
 	switch (hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)) {
 		case HRSL_KSTATUS:
-//			d_print("Low speed device connected\r\n");
+			d_print("Low speed device connected\r\n");
 			max3421e_chip_activate(chip_num);
 			uint8_t mode = max3421e_mode_read();
 			max3421e_chip_deactivate(chip_num);
@@ -682,15 +682,15 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 			return 1;
 
 		case HRSL_JSTATUS:
-//			d_print("Full speed device connected\r\n");
+			d_print("Full speed device connected\r\n");
 			return 2;
 
 		case (HRSL_JSTATUS | HRSL_KSTATUS):
-//			d_print("Bus illegal state\r\n");
+			d_print("Bus illegal state\r\n");
 			return 0;
 
 		case 0x00:
-//			d_print("Device not connected\r\n");
+			d_print("Device not connected\r\n");
 			return 0;
 	}
 	return 0;
@@ -701,6 +701,6 @@ void max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr)
 	struct std_request set_addr = {0x0, 0x5, dev_addr, 0x0, 0x0};
 
 	max3421e_usb_setup_send(chip_num, 0x00, &set_addr);
-
+	mdelay(500);
 	max3421e_usb_status_in_send(chip_num, 0x00);
 }
