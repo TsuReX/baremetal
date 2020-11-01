@@ -26,7 +26,7 @@ uint16_t	SaveState ;
 DEVICE_INFO	device_info;
 USER_STANDARD_REQUESTS  *usb_standard_requests;
 
-uint8_t comm_buff[16] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC,0xD,0xE,0xF};
+uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB};
 
 /** Количество байтов идентификатора SPI Flash. */
 #define SPI_ID_BYTES		64
@@ -79,32 +79,6 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 	};
 }
 
-void spi_flash_test(void) {
-
-	uint8_t buffer[SPI_ID_BYTES + 1] = {0,0,0,0};
-	size_t i = 0;
-
-	buffer[0] = SPI_CMD_RDID;
-
-	spi_chip_activate();
-
-	for (i = 0; i < sizeof(buffer) / sizeof(buffer[0]); ++i) {
-
-		while (!LL_SPI_IsActiveFlag_TXE(SPI1));
-		LL_SPI_TransmitData8(SPI1, buffer[i]);
-
-		while (!LL_SPI_IsActiveFlag_RXNE(SPI1));
-		buffer[i] = LL_SPI_ReceiveData8(SPI1);
-	}
-
-	spi_chip_deactivate();
-
-	d_print("MC_SPI_FLASH_ID (Hex) ");
-	for (i = 1; i < sizeof(buffer) / sizeof(buffer[0]); ++i)
-		d_print("%02X ", buffer[i]);
-}
-
-
 void usb_init(void)
 {
 
@@ -144,28 +118,21 @@ int main(void)
 
 	board_init();
 
+#ifdef USB_MASTER
 	console_init();
-
-//	scheduler_init();
-
 	spi_init();
-//	spi_flash_test();
 	spi_usb_transmission_start();
-
-
-//	comm_init(&comm_buff, sizeof(comm_buff));
-//	comm_start();
-
-//	usb_init();
-
-//	uint32_t i = 0;
 	while (1) {
 		LL_mDelay(DELAY_500_MS * 2);
-//		print("Main thread iteration %ld\r\n", i++);
-		/*ina3221_print_voltage_current();*/
-//		LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-//		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_14);
-//		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_15);
+
 	}
+#else
+
+	comm_init(&comm_buff, sizeof(comm_buff));
+	comm_start();
+	d_print("123\r\n");
+	usb_init();
+
+#endif /* USB_MASTER */
 }

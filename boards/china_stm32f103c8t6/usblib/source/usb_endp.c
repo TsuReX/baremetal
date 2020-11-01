@@ -8,7 +8,7 @@
 
 void keyboard_ep_in_handle (void)
 {
-//	d_print("%s()\r\n",  __func__);
+	d_print("%s()\r\n",  __func__);
 
 //	keyboard.keycode_1 = 'Q';
 
@@ -24,7 +24,7 @@ void keyboard_ep_in_handle (void)
 
 void mouse_ep_in_handle (void)
 {
-//	d_print("%s()\r\n",  __func__);
+	d_print("%s()\r\n",  __func__);
 
 //	mouse.x_displacement = mouse_cntr;
 //	mouse.y_displacement = mouse_cntr++ + 100;

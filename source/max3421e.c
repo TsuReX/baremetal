@@ -291,6 +291,22 @@ int16_t max3421e_usb_status_out_send(uint32_t chip_num, uint8_t dev_addr)
 	return -1 * hrslt;
 }
 
+
+uint32_t max3421e_hirq_hxfrdnirq_wait(uint32_t chip_num, size_t ms_timeout)
+{
+	max3421e_chip_activate(chip_num);
+	while(((max3421e_hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) && (ms_timeout > 0)) {
+		max3421e_chip_deactivate(chip_num);
+		mdelay(1);
+		max3421e_chip_activate(chip_num);
+		--ms_timeout;
+	}
+	max3421e_chip_deactivate(chip_num);
+	if (ms_timeout == 0)
+		return 1;
+	return 0;
+}
+
 int16_t max3421e_usb_setup_send(uint32_t chip_num, uint8_t dev_addr, struct std_request* request)
 {
 	/* Write data into SETUP FIFO */
@@ -303,27 +319,29 @@ int16_t max3421e_usb_setup_send(uint32_t chip_num, uint8_t dev_addr, struct std_
 	max3421e_peraddr_write(dev_addr);
 	max3421e_chip_deactivate(chip_num);
 
-	/* Initiate SETUP package transmission */
-	max3421e_chip_activate(chip_num);
-	max3421e_hxfr_write(HXFR_SETUP);
-	max3421e_chip_deactivate(chip_num);
-
-	/* Check ending of the package transmission */
-	max3421e_chip_activate(chip_num);
-	while((max3421e_hirq_read() & HIRQ_HXFRDNIRQ) != HIRQ_HXFRDNIRQ) {
-		max3421e_chip_deactivate(chip_num);
-		u100delay(1);
+	size_t tries = 10;
+	do {
+		/* Initiate SETUP package transmission */
 		max3421e_chip_activate(chip_num);
-	}
-	max3421e_chip_deactivate(chip_num);
-
+		max3421e_hxfr_write(HXFR_SETUP);
+		max3421e_chip_deactivate(chip_num);
+	//	d_print("1\r\n");
+		/* Check ending of the package transmission */
+		uint32_t ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
+		if (ret_val != 0) {
+			d_print("%s(): Transfer can't be done\r\n", __func__);
+		} else {
+			break;
+		}
+	} while (tries-- != 0);
+//	d_print("2\r\n");
 	/* Clear flag of the transmission ending */
 	max3421e_chip_activate(chip_num);
 	max3421e_hirq_write(HIRQ_HXFRDNIRQ);
 	max3421e_chip_deactivate(chip_num);
 
-	uint8_t hrsl = 0;
 	/* Check result of the SETUP transmission */
+	uint8_t hrsl = 0;
 	max3421e_chip_activate(chip_num);
 	hrsl = max3421e_hrsl_read() & 0x0F;
 	max3421e_chip_deactivate(chip_num);
@@ -528,6 +546,7 @@ void max3421e_usb_sof_start(uint32_t chip_num)
 		max3421e_chip_activate(chip_num);
 	}
 	max3421e_chip_deactivate(chip_num);
+	d_print("SOF started\r\n");
 }
 
 void max3421e_usb_bus_reset(uint32_t chip_num)
@@ -551,7 +570,8 @@ void max3421e_usb_bus_reset(uint32_t chip_num)
 	}
 	max3421e_chip_deactivate(chip_num);
 
-	mdelay(200);
+	mdelay(500);
+	d_print("Bus reset\r\n");
 
 }
 #if 0
@@ -650,6 +670,7 @@ void max3421e_device_irq_detection_cycle(void)
 
 uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 {
+	d_print("%s(): chip_num %ld\r\n", __func__, chip_num);
 	max3421e_chip_activate(chip_num);
 	uint8_t hctl = max3421e_hctl_read();
 	max3421e_chip_deactivate(chip_num);
@@ -671,7 +692,6 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 
 	switch (hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)) {
 		case HRSL_KSTATUS:
-			d_print("Low speed device connected\r\n");
 			max3421e_chip_activate(chip_num);
 			uint8_t mode = max3421e_mode_read();
 			max3421e_chip_deactivate(chip_num);
@@ -679,6 +699,7 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 			max3421e_chip_activate(chip_num);
 			max3421e_mode_write(mode | MODE_LOWSPEED);
 			max3421e_chip_deactivate(chip_num);
+			d_print("Low speed device connected\r\n");
 			return 1;
 
 		case HRSL_JSTATUS:
@@ -701,6 +722,7 @@ void max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr)
 	struct std_request set_addr = {0x0, 0x5, dev_addr, 0x0, 0x0};
 
 	max3421e_usb_setup_send(chip_num, 0x00, &set_addr);
-	mdelay(500);
+	mdelay(50);
 	max3421e_usb_status_in_send(chip_num, 0x00);
+	d_print("Device address is set\r\n");
 }

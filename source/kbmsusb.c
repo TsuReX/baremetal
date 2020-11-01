@@ -11,6 +11,7 @@
 #include "max3421e.h"
 #include "kbmsusb.h"
 #include "utils.h"
+#include "drivers.h"
 
 #define MS_USB_ADDR	0x33
 #define KB_USB_ADDR 0x34
@@ -20,8 +21,6 @@
 
 #define USB_NAK		0x04
 #define USB_TOGERR	0x06
-
-struct kbms_data kbms;
 
 void max3421e_rev_print(uint32_t chip_num)
 {
@@ -116,12 +115,12 @@ int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct 
 	}
 
 	/* It needs time to process request */
-	mdelay(20);
+	mdelay(200);
 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, dev_descr, sizeof(struct device_descriptor));
-	mdelay(20);
+	mdelay(50);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -148,7 +147,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, conf_descr, sizeof(struct configuration_descriptor));
-	mdelay(20);
+	mdelay(50);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -179,7 +178,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 
 			d_print("Configuration descriptor\r\n");
 			usb_conf_descr_print(p_conf_descr);
-			mdelay(20);
+			mdelay(200);
 			break;
 
 		case 0x4: /* INTERFACE_DESCRIPTOR_TYPE */
@@ -190,7 +189,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 
 			d_print("Interface descriptor\r\n");
 			usb_iface_descr_print(p_iface_descr);
-			mdelay(20);
+			mdelay(200);
 			break;
 
 		case 0x5: /* ENDPOINT_DESCRIPTOR_TYPE */
@@ -201,7 +200,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 
 			d_print("Endpoint descriptor\r\n");
 			usb_endp_descr_print(p_endp_descr);
-			mdelay(20);
+			mdelay(200);
 			break;
 
 		default:
@@ -228,7 +227,7 @@ int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	ret_val = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, full_conf, full_conf_size);
-
+	mdelay(50);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (ret_val < 0) {
@@ -256,7 +255,7 @@ int16_t usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
 	hrslt = max3421e_usb_bulk_receive(usb_channel, dev_addr, 0, &configuration, get_ep_status.w_length);
-
+	mdelay(50);
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -271,7 +270,7 @@ int32_t usb_device_set_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t conf
 	struct std_request set_conf_req = {0x00, 0x09, conf, 0x0000, 0x0000};
 
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &set_conf_req);
-
+	mdelay(50);
 	max3421e_usb_status_in_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
@@ -293,7 +292,7 @@ int32_t usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	}
 
 	/* It needs time to process request */
-	mdelay(20);
+	mdelay(200);
 
 	max3421e_usb_recv_tog_set(usb_channel, 1);
 
@@ -349,113 +348,36 @@ int32_t kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, si
 	return ret_val;
 }
 
-
-int32_t kb_detect_init()
+int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 {
-	kb_ms_power_on();
+	max3421e_master_mode_set(usb_channel);
 
-	max3421e_master_mode_set(KEYBOARD_CHANNEL);
-
-	mdelay(7000);
+	mdelay(4000);
 
 	/* TODO: Check return value */
-	if (max3421e_usb_device_detect(KEYBOARD_CHANNEL) == 0)
+	if (max3421e_usb_device_detect(usb_channel) == 0)
 		return -1;
 
-	max3421e_usb_sof_start(KEYBOARD_CHANNEL);
+	max3421e_usb_sof_start(usb_channel);
 
-	max3421e_usb_bus_reset(KEYBOARD_CHANNEL);
+	max3421e_usb_bus_reset(usb_channel);
 
-	uint8_t kb_usb_addr = KB_USB_ADDR;
+	max3421e_usb_device_set_address(usb_channel, usb_dev_addr);
 
-	max3421e_usb_device_set_address(KEYBOARD_CHANNEL, kb_usb_addr);
-
-	mdelay(500);
+	mdelay(50);
 
 	struct configuration_descriptor conf_descr;
-	if (usb_device_get_conf_descr(KEYBOARD_CHANNEL, kb_usb_addr, &conf_descr) != 0)
-		return -2;
+	if (usb_device_get_conf_descr(usb_channel, usb_dev_addr, &conf_descr) != 0)
+//		return -2;
+		;
 	usb_conf_descr_print(&conf_descr);
 
-	mdelay(500);
+	mdelay(50);
 
 	struct device_descriptor dev_descr;
-	if (usb_device_get_dev_descr(KEYBOARD_CHANNEL, kb_usb_addr, &dev_descr) != 0)
-		return -3;
-	usb_dev_descr_print(&dev_descr);
-
-	/* TODO: Check VID and PID dev_descr */
-
-	mdelay(500);
-
-//	uint8_t full_conf[512];
-//	if (usb_device_get_full_conf(KEYBOARD_CHANNEL, kb_usb_addr, full_conf, conf_descr.w_total_length) < 0)
-//		return -4;
-//	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
-
-	mdelay(50);
-
-	int16_t conf = usb_device_get_conf(KEYBOARD_CHANNEL, kb_usb_addr);
-	if (conf < 0)
-		return -5;
-	d_print("configuration: 0x%02X\r\n", conf);
-
-	mdelay(50);
-
-	if (usb_device_set_conf(KEYBOARD_CHANNEL, kb_usb_addr, 0x1) != 0)
-		return -6;
-
-	mdelay(50);
-
-	conf = usb_device_get_conf(KEYBOARD_CHANNEL, kb_usb_addr);
-	if (conf < 0)
-		return -7;
-	d_print("configuration: 0x%02X\r\n", conf);
-
-	mdelay(50);
-
-	uint8_t status[2];
-	if (usb_device_get_ep_status(KEYBOARD_CHANNEL, kb_usb_addr, 0x01, status) == 0) {
-		d_print("status[0]: 0x%02X\r\n", status[0]);
-		d_print("status[1]: 0x%02X\r\n", status[1]);
-	}
-
-	mdelay(50);
-	return 0;
-}
-
-uint32_t ms_detect_init()
-{
-//	kb_ms_power_on();
-
-	max3421e_master_mode_set(MOUSE_CHANNEL);
-
-	mdelay(7000);
-
-	/* TODO: Check return value */
-	if (max3421e_usb_device_detect(MOUSE_CHANNEL) == 0)
-		return -1;
-
-	max3421e_usb_sof_start(MOUSE_CHANNEL);
-
-	max3421e_usb_bus_reset(MOUSE_CHANNEL);
-
-	uint8_t ms_usb_addr = MS_USB_ADDR;
-
-	max3421e_usb_device_set_address(MOUSE_CHANNEL, ms_usb_addr);
-
-	mdelay(500);
-
-	struct configuration_descriptor conf_descr;
-	if (usb_device_get_conf_descr(MOUSE_CHANNEL, ms_usb_addr, &conf_descr) != 0)
-		return -2;
-	usb_conf_descr_print(&conf_descr);
-
-	mdelay(500);
-
-	struct device_descriptor dev_descr;
-	if (usb_device_get_dev_descr(MOUSE_CHANNEL, ms_usb_addr, &dev_descr) != 0)
-		return -3;
+	if (usb_device_get_dev_descr(usb_channel, usb_dev_addr, &dev_descr) != 0)
+//		return -3;
+		;
 	usb_dev_descr_print(&dev_descr);
 
 	/* TODO: Check VID and PID dev_descr */
@@ -463,101 +385,152 @@ uint32_t ms_detect_init()
 	mdelay(50);
 
 	uint8_t full_conf[512];
-	if (usb_device_get_full_conf(MOUSE_CHANNEL, ms_usb_addr, full_conf, conf_descr.w_total_length) < 0)
-		return -4;
+	if (usb_device_get_full_conf(usb_channel, usb_dev_addr, full_conf, conf_descr.w_total_length) < 0)
+//		return -4;
+		;
 	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
 
 	mdelay(50);
 
-	int16_t conf = usb_device_get_conf(MOUSE_CHANNEL, ms_usb_addr);
+	int16_t conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
-		return -5;
+//		return -5;
+		;
 	d_print("configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
 
-	if (usb_device_set_conf(MOUSE_CHANNEL, ms_usb_addr, 0x1) != 0)
+	if (usb_device_set_conf(usb_channel, usb_dev_addr, 0x1) != 0)
 		return -6;
 
 	mdelay(50);
 
-	conf = usb_device_get_conf(MOUSE_CHANNEL, ms_usb_addr);
+	conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
-		return -7;
+//		return -7;
+		;
 	d_print("configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
 
 	uint8_t status[2];
-	if (usb_device_get_ep_status(MOUSE_CHANNEL, ms_usb_addr, 0x01, status) == 0) {
-		d_print("status[0]: 0x%02X\r\n", status[0]);
-		d_print("status[1]: 0x%02X\r\n", status[1]);
+	if (usb_device_get_ep_status(usb_channel, usb_dev_addr, 0x01, status) == 0) {
+//		d_print("status[0]: 0x%02X\r\n", status[0]);
+//		d_print("status[1]: 0x%02X\r\n", status[1]);
 	}
 
 	mdelay(50);
 	return 0;
 }
 
+void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_size)
+{
+#ifdef USE_MDR1986VE9x
+
+	MDR_UART_TypeDef* UARTx = MDR_UART1;
+
+	if (hid_num == 1) {
+		UARTx = MDR_UART1;
+	} else if (hid_num == 2){
+		UARTx = MDR_UART2;
+	}
+
+	size_t i;
+	for (i = 0; i < buffer_size; ++i) {
+		UART_SendData (UARTx, src_buffer[i]);
+		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
+		do {
+			;
+		} while (UART_GetFlagStatus (UARTx, UART_FLAG_TXFE) != 1);
+	}
+#endif
+}
+
+uint32_t current_hid_num = 1;
+
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
+
 	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x50) {
 		d_print("R_CTRL + <-\r\n");
+		current_hid_num = 1;
 		return;
 	}
 	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x4F) {
 		d_print("R_CTRL + ->\r\n");
+		current_hid_num = 2;
 		return;
 	}
+	struct kbms_data kbms;
+
 	memcpy(&kbms.kb_data, kb_buffer, sizeof(kbms.kb_data));
 	memcpy(&kbms.ms_data, ms_buffer, sizeof(kbms.ms_data));
+
+	data_to_hid_transmit(current_hid_num, (uint8_t*)&kbms, sizeof(kbms));
 }
 
 void spi_usb_transmission_start(void)
 {
-	int32_t ret_val = 0;
+	int32_t ret_val = -1;
 	size_t idx = 0;
+	uint32_t kb_present = 1;
+	uint32_t ms_present = 1;
+
 #ifdef KEYBOARD
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
+	kb_ms_power_on();
 
-	ret_val = kb_detect_init();
+	ret_val = device_detect_init(KEYBOARD_CHANNEL, KB_USB_ADDR);
 	if (ret_val != 0) {
 		d_print("kb_detect_init(): %ld\r\n", ret_val);
-		return;
+		kb_present = 0;
+//		return;
 	}
 #endif
 
 #ifdef MOUSE
+
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
 	max3421e_rev_print(MOUSE_CHANNEL);
 	max3421e_chip_reset(MOUSE_CHANNEL);
 
-	ret_val = ms_detect_init();
+	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
 	if (ret_val != 0) {
 		d_print("ms_detect_init(): %ld\r\n", ret_val);
-		return;
+		ms_present = 0;
+//		return;
 	}
 #endif
+	if (kb_present == 0 && ms_present == 0) {
+		d_print("There aren't devices. Exit\r\n");
+		return;
+	}
+	d_print("Start transmission\r\n");
 
 	uint8_t kb_data[8];
 	uint8_t ms_data[4];
 	while (1) {
 		memset(kb_data, 0, sizeof(kb_data));
 #ifdef KEYBOARD
-		kb_usb_data_read(KB_USB_ADDR, 0x1, kb_data, sizeof(kb_data));
-		d_print("kb_data: ");
-		for (idx = 0; idx < sizeof(kb_data); ++idx)
-			d_print("0x%02X ", kb_data[idx]);
-		d_print("\r\n");
+		if (kb_present == 1) {
+			kb_usb_data_read(KB_USB_ADDR, 0x1, kb_data, sizeof(kb_data));
+			d_print("kb_data: ");
+			for (idx = 0; idx < sizeof(kb_data); ++idx)
+				d_print("0x%02X ", kb_data[idx]);
+			d_print("\r\n");
+		}
 #endif
 
 		memset(ms_data, 0, sizeof(ms_data));
 #ifdef MOUSE
-		ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
-		d_print("ms_data: ");
-		for (idx = 0; idx < sizeof(ms_data); ++idx)
-			d_print("0x%02X ", ms_data[idx]);
-		d_print("\r\n");
+		if (ms_present == 1) {
+			ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
+			d_print("ms_data: ");
+			for (idx = 0; idx < sizeof(ms_data); ++idx)
+				d_print("0x%02X ", ms_data[idx]);
+			d_print("\r\n");
+		}
 #endif
 		kbms_data_send(kb_data, sizeof(kb_data), ms_data, sizeof(ms_data));
 		mdelay(50);
