@@ -62,7 +62,7 @@ static void console_usart1_init(void)
 //	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
 
 	/* Initialize UART_InitStructure */
-	UART_InitStructure.UART_BaudRate                = 500000;
+	UART_InitStructure.UART_BaudRate                = 1500000;
 	UART_InitStructure.UART_WordLength              = UART_WordLength8b;
 	UART_InitStructure.UART_StopBits                = UART_StopBits1;
 	UART_InitStructure.UART_Parity                  = UART_Parity_No;
@@ -73,7 +73,7 @@ static void console_usart1_init(void)
 	UART_Init (MDR_UART1,&UART_InitStructure);
 
 	/* Enables UART1 peripheral */
-	UART_Cmd(MDR_UART1,ENABLE);
+	UART_Cmd(MDR_UART1, ENABLE);
 
 	/* Configure UART2 parameters*/
 //	UART_Init (MDR_UART2,&UART_InitStructure);

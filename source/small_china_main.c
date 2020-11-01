@@ -127,7 +127,7 @@ int main(void)
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 
 	}
-#else
+#elif USB_DEVICE
 
 	comm_init(&comm_buff, sizeof(comm_buff));
 	comm_start();
@@ -135,4 +135,9 @@ int main(void)
 	usb_init();
 
 #endif /* USB_MASTER */
+
+	console_init();
+	while(1){
+		;
+	}
 }
