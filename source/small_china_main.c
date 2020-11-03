@@ -133,7 +133,7 @@ int main(void)
 
 	comm_init(&comm_buff, sizeof(comm_buff));
 	comm_start();
-	d_print("USB Device\r\n");
+//	d_print("USB Device\r\n");
 	usb_init();
 
 #else

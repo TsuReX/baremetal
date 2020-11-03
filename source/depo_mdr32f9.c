@@ -5,6 +5,7 @@
 #include "kbmsusb.h"
 #include "config.h"
 #include "utils.h"
+#include "communication.h"
 
 void max3421e_chip_activate(uint32_t chip_num)
 {
@@ -42,7 +43,9 @@ int main(void)
 	soc_init();
 	board_init();
 	mdelay(100);
-	console_init();
+//	console_init();
+	comm_init(0, 0);
+	comm_start();
 
 	spi_init();
 	spi_usb_transmission_start();

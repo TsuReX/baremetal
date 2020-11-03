@@ -36,6 +36,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/spi.c"
 						"${BRD_PATH}/source/utils.c"
 						"${BRD_PATH}/source/config.c"
+						"${BRD_PATH}/source/communication.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_mdr32f9.c"
 				)
 

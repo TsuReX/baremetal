@@ -235,7 +235,7 @@ void usb_lp_can1_rx0_handle(void)
 		_SetISTR(CLR_RESET);
 //		if ((_GetFNR() & (FNR_RXDM | FNR_RXDP)) == 0x0) {
 //			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
-			d_print("ISTR_RESET\r\n");
+//			d_print("ISTR_RESET\r\n");
 //			d_print("ISTR_RESET USB_FNR: 0x%04X\r\n", _GetFNR() & (FNR_RXDM | FNR_RXDP));
 			reset();
 //			LL_mDelay(1);

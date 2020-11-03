@@ -413,7 +413,7 @@ void standard_request_process()
 					break;
 
 				case SET_FEATURE:
-					d_print("SET_FEATURE\r\n");
+//					d_print("SET_FEATURE\r\n");
 					if (Standard_SetEndPointFeature() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;
@@ -421,7 +421,7 @@ void standard_request_process()
 					break;
 
 				case CLEAR_FEATURE:
-					d_print("ENDPOINT_CLEAR_FEATURE\r\n");
+//					d_print("ENDPOINT_CLEAR_FEATURE\r\n");
 					if (Standard_ClearFeature() != USB_SUCCESS) {
 						usb_device_info->control_state = STALLED;
 						return;

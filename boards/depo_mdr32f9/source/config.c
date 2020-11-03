@@ -200,6 +200,15 @@ void board_init(void)
 		port_descriptor.PORT_Pin = PORT_Pin_6;
 		PORT_Init(MDR_PORTB, &port_descriptor);
 
+		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
+		port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
+		port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
+		port_descriptor.PORT_PD = PORT_PD_DRIVER;
+		port_descriptor.PORT_GFEN = PORT_GFEN_OFF;
+		port_descriptor.PORT_FUNC = PORT_FUNC_ALTER;
+		port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
+		port_descriptor.PORT_MODE = PORT_MODE_DIGITAL;
+
 		/* Configure PORTD pins 1 (UART2_TX) as output */
 		port_descriptor.PORT_OE = PORT_OE_OUT;
 		port_descriptor.PORT_Pin = PORT_Pin_1;

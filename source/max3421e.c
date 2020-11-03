@@ -329,7 +329,7 @@ int16_t max3421e_usb_setup_send(uint32_t chip_num, uint8_t dev_addr, struct std_
 		/* Check ending of the package transmission */
 		uint32_t ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
 		if (ret_val != 0) {
-			d_print("%s(): Transfer can't be done\r\n", __func__);
+//			d_print("%s(): Transfer can't be done\r\n", __func__);
 		} else {
 			break;
 		}
@@ -546,7 +546,7 @@ void max3421e_usb_sof_start(uint32_t chip_num)
 		max3421e_chip_activate(chip_num);
 	}
 	max3421e_chip_deactivate(chip_num);
-	d_print("SOF started\r\n");
+//	d_print("SOF started\r\n");
 }
 
 void max3421e_usb_bus_reset(uint32_t chip_num)
@@ -571,7 +571,7 @@ void max3421e_usb_bus_reset(uint32_t chip_num)
 	max3421e_chip_deactivate(chip_num);
 
 	mdelay(500);
-	d_print("Bus reset\r\n");
+//	d_print("Bus reset\r\n");
 
 }
 #if 0
@@ -670,7 +670,7 @@ void max3421e_device_irq_detection_cycle(void)
 
 uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 {
-	d_print("%s(): chip_num %ld\r\n", __func__, chip_num);
+//	d_print("%s(): chip_num %ld\r\n", __func__, chip_num);
 	max3421e_chip_activate(chip_num);
 	uint8_t hctl = max3421e_hctl_read();
 	max3421e_chip_deactivate(chip_num);
@@ -699,19 +699,19 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 			max3421e_chip_activate(chip_num);
 			max3421e_mode_write(mode | MODE_LOWSPEED);
 			max3421e_chip_deactivate(chip_num);
-			d_print("Low speed device connected\r\n");
+//			d_print("Low speed device connected\r\n");
 			return 1;
 
 		case HRSL_JSTATUS:
-			d_print("Full speed device connected\r\n");
+//			d_print("Full speed device connected\r\n");
 			return 2;
 
 		case (HRSL_JSTATUS | HRSL_KSTATUS):
-			d_print("Bus illegal state\r\n");
+//			d_print("Bus illegal state\r\n");
 			return 0;
 
 		case 0x00:
-			d_print("Device not connected\r\n");
+//			d_print("Device not connected\r\n");
 			return 0;
 	}
 	return 0;
@@ -724,5 +724,5 @@ void max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr)
 	max3421e_usb_setup_send(chip_num, 0x00, &set_addr);
 	mdelay(50);
 	max3421e_usb_status_in_send(chip_num, 0x00);
-	d_print("Device address is set\r\n");
+//	d_print("Device address is set\r\n");
 }

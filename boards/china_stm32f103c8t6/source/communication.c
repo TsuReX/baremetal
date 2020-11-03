@@ -120,7 +120,7 @@ void comm_stop(void)
 
 void dma1_channel5_irq_handler(void)
 {
-	d_print("%s()\r\n", __func__);
+//	d_print("%s()\r\n", __func__);
 	copy_to_usb((uint8_t*)&((struct kbms_data*)buffer)->kb_data, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
 	_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 	_SetEPTxStatus(ENDP1, EP_TX_VALID);

@@ -281,11 +281,11 @@ uint8_t *Standard_GetStatus(uint16_t Length)
 RESULT Standard_ClearFeature(void)
 {
 
-	d_print("bm_request_type: 0x%02X\r\n", usb_device_info->bm_request_type);
-	d_print("b_request: 0x%02X\r\n", usb_device_info->b_request);
-	d_print("w_value: 0x%04X\r\n", usb_device_info->w_value);
-	d_print("w_index: 0x%04X\r\n", usb_device_info->w_index);
-	d_print("w_length: 0x%04X\r\n", usb_device_info->w_length);
+//	d_print("bm_request_type: 0x%02X\r\n", usb_device_info->bm_request_type);
+//	d_print("b_request: 0x%02X\r\n", usb_device_info->b_request);
+//	d_print("w_value: 0x%04X\r\n", usb_device_info->w_value);
+//	d_print("w_index: 0x%04X\r\n", usb_device_info->w_index);
+//	d_print("w_length: 0x%04X\r\n", usb_device_info->w_length);
 	uint8_t		request_recipient = usb_device_info->bm_request_type & REQUEST_RECIPIENT;
 //	uint32_t     Type_Rec = (usb_device_info->bm_request_type & (REQUEST_TYPE | REQUEST_RECIPIENT));
 //	uint32_t     Status;
@@ -781,7 +781,7 @@ uint8_t *HID_GetStringDescriptor(uint16_t Length)
 uint8_t *HID_GetReportDescriptor(uint16_t Length)
 {
 
-	d_print("HID_GetReportDescriptor, index: 0x%04X\r\n", usb_device_info->w_index);
+//	d_print("HID_GetReportDescriptor, index: 0x%04X\r\n", usb_device_info->w_index);
 	if (usb_device_info->w_index == 0xAB)
 		return Standard_GetDescriptorData(Length, &Keyboard_RHID_Report_Descriptor);
 	else if (usb_device_info->w_index == 5)
