@@ -48,6 +48,8 @@ uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB};
 /** Код команды чтения данных SPI Flash. */
 #define SPI_CMD_READ		0x03
 
+#define USB_DEVICE
+
 void max3421e_chip_activate(uint32_t chip_num)
 {
 	switch(chip_num) {
@@ -118,7 +120,7 @@ int main(void)
 
 	board_init();
 
-#ifdef USB_MASTER
+#if defined(USB_MASTER)
 	console_init();
 	spi_init();
 	spi_usb_transmission_start();
@@ -127,16 +129,17 @@ int main(void)
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 
 	}
-#elif USB_DEVICE
+#elif defined(USB_DEVICE)
 
 	comm_init(&comm_buff, sizeof(comm_buff));
 	comm_start();
-	d_print("123\r\n");
+	d_print("USB Device\r\n");
 	usb_init();
 
-#endif /* USB_MASTER */
-
+#else
 	console_init();
+#endif
+
 	while(1){
 		;
 	}

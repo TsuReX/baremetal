@@ -11,10 +11,8 @@ const uint8_t rhid_device_descriptor[DEV_DESCRIPTOR_SIZE] = {
 	0x00,                       // bDeviceSubClass
 	0x00,                       // bDeviceProtocol
 	0x40,                       // bMaxPacketSize - Endpoint 0
-//	0x83, 0x04,                 // idVendor (0x0483)
-//	0x11, 0x57,                 // idProduct (0x5711)
-	0xEF, 0x17,
-	0x8C, 0x60,
+	0x34, 0x12,                 // idVendor (0x1234)
+	0x78, 0x56,                 // idProduct (0x5678)
 	DEVICE_VER_L, DEVICE_VER_H,	// bcdDevice rel. DEVICE_VER_H.DEVICE_VER_L
 	0x01,						// Index of string descriptor describing manufacturer
 	0x02,						// Index of string descriptor describing product
