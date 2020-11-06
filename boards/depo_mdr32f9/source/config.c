@@ -199,7 +199,7 @@ void board_init(void)
 		port_descriptor.PORT_OE = PORT_OE_IN;
 		port_descriptor.PORT_Pin = PORT_Pin_6;
 		PORT_Init(MDR_PORTB, &port_descriptor);
-
+#if 1
 		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
 		port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
 		port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
@@ -218,6 +218,17 @@ void board_init(void)
 		port_descriptor.PORT_OE = PORT_OE_IN;
 		port_descriptor.PORT_Pin = PORT_Pin_0;
 		PORT_Init(MDR_PORTD, &port_descriptor);
+
+#else
+		port_descriptor.PORT_Pin   = (PORT_Pin_1);
+		port_descriptor.PORT_OE    = PORT_OE_OUT;
+		port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
+		port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
+		port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
+
+		PORT_Init(MDR_PORTD, &port_descriptor);
+		PORT_SetBits(MDR_PORTD, PORT_Pin_1);
+#endif
 }
 
 /**

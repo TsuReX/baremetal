@@ -355,14 +355,16 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	mdelay(4000);
 
 	/* TODO: Check return value */
-	if (max3421e_usb_device_detect(usb_channel) == 0)
+	if (max3421e_usb_device_detect(usb_channel) == 0){
 		return -1;
+	}
 
 	max3421e_usb_sof_start(usb_channel);
 
 	max3421e_usb_bus_reset(usb_channel);
 
-	max3421e_usb_device_set_address(usb_channel, usb_dev_addr);
+	if (max3421e_usb_device_set_address(usb_channel, usb_dev_addr) != 0)
+		return -2;
 
 	mdelay(50);
 
@@ -449,7 +451,7 @@ void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_s
 //#endif
 }
 
-uint32_t current_hid_num = 1;
+uint32_t current_hid_num = 2;
 
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
 
@@ -495,7 +497,7 @@ void spi_usb_transmission_start(void)
 #ifdef MOUSE
 
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
-	max3421e_rev_print(MOUSE_CHANNEL);
+//	max3421e_rev_print(MOUSE_CHANNEL);
 	max3421e_chip_reset(MOUSE_CHANNEL);
 
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
@@ -527,13 +529,13 @@ void spi_usb_transmission_start(void)
 
 		memset(ms_data, 0, sizeof(ms_data));
 #ifdef MOUSE
-//		if (ms_present == 1) {
-//			ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
+		if (ms_present == 1) {
+			ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
 //			d_print("ms_data: ");
 //			for (idx = 0; idx < sizeof(ms_data); ++idx)
 //				d_print("0x%02X ", ms_data[idx]);
 //			d_print("\r\n");
-//		}
+		}
 #endif
 		kbms_data_send(kb_data, sizeof(kb_data), ms_data, sizeof(ms_data));
 		mdelay(50);

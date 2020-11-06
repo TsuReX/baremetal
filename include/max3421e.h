@@ -272,7 +272,7 @@ void max3421e_usb_device_irq_detection_cycle(void);
 
 uint32_t max3421e_usb_device_detect(uint32_t chip_num);
 
-void max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr);
+int32_t max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr);
 
 int16_t max3421e_usb_setup_send(uint32_t usb_channel, uint8_t dev_addr, struct std_request* request);
 

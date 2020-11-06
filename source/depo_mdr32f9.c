@@ -48,6 +48,7 @@ int main(void)
 	comm_start();
 
 	spi_init();
+	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 	spi_usb_transmission_start();
 
 /*****************************************************************************************/
