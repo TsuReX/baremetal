@@ -12,6 +12,25 @@
 
 void spi_init(void)
 {
+	PORT_InitTypeDef port_descriptor;
+
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
+
+	/*SPI GPIO*/
+	port_descriptor.PORT_Pin   = (PORT_Pin_3);
+	port_descriptor.PORT_OE    = PORT_OE_IN;
+	port_descriptor.PORT_FUNC  = PORT_FUNC_ALTER;
+	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
+	port_descriptor.PORT_SPEED = PORT_SPEED_FAST;
+
+	PORT_Init(MDR_PORTF, &port_descriptor);
+
+	port_descriptor.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1);
+	port_descriptor.PORT_OE    = PORT_OE_OUT;
+
+	PORT_Init(MDR_PORTF, &port_descriptor);
+
+	/*SPI*/
 	RST_CLK_PCLKcmd((RST_CLK_PCLK_RST_CLK | RST_CLK_PCLK_SSP1), ENABLE);
 
 	SSP_DeInit(MDR_SSP1);

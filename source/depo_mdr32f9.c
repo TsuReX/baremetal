@@ -17,6 +17,15 @@ void max3421e_chip_activate(uint32_t chip_num)
 		case MOUSE_CHANNEL:
 			PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
 			break;
+
+//		case MOUSE_CHANNEL:
+//			PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
+//			break;
+
+//		case MOUSE_CHANNEL:
+//			PORT_ResetBits(MDR_PORTD, PORT_Pin_0);
+//			d_print("Reset\r\n");
+//			break;
 	};
 }
 
@@ -30,6 +39,15 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 		case MOUSE_CHANNEL:
 			PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 			break;
+
+//		case MOUSE_CHANNEL:
+//			PORT_SetBits(MDR_PORTB, PORT_Pin_6);
+//			break;
+
+//		case MOUSE_CHANNEL:
+//			PORT_SetBits(MDR_PORTD, PORT_Pin_0);
+//			d_print("Set\r\n");
+//			break;
 	};
 }
 
@@ -48,7 +66,10 @@ int main(void)
 	comm_start();
 
 	spi_init();
+
+	/* Fire DEBUG_LED */
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
+
 	spi_usb_transmission_start();
 
 /*****************************************************************************************/
@@ -60,7 +81,6 @@ int main(void)
 
 		PORT_ResetBits(MDR_PORTD, PORT_Pin_7);
 		mdelay(500);
-
 	}
 
 	return 0;

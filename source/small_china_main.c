@@ -48,7 +48,8 @@ uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB};
 /** Код команды чтения данных SPI Flash. */
 #define SPI_CMD_READ		0x03
 
-#define USB_DEVICE
+//#define USB_DEVICE
+#define USB_MASTER
 
 void max3421e_chip_activate(uint32_t chip_num)
 {

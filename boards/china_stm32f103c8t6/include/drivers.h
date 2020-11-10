@@ -35,6 +35,8 @@
 /** Delay 50 milliseconds. */
 #define DELAY_50_MS	50
 
+#define KEYBOARD
+
 static inline uint16_t swap_bytes_in_word(uint16_t word)
 {
 	uint8_t tmp = ((uint8_t *)&word)[0];

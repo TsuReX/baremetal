@@ -100,135 +100,51 @@ static void systick_init(uint32_t hclk_freq)
  */
 void board_init(void)
 {
-	//	/*General initialization*/
-	//	RST_CLK_PCLKcmd(ALL_PORTS_CLK, ENABLE);
-	//
-		PORT_InitTypeDef port_descriptor;
-		PORT_StructInit(&port_descriptor);
-	//
-	//	PORT_Init(MDR_PORTA, &port_descriptor);
-	//	PORT_Init(MDR_PORTB, &port_descriptor);
-	//	PORT_Init(MDR_PORTC, &port_descriptor);
-	//	PORT_Init(MDR_PORTD, &port_descriptor);
-	//	PORT_Init(MDR_PORTE, &port_descriptor);
-	//	PORT_Init(MDR_PORTF, &port_descriptor);
-	//
-	//	RST_CLK_PCLKcmd(ALL_PORTS_CLK, DISABLE);
-		RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA, ENABLE);
-		RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB, ENABLE);
-		RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD, ENABLE);
-		RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTE, ENABLE);
-		RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
+	PORT_InitTypeDef port_descriptor;
+	PORT_StructInit(&port_descriptor);
 
-		/****************************************************/
-		/*Control*/
-		port_descriptor.PORT_Pin   = (PORT_Pin_7);
-		port_descriptor.PORT_OE    = PORT_OE_OUT;
-		port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
-		port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
-		port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTE, ENABLE);
 
-		/*PA7 PPS_ON*/
-		PORT_Init(MDR_PORTA, &port_descriptor);
-		/*PD7 DEBUG_LED*/
-		PORT_Init(MDR_PORTD, &port_descriptor);
+	port_descriptor.PORT_OE    = PORT_OE_OUT;
+	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
+	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
+	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
 
-		/*PE0 KM.KB_CS*/
-		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_ON;
-		port_descriptor.PORT_Pin   = (PORT_Pin_0);
-		PORT_Init(MDR_PORTE, &port_descriptor);
-		PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-	//	/*PB8 KM.MS_CS*/
-		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_ON;
-		port_descriptor.PORT_Pin   = (PORT_Pin_8);
-		PORT_Init(MDR_PORTB, &port_descriptor);
-		PORT_SetBits(MDR_PORTB, PORT_Pin_8);
+	/* PA7 PS_ON */
+	port_descriptor.PORT_Pin   = (PORT_Pin_7);
+	PORT_Init(MDR_PORTA, &port_descriptor);
+	PORT_SetBits(MDR_PORTA, PORT_Pin_7);
 
-		/*PB6 DEBUG*/
-		port_descriptor.PORT_Pin   = (PORT_Pin_6);
-		PORT_Init(MDR_PORTB, &port_descriptor);
-		PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
+	/* PD7 DEBUG_LED */
+	PORT_Init(MDR_PORTD, &port_descriptor);
 
+	/* PE0 KM.KB_CS */
+	port_descriptor.PORT_Pin   = (PORT_Pin_0);
+	PORT_Init(MDR_PORTE, &port_descriptor);
+	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
 
-		PORT_SetBits(MDR_PORTA, PORT_Pin_7);
+	/* PB8 KM.MS_CS */
+	port_descriptor.PORT_Pin   = (PORT_Pin_8);
+	PORT_Init(MDR_PORTB, &port_descriptor);
+	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
 
-	//	PORT_SetBits(MDR_PORTB, PORT_Pin_8);
-
-		/****************************************************/
-		/*SPI*/
-
-		port_descriptor.PORT_Pin   = (PORT_Pin_3);
-		port_descriptor.PORT_OE    = PORT_OE_IN;
-		port_descriptor.PORT_FUNC  = PORT_FUNC_ALTER;
-		port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
-		port_descriptor.PORT_SPEED = PORT_SPEED_FAST;
-
-		PORT_Init(MDR_PORTF, &port_descriptor);
-
-		port_descriptor.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1);
-		port_descriptor.PORT_OE    = PORT_OE_OUT;
-
-		PORT_Init(MDR_PORTF, &port_descriptor);
-	//
-	//	port_descriptor.PORT_Pin   = (PORT_Pin_2);
-	//	port_descriptor.PORT_OE    = PORT_OE_OUT;
-	//	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
-	//	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
-	//	port_descriptor.PORT_SPEED = PORT_SPEED_SLOW;
-	//
-	//	PORT_Init(MDR_PORTF, &port_descriptor);
-	//
-	//	/****************************************************/
-		/*USART 1,2*/
-
-		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
-		port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
-		port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
-		port_descriptor.PORT_PD = PORT_PD_DRIVER;
-		port_descriptor.PORT_GFEN = PORT_GFEN_OFF;
-		port_descriptor.PORT_FUNC = PORT_FUNC_ALTER;
-		port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
-		port_descriptor.PORT_MODE = PORT_MODE_DIGITAL;
-
-		/* Configure PORTB pins 5 (UART1_TX) as output */
-		port_descriptor.PORT_OE = PORT_OE_OUT;
-		port_descriptor.PORT_Pin = PORT_Pin_5;
-		PORT_Init(MDR_PORTB, &port_descriptor);
-
-		/* Configure PORTB pins 6 (UART1_RX) as input */
-		port_descriptor.PORT_OE = PORT_OE_IN;
-		port_descriptor.PORT_Pin = PORT_Pin_6;
-		PORT_Init(MDR_PORTB, &port_descriptor);
-#if 1
-		port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
-		port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
-		port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
-		port_descriptor.PORT_PD = PORT_PD_DRIVER;
-		port_descriptor.PORT_GFEN = PORT_GFEN_OFF;
-		port_descriptor.PORT_FUNC = PORT_FUNC_ALTER;
-		port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
-		port_descriptor.PORT_MODE = PORT_MODE_DIGITAL;
-
-		/* Configure PORTD pins 1 (UART2_TX) as output */
-		port_descriptor.PORT_OE = PORT_OE_OUT;
-		port_descriptor.PORT_Pin = PORT_Pin_1;
-		PORT_Init(MDR_PORTD, &port_descriptor);
-
-		/* Configure PORTD pins 0 (UART2_RX) as input */
-		port_descriptor.PORT_OE = PORT_OE_IN;
-		port_descriptor.PORT_Pin = PORT_Pin_0;
-		PORT_Init(MDR_PORTD, &port_descriptor);
-
-#else
-		port_descriptor.PORT_Pin   = (PORT_Pin_1);
-		port_descriptor.PORT_OE    = PORT_OE_OUT;
-		port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
-		port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
-		port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
-
-		PORT_Init(MDR_PORTD, &port_descriptor);
-		PORT_SetBits(MDR_PORTD, PORT_Pin_1);
+#if 0
+	/* PB6 DEBUG */
+	port_descriptor.PORT_Pin   = (PORT_Pin_6);
+	PORT_Init(MDR_PORTB, &port_descriptor);
+	PORT_SetBits(MDR_PORTB, PORT_Pin_6);
 #endif
+
+#if 0
+	/* PD0 DEBUG */
+	port_descriptor.PORT_Pin   = (PORT_Pin_0);
+	PORT_Init(MDR_PORTD, &port_descriptor);
+	PORT_SetBits(MDR_PORTD, PORT_Pin_0);
+#endif
+
 }
 
 /**

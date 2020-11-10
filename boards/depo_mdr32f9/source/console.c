@@ -40,11 +40,34 @@ static struct ring_buf rx_rb;
 static struct ring_buf tx_rb;
 
 /*
- * @brief	Настройка портов GPIO 9/10 для реализации каналов приема и передачи USART1.
+ * @brief	Настройка портов GPIO для реализации каналов приема и передачи USART1.
  */
 static void console_gpio_init(void)
 {
+	PORT_InitTypeDef port_descriptor;
 
+	/* USART 1,2 GPIO */
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD, ENABLE);
+
+	port_descriptor.PORT_PULL_UP = PORT_PULL_UP_OFF;
+	port_descriptor.PORT_PULL_DOWN = PORT_PULL_DOWN_OFF;
+	port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
+	port_descriptor.PORT_PD = PORT_PD_DRIVER;
+	port_descriptor.PORT_GFEN = PORT_GFEN_OFF;
+	port_descriptor.PORT_FUNC = PORT_FUNC_ALTER;
+	port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
+	port_descriptor.PORT_MODE = PORT_MODE_DIGITAL;
+
+	/* Configure PORTB pins 5 (UART1_TX) as output */
+	port_descriptor.PORT_OE = PORT_OE_OUT;
+	port_descriptor.PORT_Pin = PORT_Pin_5;
+	PORT_Init(MDR_PORTB, &port_descriptor);
+
+	/* Configure PORTB pins 6 (UART1_RX) as input */
+	port_descriptor.PORT_OE = PORT_OE_IN;
+	port_descriptor.PORT_Pin = PORT_Pin_6;
+	PORT_Init(MDR_PORTB, &port_descriptor);
 }
 
 /*

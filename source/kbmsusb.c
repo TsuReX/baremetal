@@ -16,9 +16,6 @@
 #define MS_USB_ADDR	0x33
 #define KB_USB_ADDR 0x34
 
-#define KEYBOARD
-#define MOUSE
-
 #define USB_NAK		0x04
 #define USB_TOGERR	0x06
 
@@ -427,7 +424,7 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 
 void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_size)
 {
-//#ifdef USE_MDR1986VE9x
+#ifdef USE_MDR1986VE9x
 //	d_print("%s(): hid_num %ld, buffer_size %d\r\n", __func__, hid_num, buffer_size);
 	MDR_UART_TypeDef* UARTx = MDR_UART1;
 
@@ -448,7 +445,7 @@ void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_s
 				break;
 		} while (UART_GetFlagStatus (UARTx, UART_FLAG_TXFE) != 1);
 	}
-//#endif
+#endif
 }
 
 uint32_t current_hid_num = 2;
