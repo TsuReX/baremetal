@@ -27,7 +27,7 @@ set(BOARD_SRC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f303k8t6/sour
 set(MAIN_SOURCES	"${MAIN_SOURCES}"
 					"${BOARD_SRC_PATH}/stm32f3xx_it.c"
 					"${BOARD_SRC_PATH}/system_stm32f3xx.c"
-					"${BOARD_SRC_PATH}/config.c"
+					"${BOARD_SRC_PATH}/init.c"
 					"${BOARD_SRC_PATH}/console.c"
 					"${BOARD_SRC_PATH}/scheduler.c"
 					"${BOARD_SRC_PATH}/i2c.c"

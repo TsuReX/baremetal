@@ -23,7 +23,7 @@ set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/checkboard_lpc54618j512")
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_lpc54618.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/checkboard_main.c"
-						"${BRD_PATH}/source/config.c"
+						"${BRD_PATH}/source/init.c"
 						"${BRD_PATH}/source/time.c"
 						"${BRD_PATH}/source/scheduler.c"
 						"${BRD_PATH}/source/console.c"
@@ -43,21 +43,10 @@ set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/nxp/lpc546xx/includ
 
 set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/include")
 
-#file(GLOB DRIVER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/base/Driver/NXP/LPC546xx/source/*.c")
 set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/nxp/lpc546xx/source")
 set(DRIVER_SOURCES		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/fsl_rit.c"
 						"${DRV_SOURCES_PATH}/fsl_adc.c"
-#						"${DRV_SOURCES_PATH}/fsl_reset.c"
-#						"${DRV_SOURCES_PATH}/fsl_power.c"
-#						"${DRV_SOURCES_PATH}/fsl_gpio.c"
-#						"${DRV_SOURCES_PATH}/fsl_usart_dma.c"
-#						"${DRV_SOURCES_PATH}/fsl_flexcomm.c"
-#						"${DRV_SOURCES_PATH}/fsl_clock.c"
-#						"${DRV_SOURCES_PATH}/fsl_common.c"
-#						"${DRV_SOURCES_PATH}/fsl_usart.c"
-#						"${DRV_SOURCES_PATH}/fsl_dma.c"
-#						"${DRV_SOURCES_PATH}/fsl_sctimer.c"
 				)
 #######################################################################
 ## Настройка параметров сбоки и компоновки

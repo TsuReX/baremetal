@@ -31,9 +31,9 @@ void scheduler_process(void)
 
 int main(void)
 {
-	soc_config();
+	soc_init();
 
-	board_config();
+	board_init();
 
 	ok_led_off();
 	fail_led_off();

@@ -118,7 +118,7 @@ static void systick_config(uint32_t main_clk)
 /**
  * @brief	Настройка устройств платформы(платы)
  */
-void board_config(void)
+void board_init(void)
 {
 	/* 1. */
 	SYSCTL->RCGCGPIO |= (0x1 << 5);
@@ -147,7 +147,7 @@ void board_config(void)
 /**
  * @brief	Настройка внутренних подсистем системы на кристалле.
  */
-void soc_config(void)
+void soc_init(void)
 {
 	/* Настройка внутренней флеш памяти. */
 	flash_config();

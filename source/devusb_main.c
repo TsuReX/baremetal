@@ -14,6 +14,7 @@
 #include "communication.h"
 #include "max3421e.h"
 #include "utils.h"
+#include "init.h"
 
 #include "kbmsusb.h"
 #include "usb_core.h"

@@ -56,16 +56,6 @@ void spi_init(void)
 	MDR_SSP1->CR1 |= 0x2;
 }
 
-void spi_chip_activate(void)
-{
-	PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-}
-
-void spi_chip_deactivate(void)
-{
-	PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-}
-
 uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
 {
 	size_t byte_idx = 0;

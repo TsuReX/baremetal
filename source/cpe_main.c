@@ -7,6 +7,7 @@
  */
 
 #include "drivers.h"
+#include "init.h"
 #include "config.h"
 #include "console.h"
 #include "scheduler.h"
@@ -453,10 +454,10 @@ void TIM3_IRQHandler(void)
 int main(void)
 {
 	/** Configure internal subsystems of SoC. */
-	soc_config();
+	soc_init();
 
 	/** Configure board's peripherals. */
-	board_config();
+	board_init();
 
 	console_init();
 

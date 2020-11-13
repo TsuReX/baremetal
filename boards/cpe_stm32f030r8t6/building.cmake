@@ -20,7 +20,9 @@ set(BOARD_TYPE_STATUS "SET")
 ## Подключение файло исходных кодов и заголовков
 set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/cpe_stm32f030r8t6")
 
-set(MAIN_INCLUDE		"${BRD_PATH}/include")
+set(MAIN_INCLUDE		"${BRD_PATH}/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/include"
+				)
 
 set(BOARD_SRC_PATH		"${BRD_PATH}/source/")
 
@@ -28,12 +30,9 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_stm32f030r8t6.c"
 						"${BRD_PATH}/source/system_stm32f0xx.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/cpe_main.c"
-						"${BOARD_SRC_PATH}/config.c"
+						"${BOARD_SRC_PATH}/init.c"
 						"${BOARD_SRC_PATH}/console.c"
 						"${BOARD_SRC_PATH}/scheduler.c"
-#						"${BOARD_SRC_PATH}/i2c.c"
-#						"${BOARD_SRC_PATH}/gpio.c"
-#						"${BOARD_SRC_PATH}/pwm.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
@@ -60,7 +59,6 @@ set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m0")
 set(LINKER_FLAGS	"${LINKER_FLAGS}"
 					"-T ${BRD_PATH}/flash.ld"
 					"-mcpu=cortex-m0 -specs=nano.specs"
-#					"-Wl, --gc-sections"
 				)
 
 set(LINKER_LIBS 	"-lc"

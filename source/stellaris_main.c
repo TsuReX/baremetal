@@ -25,9 +25,9 @@ void usb0_irq_handler(void) {
 
 int32_t main()
 {
-	soc_config();
+	soc_init();
 
-	board_config();
+	board_init();
 
 	while(1) {
 

@@ -1,10 +1,3 @@
-/*
- * spi.h
- *
- *  Created on: Oct 2, 2020
- *      Author: user
- */
-
 #ifndef SPI_H_
 #define SPI_H_
 

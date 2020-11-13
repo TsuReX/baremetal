@@ -1,4 +1,4 @@
-/**
+/*
  * @file	src/config.c
  *
  * @brief	Определения функций инициализации SoC и периферии.
@@ -6,11 +6,9 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
+#include "init.h"
 #include "drivers.h"
 #include "config.h"
-
-/** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	64000000
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,

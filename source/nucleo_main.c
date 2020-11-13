@@ -23,10 +23,10 @@
 int main(void)
 {
 	/** Configure internal subsystems of SoC. */
-	soc_config();
+	soc_init();
 
 	/** Configure board's peripherals. */
-	board_config();
+	board_init();
 
 	console_init();
 

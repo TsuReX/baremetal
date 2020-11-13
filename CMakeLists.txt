@@ -54,7 +54,7 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 	include(${BOARD_SCRIPT_CMAKE})
 
 #######################################################################
-elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "china_stm32f103c8t6")
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "devusb_stm32f103c8t6")
 	
 	set(PROJ_NAME stm32f103c8t6_usb)
 	

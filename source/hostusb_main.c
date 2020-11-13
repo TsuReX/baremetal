@@ -3,6 +3,7 @@
 #include "spi.h"
 #include "max3421e.h"
 #include "kbmsusb.h"
+#include "init.h"
 #include "config.h"
 #include "utils.h"
 #include "communication.h"

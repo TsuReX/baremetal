@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "china_stm32f103c8t6")
+set(CURRENT_BOARD_TYPE "devusb_stm32f103c8t6")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,26 +18,24 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/")
 
 #set(MAIN_ASM_SOURCES    "${BOARD_SRC_PATH}/source/startup_stm32f103xb.s")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
-						"${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/include"
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
-#						"${BOARD_SRC_PATH}/usb/include"
-
 						"${BOARD_SRC_PATH}/usblib/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/startup_stm32f103xb.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/small_china_main.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/devusb_main.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
-						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
+#						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
 						"${BOARD_SRC_PATH}/source/system_stm32f103xb.c"
-						"${BOARD_SRC_PATH}/source/config.c"
+						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/console.c"
 						"${BOARD_SRC_PATH}/source/scheduler.c"
 						"${BOARD_SRC_PATH}/source/spi.c"
@@ -79,7 +77,7 @@ set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall -Werror")
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
-						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/flash_stm32f103c8t6.ld"
+						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/flash_stm32f103c8t6.ld"
 						"-mcpu=cortex-m3"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
@@ -112,8 +110,8 @@ add_definitions("-DUSE_FULL_LL_DRIVER")
 #							exit\")
 							
 #######################################################################
-#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_stlinkv2.cfg")
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/china_stm32f103c8t6/oocd_jlink.cfg")
+#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/oocd_stlinkv2.cfg")
+set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/oocd_jlink.cfg")
 # Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 

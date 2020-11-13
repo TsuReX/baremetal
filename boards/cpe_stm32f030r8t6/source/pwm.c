@@ -6,10 +6,10 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "../../cpe_stm32f030r8t6/include/pwm.h"
+#include "pwm.h"
 
-#include "../../cpe_stm32f030r8t6/include/console.h"
-#include "../../cpe_stm32f030r8t6/include/drivers.h"
+#include "console.h"
+#include "drivers.h"
 
 void pwm_init(void)
 {

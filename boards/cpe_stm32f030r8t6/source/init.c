@@ -6,18 +6,15 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
-#include "config.h"
-
+#include "init.h"
 #include "drivers.h"
-
-/** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	48000000
+#include "config.h"
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
  * 			работающем на частоте 48 МГц.
  */
-static void flash_config(void)
+static void flash_init(void)
 {
 	/* Настройка времени задержки доступа к флешке.
 	 * Это необходимо для корректной работы флешки при различных частотах HCLK.
@@ -39,7 +36,7 @@ static void flash_config(void)
  *				APB2 Prescaler                 = 1
  *				PLLMUL                         = RCC_PLL_MUL12 (12)
  */
-static void rcc_config(void)
+static void rcc_init(void)
 {
 
 	/* Настройка системного тактового сигнала SYSCLK.
@@ -94,7 +91,7 @@ static void rcc_config(void)
  *
  * @param	hclk_freq	частота шины HCLK в герцах
  */
-static void systick_config(uint32_t hclk_freq)
+static void systick_init(uint32_t hclk_freq)
 {
 	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
 	LL_Init1msTick(hclk_freq);
@@ -103,7 +100,7 @@ static void systick_config(uint32_t hclk_freq)
 /**
  * @brief	Настройка устройств платформы(платы)
  */
-void board_config(void)
+void board_init(void)
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
@@ -303,14 +300,14 @@ void board_config(void)
 /**
  * @brief	Настройка внутренних подсистем системы на кристалле.
  */
-void soc_config(void)
+void soc_init(void)
 {
 	/* Настройка внутренней флеш памяти. */
-	flash_config();
+	flash_init();
 	/* Настройка подсистемы тактирования. */
-	rcc_config();
+	rcc_init();
 	/* Настраивает системный таймер ядра. */
-	systick_config(HCLK_FREQ);
+	systick_init(HCLK_FREQ);
 	/* Настройка вспомогательных параметров. */
 	LL_SetSystemCoreClock(HCLK_FREQ);
 }

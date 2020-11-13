@@ -1,5 +1,5 @@
 /**
- * @file	src/config.c
+ * @file	src/init.c
  *
  * @brief	Определения функций инициализации SoC и периферии.
  *
@@ -183,7 +183,7 @@ static void systick_config(uint32_t main_clk)
 /**
  * @brief	Настройка устройств платформы(платы)
  */
-void board_config(void)
+void board_init(void)
 {
 	/* Подключение тактирования для шины FLEXCOMM0 (используется для USART0). */
 	SYSCON->FCLKSEL[0] = SYSCON_FCLKSEL_SEL(0x0);
@@ -475,7 +475,7 @@ void board_config(void)
 /**
  * @brief	Настройка внутренних подсистем системы на кристалле.
  */
-void soc_config(void)
+void soc_init(void)
 {
 	/* Настройка внутренней флеш памяти. */
 	flash_config();

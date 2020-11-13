@@ -1,23 +1,14 @@
-/**
- * @file	include/config.h
+/*
+ * config.h
  *
- * @brief	Объявление функций инициализации SoC и периферии.
- *
- * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
+ *  Created on: Nov 13, 2020
+ *      Author: vasily
  */
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-/**
- * @brief	Инициализирует устройства и подсистемы внутри SoC.
- */
-void soc_init(void);
-
-/**
- * @brief	Инициализирует устройства платформы.
- */
-void board_init(void);
-
+/** Частота шины HCLK (работы ядра процессора). */
+#define HCLK_FREQ	64000000
 
 #endif /* _CONFIG_H_ */

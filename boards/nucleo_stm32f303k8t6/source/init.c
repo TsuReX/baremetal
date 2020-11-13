@@ -6,11 +6,9 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
+#include "init.h"
 #include "drivers.h"
 #include "config.h"
-
-/** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	48000000
 
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
@@ -21,7 +19,7 @@ static void flash_config(void)
 	/* Настройка времени задержки доступа к флешке.
 	 * Это необходимо для корректной работы флешки при различных частотах HCLK.
 	 */
-//	LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
+	LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
 }
 
 /**
@@ -86,6 +84,9 @@ static void rcc_config(void)
 	/* Настройка делителя для шины APB1 - PCLK1. */
 	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
 
+	/* Настройка делителя для шины APB2 - PCLK2. */
+	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+
 }
 
 /**
@@ -102,7 +103,7 @@ static void systick_config(uint32_t hclk_freq)
 /**
  * @brief	Настройка устройств платформы(платы)
  */
-void board_config(void)
+void board_init(void)
 {
 	/** Fire LD3 (green) led. */
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
@@ -111,7 +112,7 @@ void board_config(void)
 /**
  * @brief	Настройка внутренних подсистем системы на кристалле.
  */
-void soc_config(void)
+void soc_init(void)
 {
 	/* Настройка внутренней флеш памяти. */
 	flash_config();

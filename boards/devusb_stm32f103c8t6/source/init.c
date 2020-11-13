@@ -6,6 +6,7 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
+#include "init.h"
 #include "drivers.h"
 #include "config.h"
 
