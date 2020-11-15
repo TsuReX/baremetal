@@ -10,7 +10,7 @@
 #include "console.h"
 #include "max3421e.h"
 #include "kbmsusb.h"
-#include "utils.h"
+#include "delay.h"
 #include "drivers.h"
 
 #define MS_USB_ADDR	0x33

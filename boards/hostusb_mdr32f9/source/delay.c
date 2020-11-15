@@ -6,12 +6,12 @@
  */
 
 
-#include "utils.h"
+#include "delay.h"
 #include "drivers.h"
 
-void mdelay(uint32_t delay)
+void mdelay(uint32_t mseconds)
 {
-	delay *= 10;
+	mseconds *= 10;
   __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
   /* Add this code to indicate that local variable is not used */
   ((void)tmp);
@@ -21,14 +21,14 @@ void mdelay(uint32_t delay)
 //    delay++;
 //  }
 
-  while (delay) {
+  while (mseconds) {
     if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
-      delay--;
+      mseconds--;
     }
   }
 }
 
-void u100delay(uint32_t delay)
+void u100delay(uint32_t u100seconds)
 {
   __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
   /* Add this code to indicate that local variable is not used */
@@ -39,9 +39,9 @@ void u100delay(uint32_t delay)
 //    delay++;
 //  }
 
-  while (delay) {
+  while (u100seconds) {
     if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
-      delay--;
+      u100seconds--;
     }
   }
 }

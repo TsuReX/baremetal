@@ -5,52 +5,8 @@
 #include "kbmsusb.h"
 #include "init.h"
 #include "config.h"
-#include "utils.h"
+#include "delay.h"
 #include "communication.h"
-
-void max3421e_chip_activate(uint32_t chip_num)
-{
-	switch(chip_num) {
-		case KEYBOARD_CHANNEL:
-			PORT_ResetBits(MDR_PORTE, PORT_Pin_0);
-			break;
-
-		case MOUSE_CHANNEL:
-			PORT_ResetBits(MDR_PORTB, PORT_Pin_8);
-			break;
-
-//		case MOUSE_CHANNEL:
-//			PORT_ResetBits(MDR_PORTB, PORT_Pin_6);
-//			break;
-
-//		case MOUSE_CHANNEL:
-//			PORT_ResetBits(MDR_PORTD, PORT_Pin_0);
-//			d_print("Reset\r\n");
-//			break;
-	};
-}
-
-void max3421e_chip_deactivate(uint32_t chip_num)
-{
-	switch(chip_num) {
-		case KEYBOARD_CHANNEL:
-			PORT_SetBits(MDR_PORTE, PORT_Pin_0);
-			break;
-
-		case MOUSE_CHANNEL:
-			PORT_SetBits(MDR_PORTB, PORT_Pin_8);
-			break;
-
-//		case MOUSE_CHANNEL:
-//			PORT_SetBits(MDR_PORTB, PORT_Pin_6);
-//			break;
-
-//		case MOUSE_CHANNEL:
-//			PORT_SetBits(MDR_PORTD, PORT_Pin_0);
-//			d_print("Set\r\n");
-//			break;
-	};
-}
 
 int main(void)
 {

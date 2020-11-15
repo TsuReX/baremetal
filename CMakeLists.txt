@@ -56,7 +56,7 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f303k8t6")
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "devusb_stm32f103c8t6")
 	
-	set(PROJ_NAME stm32f103c8t6_usb)
+	set(PROJ_NAME devusb_stm32f103c8t6)
 	
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
@@ -93,9 +93,9 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "checkboard_lpc54618j512")
 	include(${BOARD_SCRIPT_CMAKE})
 	
 #######################################################################	
-elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "depo_mdr32f9")
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "hostusb_mdr32f9")
 	
-	set(PROJ_NAME depo_mdr32f9)
+	set(PROJ_NAME hostusb_mdr32f9)
 	
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 

@@ -13,7 +13,7 @@
 #include "spi.h"
 #include "communication.h"
 #include "max3421e.h"
-#include "utils.h"
+#include "delay.h"
 #include "init.h"
 
 #include "kbmsusb.h"
@@ -51,37 +51,6 @@ uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB};
 
 //#define USB_DEVICE
 #define USB_MASTER
-
-void max3421e_chip_activate(uint32_t chip_num)
-{
-	switch(chip_num) {
-		case KEYBOARD_CHANNEL:
-			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//#warning "Implement"
-			break;
-
-		case MOUSE_CHANNEL:
-			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//#warning "Implement"
-			break;
-	};
-}
-
-void max3421e_chip_deactivate(uint32_t chip_num)
-{
-	switch(chip_num) {
-		case KEYBOARD_CHANNEL:
-			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//#warning "Implement"
-
-			break;
-
-		case MOUSE_CHANNEL:
-			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-//#warning "Implement"
-			break;
-	};
-}
 
 void usb_init(void)
 {
@@ -122,27 +91,11 @@ int main(void)
 
 	board_init();
 
-#if defined(USB_MASTER)
-	console_init();
-	spi_init();
-	spi_usb_transmission_start();
-	while (1) {
-		LL_mDelay(DELAY_500_MS * 2);
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-
-	}
-#elif defined(USB_DEVICE)
-
 	comm_init(&comm_buff, sizeof(comm_buff));
+
 	comm_start();
-//	d_print("USB Device\r\n");
+
 	usb_init();
 
-#else
-	console_init();
-#endif
-
-	while(1){
-		;
-	}
+	while(1);
 }

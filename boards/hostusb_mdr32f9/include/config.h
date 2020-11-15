@@ -11,4 +11,6 @@
 /** Частота шины HCLK (работы ядра процессора). */
 #define HCLK_FREQ	64000000
 
+#define ALIAS(f) __attribute__ ((weak, alias (#f)))
+
 #endif /* _CONFIG_H_ */

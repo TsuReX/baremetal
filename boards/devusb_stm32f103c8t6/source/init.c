@@ -155,8 +155,12 @@ static void rcc_init(void)
  */
 static void systick_init(uint32_t hclk_freq)
 {
-	/* Производится настройка системного таймера ядра для определения интервала времени равного 1 миллисекунде.  */
-	LL_Init1msTick(hclk_freq);
+	/* Производится настройка системного таймера ядра для определения интервала времени равного 100 микросекундам.  */
+
+	SysTick->LOAD  = (uint32_t)((hclk_freq / 10000) - 1UL);  /* set reload register */
+	SysTick->VAL   = 0UL;                                       /* Load the SysTick Counter Value */
+	SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
+				   SysTick_CTRL_ENABLE_Msk;                   /* Enable the Systick Timer */
 }
 
 /**

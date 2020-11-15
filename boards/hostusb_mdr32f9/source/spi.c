@@ -56,7 +56,7 @@ void spi_init(void)
 	MDR_SSP1->CR1 |= 0x2;
 }
 
-uint32_t spi_data_xfer(uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
+uint32_t spi_data_xfer(const uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
 {
 	size_t byte_idx = 0;
 	if (src_buf == NULL && dst_buf == NULL)

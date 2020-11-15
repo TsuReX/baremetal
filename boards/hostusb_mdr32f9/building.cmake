@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "depo_mdr32f9")
+set(CURRENT_BOARD_TYPE "hostusb_mdr32f9")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,7 +18,7 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/")
+set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/")
 
 #set(MAIN_ASM_SOURCES    "${BRD_PATH}/source/startup_MDR32F9Qx.s")
 
@@ -34,8 +34,9 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/system_MDR32F9Qx.c"
 						"${BRD_PATH}/source/console.c"
 						"${BRD_PATH}/source/spi.c"
-						"${BRD_PATH}/source/utils.c"
+						"${BRD_PATH}/source/delay.c"
 						"${BRD_PATH}/source/init.c"
+						"${BRD_PATH}/source/platform.c"
 						"${BRD_PATH}/source/communication.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/hostusb_main.c"
 				)
@@ -63,7 +64,7 @@ set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall -O2")
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
-						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_mdr32f9/flash_mdr32f9.ld"
+						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/flash_mdr32f9.ld"
 						"-mcpu=cortex-m3"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
