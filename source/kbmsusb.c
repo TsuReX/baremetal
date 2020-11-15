@@ -477,7 +477,6 @@ void spi_usb_transmission_start(void)
 	uint32_t kb_present = 1;
 	uint32_t ms_present = 1;
 
-#ifdef KEYBOARD
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
@@ -489,9 +488,6 @@ void spi_usb_transmission_start(void)
 		kb_present = 0;
 //		return;
 	}
-#endif
-
-#ifdef MOUSE
 
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
 //	max3421e_rev_print(MOUSE_CHANNEL);
@@ -503,7 +499,6 @@ void spi_usb_transmission_start(void)
 		ms_present = 0;
 //		return;
 	}
-#endif
 	if (kb_present == 0 && ms_present == 0) {
 //		d_print("There aren't devices. Exit\r\n");
 		return;
@@ -514,7 +509,6 @@ void spi_usb_transmission_start(void)
 	uint8_t ms_data[4];
 	while (1) {
 		memset(kb_data, 0, sizeof(kb_data));
-#ifdef KEYBOARD
 		if (kb_present == 1) {
 			kb_usb_data_read(KB_USB_ADDR, 0x1, kb_data, sizeof(kb_data));
 //			d_print("kb_data: ");
@@ -522,10 +516,8 @@ void spi_usb_transmission_start(void)
 //				d_print("0x%02X ", kb_data[idx]);
 //			d_print("\r\n");
 		}
-#endif
 
 		memset(ms_data, 0, sizeof(ms_data));
-#ifdef MOUSE
 		if (ms_present == 1) {
 			ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
 //			d_print("ms_data: ");
@@ -533,7 +525,6 @@ void spi_usb_transmission_start(void)
 //				d_print("0x%02X ", ms_data[idx]);
 //			d_print("\r\n");
 		}
-#endif
 		kbms_data_send(kb_data, sizeof(kb_data), ms_data, sizeof(ms_data));
 		mdelay(50);
 	}
