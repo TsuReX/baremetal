@@ -14,10 +14,10 @@ int main(void)
 	board_init();
 
 	console_init();
-//
-//	spi_init();
-//
-//	spi_usb_transmission_start();
+
+	spi_init();
+
+	spi_usb_transmission_start();
 
 	while(1)
 	{

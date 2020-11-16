@@ -23,7 +23,7 @@ void max3421e_rev_print(uint32_t chip_num)
 {
 	max3421e_chip_activate(chip_num);
 	/* TODO: Implement device presence checking based on revision reading */
-//	d_print("REVISION 0x%02X\r\n", max3421e_rev_read());
+	d_print("REVISION 0x%02X\r\n", max3421e_rev_read());
 	max3421e_chip_deactivate(chip_num);
 }
 
@@ -477,6 +477,7 @@ void spi_usb_transmission_start(void)
 	uint32_t kb_present = 1;
 	uint32_t ms_present = 1;
 
+	d_print("\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
@@ -484,23 +485,24 @@ void spi_usb_transmission_start(void)
 
 	ret_val = device_detect_init(KEYBOARD_CHANNEL, KB_USB_ADDR);
 	if (ret_val != 0) {
-//		d_print("kb_detect_init(): %ld\r\n", ret_val);
+		d_print("kb_detect_init(): %ld\r\n", ret_val);
 		kb_present = 0;
 //		return;
 	}
 
+	d_print("\r\nPrepare mouse channel\r\n");
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
-//	max3421e_rev_print(MOUSE_CHANNEL);
+	max3421e_rev_print(MOUSE_CHANNEL);
 	max3421e_chip_reset(MOUSE_CHANNEL);
 
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
 	if (ret_val != 0) {
-//		d_print("ms_detect_init(): %ld\r\n", ret_val);
+		d_print("ms_detect_init(): %ld\r\n", ret_val);
 		ms_present = 0;
 //		return;
 	}
 	if (kb_present == 0 && ms_present == 0) {
-//		d_print("There aren't devices. Exit\r\n");
+		d_print("There aren't devices. Exit\r\n");
 		return;
 	}
 //	d_print("Start transmission\r\n");
