@@ -188,37 +188,39 @@ void board_init(void)
 	/* Configure MAX3421E_0 SS# Pin connected to pin 3 */
 	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_3, LL_GPIO_PULL_UP);
 
 	/* Configure MAX3421E_1 SS# Pin connected to pin 4 */
 	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_4, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_4, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_4, LL_GPIO_PULL_UP);
 
 	/* Configure SCK Pin connected to pin 5 */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_5, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_5, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_5, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_5, LL_GPIO_PULL_DOWN);
 
 	/* Configure MISO Pin connected to pin 6 */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_6, LL_GPIO_PULL_DOWN);
 
 	/* Configure MOSI Pin connected to pin 7 */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_7, LL_GPIO_PULL_DOWN);
 
-	/* Deassert RESET_N from MAX3421E_0. */
+	/* Deassert MAX3421E_0 SS#. */
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_0);
 
-	/* Deassert RESET_N from MAX3421E_1. */
+	/* Deassert MAX3421E_1 SS#. */
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
-	/* Deassert MAX3421E_0 SS#. */
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+	/* Assert RESET_N from MAX3421E_0. */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
 
-	/* Deassert MAX3421E_1 SS#. */
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+	/* Assert RESET_N from MAX3421E_1. */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
 
 	/* Fire green led. */
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);

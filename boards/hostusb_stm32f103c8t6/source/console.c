@@ -86,7 +86,7 @@ void console_init(void)
 	/* Настройка USART1. */
 	console_usart1_init();
 
-	d_print("DEBUG: Console initialized\n\r");
+	printk(INFO, "Console initialized\n\r");
 }
 
 /*
@@ -151,3 +151,34 @@ void d_print(const char *format, ...)
 		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
 }
+
+void printk(uint32_t msg_level, const char *format, ...)
+{
+	if (msg_level > log_level_get())
+		return;
+
+	va_list 	argptr;
+	char		str[512];
+	int			sz;
+	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 1000;
+
+	va_start(argptr, format);
+	sz = vsnprintf(str, 512, format, argptr);
+	va_end(argptr);
+
+	if (sz <= 0) {
+		return;
+	}
+
+	size_t i;
+	for (i = 0; i < sz; ++i) {
+		LL_USART_TransmitData8(USART1, str[i]);
+
+		do {
+			--ms_timeout;
+			if (ms_timeout == 0)
+				break;
+		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+	}
+}
+

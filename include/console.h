@@ -77,4 +77,12 @@ void print(const char *format, ...) __attribute__((format(printf, 1, 2)));
  */
 void d_print(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
+#define INFO	2
+#define ERR		1
+#define CRIT	0
+
+uint32_t log_level_get(void);
+
+void printk(uint32_t debug_level, const char *format, ...) __attribute__((format(printf, 2, 3)));
+
 #endif /* _CONSOLE_H_ */

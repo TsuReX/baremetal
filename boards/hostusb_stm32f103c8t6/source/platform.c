@@ -7,16 +7,17 @@
 
 #include "drivers.h"
 #include "kbmsusb.h"
+#include "config.h"
 
 void max3421e_chip_activate(uint32_t chip_num)
 {
 	switch(chip_num) {
 		case KEYBOARD_CHANNEL:
-			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_0);
 			break;
 
 		case MOUSE_CHANNEL:
-			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 			break;
 	};
 }
@@ -25,11 +26,16 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 {
 	switch(chip_num) {
 		case KEYBOARD_CHANNEL:
-			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_0);
 			break;
 
 		case MOUSE_CHANNEL:
-			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 			break;
 	};
+}
+
+uint32_t log_level_get(void)
+{
+	return CURRENT_DEBUG_LEVEL;
 }

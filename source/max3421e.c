@@ -271,7 +271,7 @@ int16_t max3421e_usb_status_in_send(uint32_t chip_num, uint8_t dev_addr)
 	uint32_t ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
 	if (ret_val != 0) {
 #ifdef DEBUG
-		d_print("%s(): Transfer can't be done\r\n", __func__);
+		printk(INFO, "%s(): Transfer can't be done\r\n", __func__);
 #endif
 		return -1 * 0xFF;
 	}
@@ -308,7 +308,7 @@ int16_t max3421e_usb_status_out_send(uint32_t chip_num, uint8_t dev_addr)
 	uint32_t ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
 	if (ret_val != 0) {
 #ifdef DEBUG
-		d_print("%s(): Transfer can't be done\r\n", __func__);
+		printk(INFO, "%s(): Transfer can't be done\r\n", __func__);
 #endif
 		return -1 * 0xFF;
 	}
@@ -346,7 +346,7 @@ int16_t max3421e_usb_setup_send(uint32_t chip_num, uint8_t dev_addr, struct std_
 		/* Check ending of the package transmission */
 		ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
 		if (ret_val != 0) {
-//			d_print("%s(): Transfer can't be done\r\n", __func__);
+//			printk(INFO, "%s(): Transfer can't be done\r\n", __func__);
 		} else {
 			break;
 		}
@@ -354,7 +354,7 @@ int16_t max3421e_usb_setup_send(uint32_t chip_num, uint8_t dev_addr, struct std_
 
 	if (tries == 0 && ret_val != 0) {
 #ifdef DEBUG
-		d_print("%s(): Transfer can't be done\r\n", __func__);
+		printk(INFO, "%s(): Transfer can't be done\r\n", __func__);
 #endif
 		return -1 * 0xFF;
 	}
@@ -419,7 +419,7 @@ int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t e
 	size_t size_to_recv = buf_size;
 
 	do {
-//		d_print("Size to receive %d\r\n", size_to_recv);
+//		printk(INFO, "Size to receive %d\r\n", size_to_recv);
 		/* Initiate BULK-IN transaction */
 		max3421e_chip_activate(chip_num);
 		max3421e_hxfr_write(HXFR_BULKIN | ep_addr);
@@ -437,7 +437,7 @@ int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t e
 		uint32_t ret_val = max3421e_hirq_hxfrdnirq_wait(chip_num, 1000);
 		if (ret_val != 0) {
 #ifdef DEBUG
-			d_print("%s(): Transfer can't be done\r\n", __func__);
+			printk(INFO, "%s(): Transfer can't be done\r\n", __func__);
 #endif
 			return -1 * 0xFF;
 		}
@@ -453,7 +453,7 @@ int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t e
 		max3421e_chip_deactivate(chip_num);
 
 		if (hrslt != 0){
-	//		d_print("BULK-IN transmission error. HRSLT: 0x%01X\r\n", hrslt);
+	//		printk(INFO, "BULK-IN transmission error. HRSLT: 0x%01X\r\n", hrslt);
 			return -1 * hrslt;
 		}
 
@@ -473,7 +473,7 @@ int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t e
 		rcvbc = max3421e_rcvbc_read();
 		max3421e_chip_deactivate(chip_num);
 
-	//	d_print("rcvbc: 0x%02X\r\n", rcvbc);
+	//	printk(INFO, "rcvbc: 0x%02X\r\n", rcvbc);
 
 		/* Read data from reception FIFO */
 		max3421e_chip_activate(chip_num);
@@ -499,6 +499,8 @@ int16_t max3421e_usb_bulk_receive(uint32_t chip_num, uint8_t dev_addr, uint8_t e
 
 void max3421e_fullduplex_spi_set(uint32_t chip_num)
 {
+	printk(INFO, "%s()\r\n", __func__);
+
 	max3421e_chip_activate(chip_num);
 	max3421e_pinctl_write(PINCTL_FDUPSPI | PINCTL_INTLEVEL | PINCTL_POSINT | PINCTL_GPXB | PINCTL_GPXA);
 	max3421e_chip_deactivate(chip_num);
@@ -506,6 +508,7 @@ void max3421e_fullduplex_spi_set(uint32_t chip_num)
 
 void max3421e_chip_reset(uint32_t chip_num)
 {
+	printk(INFO, "%s()\r\n", __func__);
 
 	max3421e_chip_activate(chip_num);
 	uint8_t usbctl = max3421e_usbctl_read();
@@ -537,20 +540,21 @@ void max3421e_chip_reset(uint32_t chip_num)
 
 void max3421e_master_mode_set(uint32_t chip_num)
 {
+	printk(INFO, "%s()\r\n", __func__);
+
 	max3421e_chip_activate(chip_num);
 	uint8_t mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
+	printk(INFO, "0 MODE: 0x%02X\r\n", mode);
 
 	max3421e_chip_activate(chip_num);
 	max3421e_mode_write(mode | MODE_DPPULLDN | MODE_DMPULLDN |MODE_HOST);
 	max3421e_chip_deactivate(chip_num);
-#ifdef DEBUG
-	d_print("Mode set\r\n");
+
 	max3421e_chip_activate(chip_num);
 	mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
-	d_print("MODE: 0x%02X\r\n", mode);
-#endif
+	printk(INFO, "1 MODE: 0x%02X\r\n", mode);
 }
 
 void max3421e_usb_sof_stop(uint32_t chip_num)
@@ -567,6 +571,8 @@ void max3421e_usb_sof_stop(uint32_t chip_num)
 
 void max3421e_usb_sof_start(uint32_t chip_num)
 {
+	printk(INFO, "%s()\r\n", __func__);
+
 	max3421e_chip_activate(chip_num);
 	uint8_t mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
@@ -586,17 +592,16 @@ void max3421e_usb_sof_start(uint32_t chip_num)
 	}
 	max3421e_chip_deactivate(chip_num);
 
-#ifdef DEBUG
-	d_print("SOF started\r\n");
 	max3421e_chip_activate(chip_num);
 	mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
-	d_print("MODE: 0x%02X\r\n", mode);
-#endif
+	printk(INFO, "MODE: 0x%02X\r\n", mode);
 }
 
 void max3421e_usb_bus_reset(uint32_t chip_num)
 {
+	printk(INFO, "%s()\r\n", __func__);
+
 	max3421e_chip_activate(chip_num);
 	uint8_t hctl = max3421e_hctl_read();
 	max3421e_chip_deactivate(chip_num);
@@ -617,10 +622,6 @@ void max3421e_usb_bus_reset(uint32_t chip_num)
 	max3421e_chip_deactivate(chip_num);
 
 	mdelay(500);
-
-#ifdef DEBUG
-	d_print("Bus reset\r\n");
-#endif
 }
 
 #if 0
@@ -642,7 +643,7 @@ void max3421e_device_poll_detection_cycle(void)
 
 		switch(hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)){
 		case HRSL_KSTATUS:
-				d_print("Low speed device connected\r\n");
+				printk(INFO, "Low speed device connected\r\n");
 				max3421e_chip_activate();
 				uint8_t mode = max3421e_mode_read();
 				max3421e_chip_deactivate();
@@ -652,13 +653,13 @@ void max3421e_device_poll_detection_cycle(void)
 				max3421e_chip_deactivate();
 				break;
 		case HRSL_JSTATUS:
-				d_print("Full speed device connected\r\n");
+				printk(INFO, "Full speed device connected\r\n");
 				break;
 		case (HRSL_JSTATUS | HRSL_KSTATUS):
-				d_print("Bus illegal state\r\n");
+				printk(INFO, "Bus illegal state\r\n");
 				break;
 		case 0x00:
-				d_print("Device not connected\r\n");
+				printk(INFO, "Device not connected\r\n");
 				break;
 		}
 
@@ -692,7 +693,7 @@ void max3421e_device_irq_detection_cycle(void)
 
 		switch(hrsl & (HRSL_JSTATUS | HRSL_KSTATUS)){
 		case HRSL_KSTATUS:
-				d_print("Low speed device connected\r\n");
+				printk(INFO, "Low speed device connected\r\n");
 				max3421e_chip_activate();
 				uint8_t mode = max3421e_mode_read();
 				max3421e_chip_deactivate();
@@ -702,13 +703,13 @@ void max3421e_device_irq_detection_cycle(void)
 				max3421e_chip_deactivate();
 				break;
 		case HRSL_JSTATUS:
-				d_print("Full speed device connected\r\n");
+				printk(INFO, "Full speed device connected\r\n");
 				break;
 		case (HRSL_JSTATUS | HRSL_KSTATUS):
-				d_print("Bus illegal state\r\n");
+				printk(INFO, "Bus illegal state\r\n");
 				break;
 		case 0x00:
-				d_print("Device not connected\r\n");
+				printk(INFO, "Device not connected\r\n");
 				break;
 		}
 
@@ -719,7 +720,7 @@ void max3421e_device_irq_detection_cycle(void)
 
 uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 {
-//	d_print("%s(): chip_num %ld\r\n", __func__, chip_num);
+	printk(INFO, "%s(): chip_num %ld\r\n", __func__, chip_num);
 	max3421e_chip_activate(chip_num);
 	uint8_t hctl = max3421e_hctl_read();
 	max3421e_chip_deactivate(chip_num);
@@ -749,25 +750,25 @@ uint32_t max3421e_usb_device_detect(uint32_t chip_num)
 			max3421e_mode_write(mode | MODE_LOWSPEED);
 			max3421e_chip_deactivate(chip_num);
 #ifdef DEBUG
-			d_print("Low speed device connected\r\n");
+			printk(INFO, "Low speed device connected\r\n");
 #endif
 			return 1;
 
 		case HRSL_JSTATUS:
 #ifdef DEBUG
-			d_print("Full speed device connected\r\n");
+			printk(INFO, "Full speed device connected\r\n");
 #endif
 			return 2;
 
 		case (HRSL_JSTATUS | HRSL_KSTATUS):
 #ifdef DEBUG
-			d_print("Bus illegal state\r\n");
+			printk(INFO, "Bus illegal state\r\n");
 #endif
 			return 0;
 
 		case 0x00:
 #ifdef DEBUG
-			d_print("Device not connected\r\n");
+			printk(INFO, "Device not connected\r\n");
 #endif
 			return 0;
 	}
@@ -782,6 +783,6 @@ int32_t max3421e_usb_device_set_address(uint32_t chip_num, uint8_t dev_addr)
 		return -1;
 	mdelay(50);
 	max3421e_usb_status_in_send(chip_num, 0x00);
-//	d_print("Device address is set\r\n");
+	printk(INFO, "Device address is set\r\n");
 	return 0;
 }

@@ -16,10 +16,10 @@ void spi_init(void) {
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
 
 	/* Configure SPI1 communication */
-	LL_SPI_SetBaudRatePrescaler(SPI1, LL_SPI_BAUDRATEPRESCALER_DIV2);
+	LL_SPI_SetBaudRatePrescaler(SPI1, LL_SPI_BAUDRATEPRESCALER_DIV8);
 	LL_SPI_SetTransferDirection(SPI1, LL_SPI_FULL_DUPLEX);
-	LL_SPI_SetClockPhase(SPI1, LL_SPI_PHASE_2EDGE);
-	LL_SPI_SetClockPolarity(SPI1, LL_SPI_POLARITY_HIGH);
+	LL_SPI_SetClockPhase(SPI1, LL_SPI_PHASE_1EDGE);
+	LL_SPI_SetClockPolarity(SPI1, LL_SPI_POLARITY_LOW);
 	/* Reset value is LL_SPI_MSB_FIRST */
 	//  LL_SPI_SetTransferBitOrder(SPI2, LL_SPI_MSB_FIRST);
 	LL_SPI_SetDataWidth(SPI1, LL_SPI_DATAWIDTH_8BIT);
