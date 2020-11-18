@@ -14,6 +14,7 @@
 #include "console.h"
 #include "drivers.h"
 #include "config.h"
+#include "debug.h"
 
 /** Количество байтов передаваемых через USART1. */
 #define SIZE_TO_TRANSMIT	32
@@ -118,7 +119,7 @@ void print(const char *format, ...)
 	}
 	va_end(argptr);
 }
-
+#if 0
 void d_print(const char *format, ...)
 {
 	va_list 	argptr;
@@ -153,34 +154,26 @@ void d_print(const char *format, ...)
 		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
 }
+#endif
 
-void printk(uint32_t msg_level, const char *format, ...)
+size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t usec_timeout)
 {
-	if (msg_level > log_level_get())
-		return;
-
-	va_list 	argptr;
-	char		str[512];
-	int			sz;
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 1000;
-
-	va_start(argptr, format);
-	sz = vsnprintf(str, 512, format, argptr);
-	va_end(argptr);
-
-	if (sz <= 0) {
-		return;
-	}
-
 	size_t i;
-	for (i = 0; i < sz; ++i) {
-		LL_USART_TransmitData8(USART1, str[i]);
+	for (i = 0; i < src_buffer_size; ++i) {
+		LL_USART_TransmitData8(USART1, src_buffer[i]);
 
 		do {
-			--ms_timeout;
-			if (ms_timeout == 0)
+			__DSB();
+			--usec_timeout;
+			if (usec_timeout == 0)
 				break;
 		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
+	return i;
+}
+
+size_t console_read(const uint8_t *dst_buffer, size_t dst_buffer_size, uint32_t usec_timeout)
+{
+	return 0;
 }
 

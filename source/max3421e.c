@@ -12,8 +12,7 @@
 #include "spi.h"
 #include "delay.h"
 #include "console.h"
-
-#define DEBUG
+#include "debug.h"
 
 uint8_t max3421e_usbirq_read(void)
 {
