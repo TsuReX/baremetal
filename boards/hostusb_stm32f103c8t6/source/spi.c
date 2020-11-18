@@ -12,6 +12,7 @@
 static void gpio_spi1_init(void) {
 
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
+
 	/* Configure SCK Pin connected to pin 5 */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_5, LL_GPIO_MODE_ALTERNATE);
 	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_5, LL_GPIO_SPEED_FREQ_HIGH);
@@ -33,6 +34,7 @@ static void spi1_init(void)
 
 	NVIC_SetPriority(SPI1_IRQn, 0);
 	NVIC_EnableIRQ(SPI1_IRQn);
+
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
 
 	/* Configure SPI1 communication */
@@ -57,7 +59,6 @@ static void gpio_spi2_init(void) {
 
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
 
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 	/* Configure SCK Pin connected to pin 13 */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_13, LL_GPIO_MODE_ALTERNATE);
 	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_13, LL_GPIO_SPEED_FREQ_HIGH);
@@ -79,6 +80,7 @@ static void spi2_init(void)
 
 	NVIC_SetPriority(SPI2_IRQn, 0);
 	NVIC_EnableIRQ(SPI2_IRQn);
+
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
 
 	/* Configure SPI1 communication */

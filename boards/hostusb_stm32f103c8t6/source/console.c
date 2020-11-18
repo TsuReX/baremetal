@@ -46,7 +46,7 @@ static void console_gpio_init(void)
 }
 
 /*
- * @brief Настройка USART1 для работы на скорости 115200, включение прерываний.
+ * @brief Настройка USART1 для работы на скорости 1500000, включение прерываний.
  */
 static void console_usart1_init(void)
 {
@@ -60,6 +60,7 @@ static void console_usart1_init(void)
 //	NVIC_EnableIRQ(USART1_IRQn);
 
 	LL_USART_EnableDirectionTx(USART1);
+	LL_USART_EnableDirectionRx(USART1);
 
 	LL_USART_Enable(USART1);
 }
@@ -70,6 +71,7 @@ static void console_usart1_init(void)
 static void console_usart1_close(void)
 {
 	LL_USART_DisableDirectionTx(USART1);
+	LL_USART_DisableDirectionRx(USART1);
 
 	LL_USART_Disable(USART1);
 }

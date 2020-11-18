@@ -51,33 +51,34 @@ static void sysclk_init_48mhz_hse()
 /**
  * @brief TODO
  */
-//static void sysclk_init_24mhz()
-//{
-//	/* Включение внутреннего источника тактирования HSI.
-//	 * HSI активен по умолчанию. */
-//	LL_RCC_HSI_Enable();
-//	/* Ожидание активации источника HSI. */
-//	while (LL_RCC_HSI_IsReady() != 1);
-//
-//	/* Установка источника сигнала для PLL - PLLSRC.
-//	 * Установка множителя PLL - PLLMUL.*/
-//	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_9);
-//
-//	/* Включение PLL. */
-//	LL_RCC_PLL_Enable();
-//	/* Ожидание активации PLL. */
-//	while (LL_RCC_PLL_IsReady() != 1);
-//
-//	/* Настройка источника тактирования для SYSCLK. */
-//	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-//	/* Ожидание активации переключателя. */
-//	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
-//}
+#if 0
+static void hsi_sysclk_24mhz_init()
+{
+	/* Включение внутреннего источника тактирования HSI.
+	 * HSI активен по умолчанию. */
+	LL_RCC_HSI_Enable();
+	/* Ожидание активации источника HSI. */
+	while (LL_RCC_HSI_IsReady() != 1);
 
+	/* Установка источника сигнала для PLL - PLLSRC.
+	 * Установка множителя PLL - PLLMUL.*/
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_9);
+
+	/* Включение PLL. */
+	LL_RCC_PLL_Enable();
+	/* Ожидание активации PLL. */
+	while (LL_RCC_PLL_IsReady() != 1);
+
+	/* Настройка источника тактирования для SYSCLK. */
+	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+	/* Ожидание активации переключателя. */
+	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+}
+#endif
 /**
  * @brief TODO
  */
-static void ahbclk_init_48mhz()
+static void ahbclk_48mhz_init()
 {
 	/* Настройка делителя для шины AHB - HCLK. */
 	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
@@ -86,7 +87,7 @@ static void ahbclk_init_48mhz()
 /**
  * @brief TODO
  */
-static void apb1clk_init_24mhz()
+static void apb1clk_24mhz_init()
 {
 	/* Настройка делителя для шины APB1 - PCLK1. */
 	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
@@ -95,7 +96,7 @@ static void apb1clk_init_24mhz()
 /**
  * @brief TODO
  */
-static void apb2clk_init_24mhz()
+static void apb2clk_24mhz_init()
 {
 	/* Настройка делителя для шины APB2 - PCLK2. */
 	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
@@ -124,24 +125,23 @@ static void mco_init_sysclk()
  * 				SYSCLK, AHBCLK, APB1CLK, APB2CLK, RTCCLK, MCO;
  *
  *			The system Clock is configured as follow :
- *				System Clock source		= PLL (HSI)
- *				SYSCLK (MHz)			= 64
- *				AHBCLK/HCLK (MHz)		= 64
- *				APB1CLK	(MHz)			= 32
- *				APB2CLK	(MHz)			= 64
- *				ADCCLK (MHz)			= 8
+ *				System Clock source		= PLL (HSE)
+ *				SYSCLK (MHz)			= 48
+ *				AHBCLK/HCLK (MHz)		= 48
+ *				APB1CLK	(MHz)			= 24
+ *				APB2CLK	(MHz)			= 24
  *				RTCCLK (KHz)			= 40
  */
 static void rcc_init(void)
 {
-//	sysclk_init_24mhz();
+//	sysclk_init_24mhz_hsi();
 	sysclk_init_48mhz_hse();
 
-	ahbclk_init_48mhz();
+	ahbclk_48mhz_init();
 
-	apb1clk_init_24mhz();
+	apb1clk_24mhz_init();
 
-	apb2clk_init_24mhz();
+	apb2clk_24mhz_init();
 
 	rtcclk_init();
 
