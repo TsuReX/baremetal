@@ -41,9 +41,22 @@ void max3421e_usbctl_write(uint8_t usbctl)
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 }
 
-uint8_t max3421e_pinctl_read(void)
+uint8_t max3421e_cpuctl_read(void)
 {
 	uint8_t	buffer[2] = {SPI_CMD_RDPINCTL, 0x00};
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+	return buffer[1];
+}
+
+void max3421e_cpuctl_write(uint8_t pinctl)
+{
+	uint8_t	buffer[2] = {SPI_CMD_WRCPUCTL, pinctl};
+	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+}
+
+uint8_t max3421e_pinctl_read(void)
+{
+	uint8_t	buffer[2] = {SPI_CMD_RDCPUCTL, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
 }
@@ -502,8 +515,13 @@ void max3421e_fullduplex_spi_set(uint32_t chip_num)
 	printk(INFO, "%s()\r\n", __func__);
 
 	max3421e_chip_activate(chip_num);
-	max3421e_pinctl_write(PINCTL_FDUPSPI | PINCTL_INTLEVEL | PINCTL_POSINT | PINCTL_GPXB | PINCTL_GPXA);
+	max3421e_pinctl_write(PINCTL_FDUPSPI | PINCTL_POSINT | PINCTL_GPXB | PINCTL_GPXA);
 	max3421e_chip_deactivate(chip_num);
+
+	max3421e_chip_activate(chip_num);
+	max3421e_cpuctl_write(0x0);
+	max3421e_chip_deactivate(chip_num);
+
 }
 
 void max3421e_chip_reset(uint32_t chip_num)
