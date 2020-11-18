@@ -9,7 +9,27 @@
 #include "console.h"
 #include "drivers.h"
 
-void spi_init(void) {
+static void gpio_spi1_init(void) {
+
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
+	/* Configure SCK Pin connected to pin 5 */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_5, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_5, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_5, LL_GPIO_PULL_DOWN);
+
+	/* Configure MISO Pin connected to pin 6 */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_6, LL_GPIO_PULL_DOWN);
+
+	/* Configure MOSI Pin connected to pin 7 */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_7, LL_GPIO_PULL_DOWN);
+}
+
+static void spi1_init(void)
+{
 
 	NVIC_SetPriority(SPI1_IRQn, 0);
 	NVIC_EnableIRQ(SPI1_IRQn);
@@ -31,6 +51,61 @@ void spi_init(void) {
 //	LL_SPI_EnableIT_ERR(SPI1);
 
 	LL_SPI_Enable(SPI1);
+}
+
+static void gpio_spi2_init(void) {
+
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
+	/* Configure SCK Pin connected to pin 13 */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_13, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_13, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_13, LL_GPIO_PULL_DOWN);
+
+	/* Configure MISO Pin connected to pin 14 */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_14, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_14, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_14, LL_GPIO_PULL_DOWN);
+
+	/* Configure MOSI Pin connected to pin 15 */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_15, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_15, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_15, LL_GPIO_PULL_DOWN);
+}
+
+static void spi2_init(void)
+{
+
+	NVIC_SetPriority(SPI2_IRQn, 0);
+	NVIC_EnableIRQ(SPI2_IRQn);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
+
+	/* Configure SPI1 communication */
+	LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV8);
+	LL_SPI_SetTransferDirection(SPI2, LL_SPI_FULL_DUPLEX);
+	LL_SPI_SetClockPhase(SPI1, LL_SPI_PHASE_1EDGE);
+	LL_SPI_SetClockPolarity(SPI1, LL_SPI_POLARITY_LOW);
+	/* Reset value is LL_SPI_MSB_FIRST */
+	//  LL_SPI_SetTransferBitOrder(SPI2, LL_SPI_MSB_FIRST);
+	LL_SPI_SetDataWidth(SPI2, LL_SPI_DATAWIDTH_8BIT);
+	LL_SPI_SetNSSMode(SPI2, LL_SPI_NSS_SOFT);
+	LL_SPI_SetMode(SPI2, LL_SPI_MODE_MASTER);
+
+//	LL_SPI_EnableIT_RXNE(SPI2);
+//	LL_SPI_EnableIT_TXE(SPI2);
+//	LL_SPI_EnableIT_ERR(SPI2);
+
+	LL_SPI_Enable(SPI2);
+}
+
+void spi_init(void)
+{
+	gpio_spi1_init();
+	spi1_init();
+
+	gpio_spi2_init();
+	spi2_init();
 }
 
 uint32_t spi_data_xfer(const uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
