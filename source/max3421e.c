@@ -9,8 +9,9 @@
 
 #include "drivers.h"
 #include "max3421e.h"
+
+#include "time.h"
 #include "spi.h"
-#include "delay.h"
 #include "console.h"
 #include "debug.h"
 

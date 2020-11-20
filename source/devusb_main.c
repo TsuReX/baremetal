@@ -6,6 +6,8 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 #include <string.h>
+
+#include "time.h"
 #include "drivers.h"
 #include "config.h"
 #include "console.h"
@@ -13,7 +15,6 @@
 #include "spi.h"
 #include "communication.h"
 #include "max3421e.h"
-#include "delay.h"
 #include "init.h"
 
 #include "kbmsusb.h"

@@ -12,7 +12,8 @@
 #include "console.h"
 #include "max3421e.h"
 #include "kbmsusb.h"
-#include "delay.h"
+
+#include "time.h"
 
 #define MS_USB_ADDR	0x33
 #define KB_USB_ADDR 0x34

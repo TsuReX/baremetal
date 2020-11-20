@@ -28,5 +28,4 @@ void printk(uint32_t msg_level, const char *format, ...)
 	}
 
 	console_write((uint8_t *)str, sz, 1000);
-
 }

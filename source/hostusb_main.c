@@ -1,3 +1,4 @@
+#include "time.h"
 #include "drivers.h"
 #include "console.h"
 #include "spi.h"
@@ -5,7 +6,6 @@
 #include "kbmsusb.h"
 #include "init.h"
 #include "config.h"
-#include "delay.h"
 #include "communication.h"
 
 int main(void)

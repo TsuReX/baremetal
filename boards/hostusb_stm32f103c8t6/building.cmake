@@ -41,7 +41,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/console.c"
 						"${BOARD_SRC_PATH}/source/scheduler.c"
 						"${BOARD_SRC_PATH}/source/spi.c"
-						"${BOARD_SRC_PATH}/source/delay.c"
+						"${BOARD_SRC_PATH}/source/time.c"
 
 				)
 
