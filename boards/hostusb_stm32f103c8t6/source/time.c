@@ -9,7 +9,21 @@
 #include "time.h"
 #include "drivers.h"
 
+extern uint64_t system_ticks;
 
+void _mdelay(uint32_t ticks)
+{
+#if 1
+	/* Disable interrupt */
+	uint64_t next_tick = system_ticks + ticks;
+	/* Enable interrupt */
+#else
+	/* Исходить из соображения, что задержка должна уложится в 32 разряда. */
+	uint32_t next_tick = (uint32_t)system_ticks + ticks;
+#endif
+	while (next_tick < system_ticks)
+		__DSB();
+}
 
 void mdelay(uint32_t mseconds)
 {

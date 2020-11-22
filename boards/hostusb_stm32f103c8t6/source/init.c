@@ -10,6 +10,14 @@
 #include "drivers.h"
 #include "config.h"
 
+/* Счетчик интервалов системного времени. */
+uint64_t system_ticks;
+
+void systick_handler(void)
+{
+	++system_ticks;
+}
+
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
  * 			работающем на частоте 48 МГц.
@@ -155,12 +163,14 @@ static void rcc_init(void)
  */
 static void systick_init(uint32_t hclk_freq)
 {
+	system_ticks = 0;
 	/* Производится настройка системного таймера ядра для определения интервала времени равного 100 микросекундам.  */
 
-	SysTick->LOAD  = (uint32_t)((hclk_freq / 10000) - 1UL);  /* set reload register */
-	SysTick->VAL   = 0UL;                                       /* Load the SysTick Counter Value */
-	SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
-				   SysTick_CTRL_ENABLE_Msk;                   /* Enable the Systick Timer */
+	SysTick->LOAD  =	(uint32_t)((hclk_freq / 10000) - 1UL);		/* Set reload register */
+	SysTick->VAL   =	0UL;                                       	/* Load the SysTick Counter Value */
+	SysTick->CTRL  =	SysTick_CTRL_CLKSOURCE_Msk |
+						SysTick_CTRL_ENABLE_Msk |					/* Enable the Systick Timer */
+						SysTick_CTRL_TICKINT_Msk;					/* Enable the Systick Interrupt */
 }
 
 /**
