@@ -11,11 +11,14 @@
 #include "config.h"
 
 /* Счетчик интервалов системного времени. */
-uint64_t system_ticks;
+volatile uint64_t system_ticks;
+/* Период в микросекундах между отсчетами системного таймера. */
+uint32_t system_period;
 
 void systick_handler(void)
 {
 	++system_ticks;
+	(void)SysTick->CTRL;
 }
 
 /**
@@ -159,14 +162,28 @@ static void rcc_init(void)
 /**
  * @brief	Наcтраивает системный таймер ядра (SysTick)
  *
- * @param	hclk_freq	частота шины HCLK в герцах
+ * @param[in]	hclk_freq	частота шины HCLK в герцах
+ * @param[in]	period		период сребетывания таймера в микросекундах, кратный 10
  */
-static void systick_init(uint32_t hclk_freq)
+static void systick_init(uint32_t hclk_freq, uint32_t period)
 {
+	period = ((period + 5) / 10) * 10;
+	if (period < 10)
+		period = 10;
+	if (period > 1000)
+		period = 1000;
 	system_ticks = 0;
 	/* Производится настройка системного таймера ядра для определения интервала времени равного 100 микросекундам.  */
 
-	SysTick->LOAD  =	(uint32_t)((hclk_freq / 10000) - 1UL);		/* Set reload register */
+	uint32_t counter_value = (uint32_t)(((hclk_freq / 1000000) * period));
+
+	while (counter_value < 50) {
+		period *= 2;
+		counter_value = (uint32_t)(((hclk_freq / 1000000) * period));
+	}
+	system_period = period;
+
+	SysTick->LOAD  =	counter_value;/* Set reload register */
 	SysTick->VAL   =	0UL;                                       	/* Load the SysTick Counter Value */
 	SysTick->CTRL  =	SysTick_CTRL_CLKSOURCE_Msk |
 						SysTick_CTRL_ENABLE_Msk |					/* Enable the Systick Timer */
@@ -238,6 +255,6 @@ void soc_init(void)
 	/* Настройка вспомогательных параметров. */
 	LL_SetSystemCoreClock(HCLK_FREQ);
 	/* Настраивает системный таймер ядра. */
-	systick_init(HCLK_FREQ);
+	systick_init(HCLK_FREQ, 10);
 }
 

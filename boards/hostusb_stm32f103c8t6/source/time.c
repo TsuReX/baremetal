@@ -10,54 +10,37 @@
 #include "drivers.h"
 
 extern uint64_t system_ticks;
+extern uint32_t system_period;
 
-void _mdelay(uint32_t ticks)
+/**
+ * @brief	Выполняет активную задержку
+ *
+ * @param[in]	useconds	количество микросекунд задержки,
+ * 							по факту длительность задержки
+ * 							может быть кратна только значению system_period
+ */
+void udelay(uint32_t useconds)
 {
+	uint32_t ticks = (useconds + (system_period / 2)) / system_period;
+	if (ticks == 0)
+		++ticks;
 #if 1
 	/* Disable interrupt */
 	uint64_t next_tick = system_ticks + ticks;
 	/* Enable interrupt */
 #else
 	/* Исходить из соображения, что задержка должна уложится в 32 разряда. */
-	uint32_t next_tick = (uint32_t)system_ticks + ticks;
+	uint32_t next_tick = system_ticks + ticks;
 #endif
-	while (next_tick < system_ticks)
-		__DSB();
+	while (next_tick > system_ticks);
 }
 
 void mdelay(uint32_t mseconds)
 {
-	mseconds *= 10;
-  __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
-  /* Add this code to indicate that local variable is not used */
-  ((void)tmp);
-
-//  /* Add a period to guaranty minimum wait */
-//  if (delay < LL_MAX_DELAY) {
-//    delay++;
-//  }
-
-  while (mseconds) {
-    if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
-      mseconds--;
-    }
-  }
+	udelay(mseconds * 1000);
 }
 
 void u100delay(uint32_t u100seconds)
 {
-  __IO uint32_t  tmp = SysTick->CTRL;  /* Clear the COUNTFLAG first */
-  /* Add this code to indicate that local variable is not used */
-  ((void)tmp);
-
-//  /* Add a period to guaranty minimum wait */
-//  if (delay < LL_MAX_DELAY) {
-//    delay++;
-//  }
-
-  while (u100seconds) {
-    if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0U) {
-      u100seconds--;
-    }
-  }
+	udelay(u100seconds * 100);
 }
