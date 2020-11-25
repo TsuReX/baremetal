@@ -35,6 +35,25 @@ void max3421e_chip_deactivate(uint32_t chip_num)
 	};
 }
 
+void spi_chip_activate(uint32_t chip_num)
+{
+	switch(chip_num) {
+		case FLASH_CHANNEL:
+			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_2);
+			break;
+
+	};
+}
+
+void spi_chip_deactivate(uint32_t chip_num)
+{
+	switch(chip_num) {
+		case FLASH_CHANNEL:
+			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_2);
+			break;
+	};
+}
+
 uint32_t log_level_get(void)
 {
 	return CURRENT_DEBUG_LEVEL;

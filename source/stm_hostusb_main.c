@@ -7,6 +7,7 @@
 #include "init.h"
 #include "config.h"
 #include "debug.h"
+#include "spi_flash.h"
 
 int main(void)
 {
@@ -25,6 +26,8 @@ int main(void)
 
 	/* Deassert RESET_N from MAX3421E_1. */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+
+	spi_flash_test();
 
 	spi_usb_transmission_start();
 	while(1)

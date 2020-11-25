@@ -13,4 +13,6 @@
 
 #define CURRENT_DEBUG_LEVEL 2
 
+#define FLASH_CHANNEL 0x3
+
 #endif /* _CONFIG_H_ */
