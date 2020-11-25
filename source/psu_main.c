@@ -29,9 +29,9 @@ void adc_init()
 
 	LL_RCC_HSI14_Enable();
 	mdelay(1);
-	LL_ADC_SetClock(LL_ADC_CLOCK_ASYNC);
-	mdelay(1);
 	LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1);
+	mdelay(1);
+	LL_ADC_SetClock(ADC1, LL_ADC_CLOCK_ASYNC);
 
 	LL_ADC_Disable(ADC1);
 	LL_ADC_StartCalibration(ADC1);
@@ -49,7 +49,7 @@ void adc_init()
 
 	LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_1CYCLE_5);
 	LL_ADC_REG_SetSequencerChannels(ADC1, LL_ADC_CHANNEL_0 | LL_ADC_CHANNEL_1);
-	LL_ADC_REG_SetSequencerScanDirection(LL_ADC_REG_SEQ_SCAN_DIR_FORWARD);
+	LL_ADC_REG_SetSequencerScanDirection(ADC1, LL_ADC_REG_SEQ_SCAN_DIR_FORWARD);
 	LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_SINGLE);
 	LL_ADC_REG_SetSequencerDiscont(ADC1, LL_ADC_REG_SEQ_DISCONT_DISABLE);
 	LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
@@ -97,6 +97,7 @@ int main(void)
 	/** Configure board's peripherals. */
 	board_init();
 
+	console_init();
 
 	while (1);
 }
