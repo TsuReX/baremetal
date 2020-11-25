@@ -15,6 +15,16 @@ volatile uint64_t system_ticks;
 /* Период в микросекундах между отсчетами системного таймера. */
 uint32_t system_period;
 
+void get_system_ticks(uint64_t *sys_ticks)
+{
+	*sys_ticks = system_ticks;
+}
+
+void get_system_tick_period(uint32_t *sys_period)
+{
+	*sys_period = system_period;
+}
+
 void systick_handler(void)
 {
 	++system_ticks;

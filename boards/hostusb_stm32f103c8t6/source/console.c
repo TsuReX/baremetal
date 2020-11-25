@@ -162,11 +162,21 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 	for (i = 0; i < src_buffer_size; ++i) {
 		LL_USART_TransmitData8(USART1, src_buffer[i]);
 
-		do {
+#if defined(PERIOD_TIMEOUT)
+		struct period timeout;
+		period_start(&timeout, usec_timeout);
+#endif
+
+	do {
 			__DSB();
+#if !defined(PERIOD_TIMEOUT)
 			--usec_timeout;
 			if (usec_timeout == 0)
 				break;
+#else
+			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
+				break;
+#endif
 		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
 	return i;

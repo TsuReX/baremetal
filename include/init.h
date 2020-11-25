@@ -9,6 +9,14 @@
 #ifndef _INIT_H_
 #define _INIT_H_
 
+#include <stdint.h>
+
+/* TODO: Продумать, куда можно перенести функцию */
+void get_system_ticks(uint64_t *sys_ticks);
+
+/* TODO: Продумать, куда можно перенести функцию */
+void get_system_tick_period(uint32_t *sys_period);
+
 /**
  * @brief	Инициализирует устройства и подсистемы внутри SoC.
  */
