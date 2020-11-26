@@ -14,6 +14,7 @@
 #include "kbmsusb.h"
 
 #include "time.h"
+#include "spi_flash.h"
 
 #define MS_USB_ADDR	0x33
 #define KB_USB_ADDR 0x34
@@ -481,6 +482,8 @@ void spi_usb_transmission_start(void)
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
 
+	spi_flash_test();
+
 	printk(INFO, "\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
@@ -494,6 +497,8 @@ void spi_usb_transmission_start(void)
 	} else {
 		kb_present = 1;
 	}
+
+	spi_flash_test();
 
 	printk(INFO, "\r\nPrepare mouse channel\r\n");
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);

@@ -8,6 +8,7 @@
 #include "spi.h"
 #include "console.h"
 #include "drivers.h"
+#include "time.h"
 
 static void gpio_spi1_init(void) {
 
@@ -31,9 +32,9 @@ static void gpio_spi1_init(void) {
 
 static void spi1_init(void)
 {
-
-	NVIC_SetPriority(SPI1_IRQn, 0);
-	NVIC_EnableIRQ(SPI1_IRQn);
+//
+//	NVIC_SetPriority(SPI1_IRQn, 0);
+//	NVIC_EnableIRQ(SPI1_IRQn);
 
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
 
@@ -101,6 +102,128 @@ static void spi2_init(void)
 	LL_SPI_Enable(SPI2);
 }
 
+static void spi_dma_tx_init()
+{
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+	/* Настройка канала приема. */
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
+							LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+							LL_DMA_PRIORITY_HIGH              |
+							LL_DMA_MODE_NORMAL	              |
+							LL_DMA_PERIPH_NOINCREMENT         |
+							LL_DMA_MEMORY_INCREMENT           |
+							LL_DMA_PDATAALIGN_BYTE            |
+							LL_DMA_MDATAALIGN_BYTE);
+
+}
+
+static void spi_dma_rx_init()
+{
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+	/* Настройка канала приема. */
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_2,
+							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+							LL_DMA_PRIORITY_HIGH              |
+							LL_DMA_MODE_NORMAL	              |
+							LL_DMA_PERIPH_NOINCREMENT         |
+							LL_DMA_MEMORY_INCREMENT           |
+							LL_DMA_PDATAALIGN_BYTE            |
+							LL_DMA_MDATAALIGN_BYTE);
+
+}
+
+static void spi_rx_trans_prepare(const void *rx_buf, size_t rx_buf_size)
+{
+		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_2,
+								(uint32_t) &(SPI1->DR),
+								(uint32_t)rx_buf,
+								LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+
+		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, rx_buf_size);
+}
+
+static void spi_tx_trans_prepare(const void *rx_buf, size_t rx_buf_size)
+{
+		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3,
+								(uint32_t)rx_buf,
+								(uint32_t) &(SPI1->DR),
+								LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
+
+		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, rx_buf_size);
+}
+
+static void spi_dma_rx_start()
+{
+	/* Включить приемный канал 2 DMA1. */
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_2);
+}
+
+static void spi_dma_rx_stop()
+{
+	/* Выключить приемный канал 2 DMA1. */
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_2);
+}
+
+static void spi_dma_tx_start()
+{
+	/* Включить приемный канал 3 DMA1. */
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
+}
+
+static void spi_dma_tx_stop()
+{
+	/* Выключить приемный канал 3 DMA1. */
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
+}
+
+static uint32_t spi_dma_rx_compl_wait(uint32_t msec_timeout)
+{
+	do {
+		if (LL_DMA_IsActiveFlag_TC2(DMA1) != 0) {
+			LL_DMA_ClearFlag_TC2(DMA1);
+			return 1;
+		}
+		mdelay(1);
+	} while (msec_timeout-- != 0);
+
+	return 0;
+}
+
+static uint32_t spi_dma_tx_compl_wait(uint32_t msec_timeout)
+{
+	do {
+		if (LL_DMA_IsActiveFlag_TC3(DMA1) != 0) {
+			LL_DMA_ClearFlag_TC3(DMA1);
+			return 1;
+		}
+		mdelay(1);
+	} while (msec_timeout-- != 0);
+
+	return 0;
+}
+
+uint32_t spi_dma_data_send(const uint8_t *src_buf, size_t data_size)
+{
+	spi_tx_trans_prepare(src_buf, data_size);
+	spi_dma_tx_start();
+	uint32_t ret_val = spi_dma_tx_compl_wait(1000);
+	spi_dma_tx_stop();
+
+	return ret_val;
+}
+
+uint32_t spi_dma_data_recv(uint8_t *dst_buf, size_t data_size)
+{
+	spi_rx_trans_prepare(dst_buf, data_size);
+	spi_dma_rx_start();
+	uint32_t ret_val = spi_dma_rx_compl_wait(1000);
+	spi_dma_rx_stop();
+
+	return ret_val;
+}
+
 void spi_init(void)
 {
 	gpio_spi1_init();
@@ -108,6 +231,9 @@ void spi_init(void)
 
 	gpio_spi2_init();
 	spi2_init();
+
+	spi_dma_rx_init();
+	spi_dma_tx_init();
 }
 
 uint32_t spi_data_xfer(const uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
