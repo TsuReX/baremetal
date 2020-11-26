@@ -146,8 +146,9 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
-	/** Fire LD3 (green) led. */
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 }
 
 /**
