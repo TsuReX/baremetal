@@ -1,8 +1,8 @@
 ENTRY(reset_handler)
 
 MEMORY {
-	SRAM (xrw)	: ORIGIN = 0x20000000, LENGTH = 0x2000
-	PROGRAM_FLASH (rx)	: ORIGIN = 0x0, LENGTH = 64K
+	SRAM (xrw)	: ORIGIN = 0x20000000, LENGTH = 0x1000
+	PROGRAM_FLASH (rx)	: ORIGIN = 0x0, LENGTH = 16K
 }
 
 __flash_start__	= ORIGIN(PROGRAM_FLASH);
@@ -48,7 +48,7 @@ SECTIONS
 
 		__stack_start__ = .;
 		. = ALIGN(4);
-		__stack_end__ = . + __stack_size__;
+		__stack_end__ = . + __stack_size__ - 4;
 	
 	} > SRAM
 

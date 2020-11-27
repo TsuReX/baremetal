@@ -118,7 +118,7 @@ int main(void)
 	console_init();
 	adc_init();
 
-	adc_start_convertion();
+//	adc_start_convertion();
 
 	while (1) {
 		udelay(500000);
