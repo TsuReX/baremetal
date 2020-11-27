@@ -59,11 +59,17 @@ void adc_init()
 
 void adc_start_convertion(void)
 {
-#define VOLTAGE_COUNT 2
+#define VOLTAGE_COUNT	2
+#define VREF			(3300)
+#define VK				(((VREF * 1000) / 4096) * (310000 / 2370))
 
 	LL_ADC_ClearFlag_ADRDY(ADC1);
 	uint16_t voltage[VOLTAGE_COUNT];
 	size_t i = 0;
+//	uint32_t prev_vac = 0xFFFFFFFF;
+	uint32_t cur_vac = 0xFFFFFFFF;
+	uint32_t vpfc = 0;
+
 	while (1) {
 		if (i == 0)
 			LL_ADC_REG_StartConversion(ADC1);
@@ -76,10 +82,22 @@ void adc_start_convertion(void)
 
 		if (LL_ADC_IsActiveFlag_EOS(ADC1)) {
 			LL_ADC_ClearFlag_EOS(ADC1);
-			printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X\r\n", voltage[0], voltage[1]);
+//			printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X\r\n", voltage[0], voltage[1]);
+			cur_vac = (uint32_t)voltage[0] * VK / 1000000;
+			vpfc = (uint32_t)voltage[1] * VK / 1000000;
+			printk(INFO, "VAC: %ld, VPFC: %ld\r\n", cur_vac, vpfc);
 			i %= VOLTAGE_COUNT;
 		}
-		mdelay(1000);
+//		if (cur_vac <= prev_vac) {
+//			prev_vac = cur_vac;
+//			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+//		} else { /* cur_vac > prev_vac */
+//			prev_vac = cur_vac;
+//			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+//		}
+//		udelay(100);
+
+		mdelay(100);
 	}
 
 }
@@ -98,6 +116,16 @@ int main(void)
 	board_init();
 
 	console_init();
+	adc_init();
 
-	while (1);
+	adc_start_convertion();
+
+	while (1) {
+		udelay(500000);
+		LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_8);
+		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+		udelay(500000);
+		LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_8);
+		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+	}
 }

@@ -78,9 +78,11 @@ static void rcc_config(void)
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
 
-	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
 
 	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+
+	LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
 }
 
 /**
@@ -121,6 +123,7 @@ void board_init(void)
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
 
 	/* MCO output enable. */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
@@ -128,6 +131,9 @@ void board_init(void)
 
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+
+	LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_8, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_8);
 }
 
 /**

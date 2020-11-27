@@ -16,6 +16,7 @@
 #include "ringbuf.h"
 #include "time.h"
 #include "debug.h"
+#include "config.h"
 
 /* Содержащаяся в данном файле настройка и вариант использования USART1 будут специфичны для текстовой консоли.
  * Настройки и вариант использования USART1 для spi-manager будут иными и будут располагаться в другом файле.
@@ -73,20 +74,9 @@ static void console_usart1_init(void)
 	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
 	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
 
-	LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
-	LL_USART_SetBaudRate(USART1, LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE), LL_USART_OVERSAMPLING_16, 1500000);
-
-	/*LL_USART_EnableOverrunDetect(USART1);*/
-	/*LL_USART_EnableDMADeactOnRxErr(USART1);*/
-	LL_USART_EnableDMAReq_RX(USART1);
-	/*LL_USART_EnableDMAReq_TX(USART1);*/
-	/*LL_USART_EnableIT_RXNE(USART1);*/
-
-	NVIC_SetPriority(USART1_IRQn, 0);
-	NVIC_EnableIRQ(USART1_IRQn);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, LL_USART_OVERSAMPLING_16, 1500000);
 
 	LL_USART_EnableDirectionTx(USART1);
-
 	LL_USART_Enable(USART1);
 }
 
