@@ -34,6 +34,11 @@ void systick_handler(void)
 	(void)SysTick->CTRL;
 }
 
+static void mco_init_sysclk()
+{
+	LL_RCC_ConfigMCO(LL_RCC_MCO1SOURCE_SYSCLK, LL_RCC_MCO1_DIV_1);
+}
+
 /**
  * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
  * 			работающем на частоте 48 МГц.
@@ -62,52 +67,20 @@ static void flash_config(void)
  */
 static void rcc_config(void)
 {
-
-	/* Настройка системного тактового сигнала SYSCLK.
-	 * HSI ------------------------> or
-	 * HSI -> /2 -----> |			 |
-	 * 					|--->PLL---> or--> SYSCLK
-	 * HSE -> PREDIV -> |			 |
-	 * HSE ------------------------> or
-	 * До того, как будет настроена новая цепь тактирования,
-	 * SYSCLK будет тактироваться напрямую от внутреннего источника HSI.
-	 */
-
-	/* Включение внутреннего источника тактирования HSI.
-	 * HSI активен по умолчанию. */
 	LL_RCC_HSI_Enable();
-	/* Ожидание активации источника HSI. */
 	while (LL_RCC_HSI_IsReady() != 1);
 
-	/* В случае наличия внешнего источника тактирования. */
-
-	/* Включение внешнего источника тактирования HSE. */
-	/* LL_RCC_HSE_Enable(); */
-	/* Ожидание активации источника HSI. */
-	/* while (LL_RCC_HSE_IsReady() != 1); */
-
-	/* Установка источника сигнала для PLL - PLLSRC.
-	 * Установка множителя PLL - PLLMUL.*/
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_12);
 
-	/* Включение PLL. */
 	LL_RCC_PLL_Enable();
-	/* Ожидание активации PLL. */
 	while (LL_RCC_PLL_IsReady() != 1);
 
-	/* Настройка источника тактирования для SYSCLK. */
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-	/* Ожидание активации переключателя. */
 	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
 
-	/* Системный источник тактирования SYSCLK настроен. */
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
 
-	/* Настройка делителя для шины AHB - HCLK. */
-	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-
-	/* Настройка делителя для шины APB1 - PCLK1. */
-	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
 }
 
 /**
@@ -146,7 +119,13 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+
+	/* MCO output enable. */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_8, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOF, LL_GPIO_PIN_8, LL_GPIO_AF_0);
+
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 }
@@ -164,5 +143,7 @@ void soc_init(void)
 	LL_SetSystemCoreClock(HCLK_FREQ);
 	/* Настраивает системный таймер ядра. */
 	systick_init(HCLK_FREQ, 10);
+
+	mco_init_sysclk();
 }
 

@@ -100,11 +100,23 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME})
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
 
+if (NOT DEFINED PROGRAMMER)
+	set(PROG_SCRIPT	"oocd_jlink.cfg")
+else()
+if (${PROGRAMMER} STREQUAL "ST2")
+	set(PROG_SCRIPT	"oocd_stlinkv2.cfg")
+elseif(${PROGRAMMER} STREQUAL "JLINK")
+	set(PROG_SCRIPT	"oocd_jlink.cfg")
+else()
+	return()
+endif ()
+endif ()
+
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do flash\")
+					ARGS	-f ${BRD_PATH}/${PROG_SCRIPT} -c \"do flash\")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки
@@ -116,6 +128,5 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do debug\")
-
+					ARGS	-f ${BRD_PATH}/${PROG_SCRIPT} -c \"do debug\")
 							
