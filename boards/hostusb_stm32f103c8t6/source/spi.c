@@ -10,6 +10,8 @@
 #include "drivers.h"
 #include "time.h"
 
+uint8_t dummy_tx = 0x0;
+
 static void gpio_spi1_init(void) {
 
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
@@ -106,21 +108,39 @@ static void spi_dma_tx_init()
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
-	/* Настройка канала приема. */
-	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
-							LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
-							LL_DMA_PRIORITY_HIGH              |
-							LL_DMA_MODE_NORMAL	              |
-							LL_DMA_PERIPH_NOINCREMENT         |
-							LL_DMA_MEMORY_INCREMENT           |
-							LL_DMA_PDATAALIGN_BYTE            |
-							LL_DMA_MDATAALIGN_BYTE);
-
+//	/* Настройка канала передачи. */
+//	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
+//							LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+//							LL_DMA_PRIORITY_HIGH              |
+//							LL_DMA_MODE_NORMAL	              |
+//							LL_DMA_PERIPH_NOINCREMENT         |
+//							LL_DMA_MEMORY_INCREMENT           |
+//							LL_DMA_PDATAALIGN_BYTE            |
+//							LL_DMA_MDATAALIGN_BYTE);
+//
+//	LL_SPI_EnableDMAReq_TX(SPI1);
 }
 
 static void spi_dma_rx_init()
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+//	/* Настройка канала приема. */
+//	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_2,
+//							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+//							LL_DMA_PRIORITY_HIGH              |
+//							LL_DMA_MODE_NORMAL	              |
+//							LL_DMA_PERIPH_NOINCREMENT         |
+//							LL_DMA_MEMORY_INCREMENT           |
+//							LL_DMA_PDATAALIGN_BYTE            |
+//							LL_DMA_MDATAALIGN_BYTE);
+//
+//	LL_SPI_EnableDMAReq_RX(SPI1);
+}
+
+static void spi_rx_trans_prepare(const void *rx_buf, size_t rx_buf_size)
+{
+	LL_SPI_ReceiveData8(SPI1);
 
 	/* Настройка канала приема. */
 	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_2,
@@ -132,32 +152,61 @@ static void spi_dma_rx_init()
 							LL_DMA_PDATAALIGN_BYTE            |
 							LL_DMA_MDATAALIGN_BYTE);
 
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_2,
+							(uint32_t) &(SPI1->DR),
+							(uint32_t)rx_buf,
+							LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, rx_buf_size);
+	LL_SPI_EnableDMAReq_RX(SPI1);
+
+	/* Настройка канала передачи. */
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
+							LL_DMA_DIRECTION_MEMORY_TO_PERIPH 	|
+							LL_DMA_PRIORITY_HIGH              	|
+							LL_DMA_MODE_NORMAL					|
+							LL_DMA_PERIPH_NOINCREMENT			|
+							LL_DMA_MEMORY_NOINCREMENT			|
+							LL_DMA_PDATAALIGN_BYTE            |
+							LL_DMA_MDATAALIGN_BYTE);
+
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3,
+							(uint32_t)&dummy_tx,
+							(uint32_t) &(SPI1->DR),
+							LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, rx_buf_size);
+	LL_SPI_EnableDMAReq_TX(SPI1);
 }
 
-static void spi_rx_trans_prepare(const void *rx_buf, size_t rx_buf_size)
+static void spi_tx_trans_prepare(const void *tx_buf, size_t tx_buf_size)
 {
-		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_2,
-								(uint32_t) &(SPI1->DR),
-								(uint32_t)rx_buf,
-								LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+	/* Настройка канала передачи. */
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
+							LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+							LL_DMA_PRIORITY_HIGH              |
+							LL_DMA_MODE_NORMAL	              |
+							LL_DMA_PERIPH_NOINCREMENT         |
+							LL_DMA_MEMORY_INCREMENT           |
+							LL_DMA_PDATAALIGN_BYTE            |
+							LL_DMA_MDATAALIGN_BYTE);
 
-		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, rx_buf_size);
-}
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3,
+							(uint32_t)tx_buf,
+							(uint32_t) &(SPI1->DR),
+							LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
 
-static void spi_tx_trans_prepare(const void *rx_buf, size_t rx_buf_size)
-{
-		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3,
-								(uint32_t)rx_buf,
-								(uint32_t) &(SPI1->DR),
-								LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
-
-		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, rx_buf_size);
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, tx_buf_size);
+	LL_SPI_EnableDMAReq_TX(SPI1);
 }
 
 static void spi_dma_rx_start()
 {
+	/* Важна последовательность включения. */
 	/* Включить приемный канал 2 DMA1. */
 	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_2);
+	/* Включить передающий канал 3 DMA1. */
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
 }
 
 static void spi_dma_rx_stop()
@@ -168,7 +217,7 @@ static void spi_dma_rx_stop()
 
 static void spi_dma_tx_start()
 {
-	/* Включить приемный канал 3 DMA1. */
+	/* Включить передающий канал 3 DMA1. */
 	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
 }
 

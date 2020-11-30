@@ -4,6 +4,7 @@
  *  Created on: Nov 25, 2020
  *      Author: vasily
  */
+#include <string.h>
 #include "spi_flash.h"
 #include "spi.h"
 #include "config.h" /* TODO: Убрать это включение отсюда.*/
@@ -12,7 +13,7 @@
 
 void spi_flash_test()
 {
-	uint8_t flash_jdec_id[3];
+	uint8_t flash_jdec_id[3] = {0x11,0x22,0x33};
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_flash_jdec_id_read(flash_jdec_id);
 	spi_chip_deactivate(FLASH_CHANNEL);
@@ -20,6 +21,7 @@ void spi_flash_test()
 	printk(INFO, "JDEC Flash ID %02X%02X%02X\r\n", flash_jdec_id[0], flash_jdec_id[1], flash_jdec_id[2]);
 
 	uint8_t data[256];
+	memset(data, 0xFF, sizeof(data));
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_flash_data_read(data, sizeof(data));
 	spi_chip_deactivate(FLASH_CHANNEL);
@@ -35,6 +37,8 @@ void spi_flash_test()
 	}
 	printk(INFO, "\r\n");
 }
+
+
 
 void spi_flash_jdec_id_read(uint8_t flash_jdec_id[3])
 {
