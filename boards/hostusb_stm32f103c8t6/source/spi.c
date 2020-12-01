@@ -213,6 +213,8 @@ static void spi_dma_rx_stop()
 {
 	/* Выключить приемный канал 2 DMA1. */
 	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_2);
+	/* Выключить передающий канал 3 DMA1. */
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
 }
 
 static void spi_dma_tx_start()

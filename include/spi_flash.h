@@ -15,5 +15,8 @@ void spi_flash_test();
 
 void spi_flash_jdec_id_read(uint8_t flash_jdec_id[3]);
 void spi_flash_data_read(uint8_t *dst_buf, size_t data_size);
+void spi_flash_4byte_addr_mode();
+void spi_flash_status1_read(uint8_t* status);
+
 
 #endif /* SPI_FLASH_H_ */
