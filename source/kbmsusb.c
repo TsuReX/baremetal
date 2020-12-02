@@ -482,7 +482,7 @@ void spi_usb_transmission_start(void)
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
 
-	spi_flash_test();
+//	spi_flash_test();
 
 	printk(INFO, "\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);

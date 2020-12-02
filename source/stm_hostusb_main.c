@@ -27,9 +27,9 @@ int main(void)
 	/* Deassert RESET_N from MAX3421E_1. */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
 
-	spi_flash_test();
+//	spi_flash_test();
 
-//	spi_usb_transmission_start();
+	spi_usb_transmission_start();
 	while(1)
 	{
 		udelay(500000);

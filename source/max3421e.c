@@ -17,54 +17,106 @@
 
 uint8_t max3421e_usbirq_read(void)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_RDUSBIRQ, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t cmd = SPI_CMD_RDUSBIRQ;
+	uint8_t usbirq = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&usbirq, sizeof(usbirq));
+	return usbirq;
+#endif
 }
 
 void max3421e_usbirq_write(uint8_t usbirq)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_WRUSBIRQ, usbirq};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+#else
+	uint8_t	buffer[2] = {SPI_CMD_WRUSBIRQ, usbirq};
+	spi_dma_data_send(buffer, sizeof(buffer) / sizeof(buffer[0]));
+#endif
 }
 
 uint8_t max3421e_usbctl_read(void)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_RDUSBCTL, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t cmd = SPI_CMD_RDUSBCTL;
+	uint8_t usbctl = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&usbctl, sizeof(usbctl));
+	return usbctl;
+#endif
 }
 
 void max3421e_usbctl_write(uint8_t usbctl)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_WRUSBCTL, usbctl};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+#else
+	uint8_t	buffer[2] = {SPI_CMD_WRUSBCTL, usbctl};
+	spi_dma_data_send(buffer, sizeof(buffer) / sizeof(buffer[0]));
+#endif
 }
 
 uint8_t max3421e_cpuctl_read(void)
 {
-	uint8_t	buffer[2] = {SPI_CMD_RDPINCTL, 0x00};
+#if !defined(SPI_DMA)
+	uint8_t	buffer[2] = {SPI_CMD_RDCPUCTL, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t cmd = SPI_CMD_RDCPUCTL;
+	uint8_t cpuctl = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&cpuctl, sizeof(cpuctl));
+	return cpuctl;
+#endif
 }
 
-void max3421e_cpuctl_write(uint8_t pinctl)
+void max3421e_cpuctl_write(uint8_t cpuctl)
 {
-	uint8_t	buffer[2] = {SPI_CMD_WRCPUCTL, pinctl};
+#if !defined(SPI_DMA)
+	uint8_t	buffer[2] = {SPI_CMD_WRCPUCTL, cpuctl};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+#else
+	uint8_t	buffer[2] = {SPI_CMD_WRCPUCTL, cpuctl};
+	spi_dma_data_send(buffer, sizeof(buffer) / sizeof(buffer[0]));
+#endif
 }
 
 uint8_t max3421e_pinctl_read(void)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_RDCPUCTL, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t cmd = SPI_CMD_RDCPUCTL;
+	uint8_t pinctl = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&pinctl, sizeof(pinctl));
+	return pinctl;
+#endif
 }
 
 void max3421e_pinctl_write(uint8_t pinctl)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_WRPINCTL, pinctl};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+#else
+	uint8_t	buffer[2] = {SPI_CMD_WRPINCTL, pinctl};
+	spi_dma_data_send(buffer, sizeof(buffer) / sizeof(buffer[0]));
+#endif
 }
 
 uint8_t max3421e_iopins1_read(void)
@@ -95,9 +147,17 @@ void max3421e_iopins2_write(uint8_t iopins1)
 
 uint8_t max3421e_rev_read(void)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_RDREV, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t	cmd = 0x05;
+	uint8_t revision = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&revision, sizeof(revision));
+	return revision;
+#endif
 }
 
 uint8_t max3421e_hirq_read(void)
@@ -115,15 +175,28 @@ void max3421e_hirq_write(uint8_t hirq)
 
 uint8_t max3421e_mode_read(void)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_RDMODE, 0x00};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
 	return buffer[1];
+#else
+	uint8_t cmd = SPI_CMD_RDMODE;
+	uint8_t mode = 0xFF;
+	spi_dma_data_send(&cmd, sizeof(cmd));
+	spi_dma_data_recv(&mode, sizeof(mode));
+	return mode;
+#endif
 }
 
 void max3421e_mode_write(uint8_t mode)
 {
+#if !defined(SPI_DMA)
 	uint8_t	buffer[2] = {SPI_CMD_WRMODE, mode};
 	spi_data_xfer(buffer, buffer, sizeof(buffer) / sizeof(buffer[0]));
+#else
+	uint8_t	buffer[2] = {SPI_CMD_WRMODE, mode};
+	spi_dma_data_send(buffer, sizeof(buffer) / sizeof(buffer[0]));
+#endif
 }
 
 uint8_t max3421e_peraddr_read(void)
