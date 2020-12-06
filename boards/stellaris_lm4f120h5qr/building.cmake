@@ -25,7 +25,7 @@ set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr")
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_tm4c1233h6pm.c"
 						"${BRD_PATH}/source/init.c"
-						"${BRD_PATH}/source/time.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/context.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/stellaris_main.c"
 				)

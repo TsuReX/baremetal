@@ -9,15 +9,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-/**
- * @brief	Инициализирует устройства и подсистемы внутри SoC.
- */
-void soc_init(void);
-
-/**
- * @brief	Инициализирует устройства платформы.
- */
-void board_init(void);
-
+/* Частота ядра процессора.*/
+#define CORE_FREQ 80000000
 
 #endif /* _CONFIG_H_ */

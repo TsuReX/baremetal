@@ -102,7 +102,7 @@ void (* const isr_vector_table[])(void) = {
 	0,                                      // Reserved
 	0,                                      // Reserved
 	IntDefaultHandler,                      // Hibernate
-	usb0_irq_handler,                      // USB0
+	IntDefaultHandler,                      // USB0
 	IntDefaultHandler,                      // PWM Generator 3
 	IntDefaultHandler,                      // uDMA Software Transfer
 	IntDefaultHandler,                      // uDMA Error
