@@ -235,7 +235,7 @@ void reset_handler(void) {
     // Disable interrupts
     __asm volatile ("cpsid i");
 
-    setup_psp();
+//    setup_psp();
 
     data_init((uint32_t)&__data_load__, (uint32_t)&__data_start__, (size_t)&__data_end__ - (size_t)&__data_start__);
     bss_init((uint32_t)&__bss_start__, (uint32_t)&__bss_end__ - (uint32_t)&__bss_start__);

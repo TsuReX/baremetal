@@ -195,9 +195,9 @@ void board_init(void)
 					(1 << GPIO_PIN_3);
 
 	/* 3. GPIO Alternate Function Select */
-	GPIOF->AFSEL =	(1 << GPIO_PIN_1) |
-					(1 << GPIO_PIN_2) |
-					(1 << GPIO_PIN_3);
+	GPIOF->AFSEL =	(0 << GPIO_PIN_1) |
+					(0 << GPIO_PIN_2) |
+					(0 << GPIO_PIN_3);
 
 	/* 4. GPIO Port Control */
 	GPIOF->PCTL =	(GPIOPCTL_F0 << (GPIO_PIN_1 << 2)) |
@@ -207,7 +207,7 @@ void board_init(void)
 	/* 5. GPIO Digital Enable */
 	GPIOF->DEN =	(1 << GPIO_PIN_1) |
 					(1 << GPIO_PIN_2) |
-					(1 << GPIO_PIN_1);
+					(1 << GPIO_PIN_3);
 
 	/* 6. GPIO 2-mA Drive Select */
 	GPIOF->DR2R =	(1 << GPIO_PIN_3) |
@@ -215,9 +215,9 @@ void board_init(void)
 					(1 << GPIO_PIN_1);
 
 	/* 7. GPIO Pull-Up Select */
-	GPIOF->PUR =	(1 << GPIO_PIN_3) |
-					(1 << GPIO_PIN_2) |
-					(1 << GPIO_PIN_1);
+//	GPIOF->PUR =	(1 << GPIO_PIN_3) |
+//					(1 << GPIO_PIN_2) |
+//					(1 << GPIO_PIN_1);
 
 	/* 8. GPIO Pull-Down Select */
 	GPIOF->PDR = 0;
@@ -250,7 +250,7 @@ void board_init(void)
 void soc_init(void)
 {
 	/* Настройка подсистемы тактирования. */
-	rcc_init();
+//	rcc_init();
 	/* Настраивает системный таймер ядра. */
 	systick_init(CORE_FREQ, 10);
 }
