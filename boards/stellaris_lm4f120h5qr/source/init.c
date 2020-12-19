@@ -58,31 +58,32 @@ static void rcc_init(void)
 #define RCC2_USERCC2	(31)
 
 
-	/* 1. Run-Mode Clock Configuration 2 */
+	/* 1. Enable using RCC2 */
 	SYSCTL->RCC2 |= SYSCTL_RCC2_USERCC2;
 
-	/* 2. Run-Mode Clock Configuration */
+	/* 2. Select MOSC crystal type */
+	SYSCTL->RCC |= SYSCTL_RCC_XTAL_16MHZ;
+
+	/* 3. Enable Main oscillator MOSC */
 	SYSCTL->RCC &= ~SYSCTL_RCC_MOSCDIS;
 
-	/* 3. Raw Interrupt Status */
+	/* 4. Wait for MOSC clock stabilizes */
 	while (SYSCTL->RIS & SYSCTL_RIS_MOSCPUPRIS == 0);
 
-	/* 4.  */
+	/* 5. Use Precise Internal Oscillator as main clock source */
 	SYSCTL->RCC |= SYSCTL_RCC_BYPASS;
 	SYSCTL->RCC2 |= SYSCTL_RCC2_BYPASS2;
 
-	SYSCTL->RCC |= SYSCTL_RCC_USESYSDIV;
 
-	/* 5.  */
-	SYSCTL->RCC |= SYSCTL_RCC_XTAL_16MHZ;
-
+	/* X. Use MOSC as main clock source */
 	SYSCTL->RCC &= ~SYSCTL_RCC_OSCSRC_M;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_OSCSRC2_M;
 
+	/* X. Enable PLL */
 	SYSCTL->RCC &= ~SYSCTL_RCC_PWRDN;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_PWRDN2;
 
-/* 2.1 */
+	/* X. Setup PLL clock frequency */
 	/* 400MHz = (16MHz * (49 + (1024 / 1204) ) / ((0 + 1) * (0 + 1))); */
 
 	SYSCTL->PLLFREQ0 =	(1024 << SYSCTL_PLLFREQ0_MFRAC_S) |
@@ -91,28 +92,29 @@ static void rcc_init(void)
 	SYSCTL->PLLFREQ1 =	(0 << SYSCTL_PLLFREQ1_Q_S) |
 						(0 << SYSCTL_PLLFREQ1_N_S);
 
+	/* X. Wait for PLL clock stabilizes */
 	while (SYSCTL->PLLSTAT & SYSCTL_PLLSTAT_LOCK == 0);
 
-/* 3.*/
-	SYSCTL->RCC &= ~SYSCTL_RCC_USESYSDIV;
-	SYSCTL->RCC2 |= SYSCTL_RCC2_DIV400;
-
-	SYSCTL->RCC2 &= ~SYSCTL_RCC2_SYSDIV2_M;
-	SYSCTL->RCC2 |= (0x4 << SYSCTL_RCC2_SYSDIV2_S);
-
-/* 4.*/
+	/* X. Ensure that PLL clocks normal*/
 	while (SYSCTL->RIS & SYSCTL_RIS_PLLLRIS == 0);
 
-/* 5.*/
+	/* X. Disable PLL clock division by 2 */
+	SYSCTL->RCC2 |= SYSCTL_RCC2_DIV400;
+
+	/* X. Set up PLL clock divisor for 5 */
+	SYSCTL->RCC2 &= ~SYSCTL_RCC2_SYSDIV2_M;
+	SYSCTL->RCC2 |= (0x2 << SYSCTL_RCC2_SYSDIV2_S);
+	SYSCTL->RCC2 &= ~SYSCTL_RCC2_SYSDIV2LSB;
+
+	/* X. Use clock divider as source for system clock */
+	SYSCTL->RCC &= ~SYSCTL_RCC_USESYSDIV;
+
+	/* X. Use diveded PLL clock as system clock */
 	SYSCTL->RCC &= ~SYSCTL_RCC_BYPASS;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_BYPASS2;
 
-/* 6.*/
+	/* X. Disable automatic clock gating */
 	SYSCTL->RCC &= ~SYSCTL_RCC_ACG;
-
-/* 7.*/
-
-
 }
 
 /**
@@ -250,7 +252,7 @@ void board_init(void)
 void soc_init(void)
 {
 	/* Настройка подсистемы тактирования. */
-//	rcc_init();
+	rcc_init();
 	/* Настраивает системный таймер ядра. */
 	systick_init(CORE_FREQ, 10);
 }

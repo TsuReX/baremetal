@@ -25,11 +25,11 @@ int32_t main()
 	while(1) {
 
 		GPIOF->DATA = 2;
-		mdelay(50);
+		mdelay(500);
 		GPIOF->DATA = 4;
-		mdelay(50);
+		mdelay(500);
 		GPIOF->DATA = 8;
-		mdelay(50);
+		mdelay(500);
 	}
 
 	return 0;
