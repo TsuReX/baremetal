@@ -25,7 +25,7 @@ int32_t main()
 	board_init();
 
 	console_init();
-//	printk(INFO, "Console initialized\r\n");
+	printk(INFO, "Console initialized\r\n");
 
 	while(1) {
 
