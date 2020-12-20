@@ -1,7 +1,7 @@
 /**
- * @file	include/config.h
+ * @file	config.h
  *
- * @brief	Объявление функций инициализации SoC и периферии.
+ * @brief
  *
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
@@ -11,5 +11,7 @@
 
 /* Частота ядра процессора.*/
 #define CORE_FREQ 80000000
+
+#define CURRENT_DEBUG_LEVEL 2
 
 #endif /* _CONFIG_H_ */

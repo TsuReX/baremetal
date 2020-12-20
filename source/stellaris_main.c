@@ -15,12 +15,17 @@
 #include "init.h"
 #include "drivers.h"
 #include "time.h"
+#include "console.h"
+#include "debug.h"
 
 int32_t main()
 {
 	soc_init();
 
 	board_init();
+
+	console_init();
+//	printk(INFO, "Console initialized\r\n");
 
 	while(1) {
 

@@ -25,8 +25,10 @@ set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr")
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BRD_PATH}/source/startup_tm4c1233h6pm.c"
 						"${BRD_PATH}/source/init.c"
+						"${BRD_PATH}/source/platform.c"
+						"${BRD_PATH}/source/console.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/context.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/stellaris_main.c"
 				)
 					
@@ -54,8 +56,12 @@ set(CMAKE_ASM_FLAGS	"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4 -g -ggdb")
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
 						"-T ${BRD_PATH}/flash_tm4c1233h6pm.ld"
 						"-mcpu=cortex-m4 -specs=nano.specs"
-						"-Wl,--gc-sections"
+#						"-Wl,--gc-sections"
 #						"-nostdlib"
+				)
+
+set(LINKER_LIBS 		"-lc"
+						"-lm"
 						"-lnosys"
 				)
 					

@@ -39,25 +39,6 @@ void systick_handler(void)
  */
 static void rcc_init(void)
 {
-#define RCC_MOSCDIS		(0)
-#define RCC_OSCSRC		(4)
-#define RCC_XTAL		(6)
-#define RCC_BYPASS		(11)
-#define RCC_PWRDN		(13)
-#define RCC_USESYSDIV	(22)
-#define RCC_SYSDIV		(23)
-#define RCC_ACG			(27)
-
-#define RCC2_OSCSRC2	(4)
-#define RCC2_BYPASS2	(11)
-#define RCC2_PWRDN2		(13)
-#define RCC2_USBPWRDN	(14)
-#define RCC2_SYSDIV2LSB	(22)
-#define RCC2_SYSDIV2	(23)
-#define RCC2_DIV400		(30)
-#define RCC2_USERCC2	(31)
-
-
 	/* 1. Enable using RCC2 */
 	SYSCTL->RCC2 |= SYSCTL_RCC2_USERCC2;
 
@@ -75,15 +56,15 @@ static void rcc_init(void)
 	SYSCTL->RCC2 |= SYSCTL_RCC2_BYPASS2;
 
 
-	/* X. Use MOSC as main clock source */
+	/* 6. Use MOSC as main clock source */
 	SYSCTL->RCC &= ~SYSCTL_RCC_OSCSRC_M;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_OSCSRC2_M;
 
-	/* X. Enable PLL */
+	/* 7. Enable PLL */
 	SYSCTL->RCC &= ~SYSCTL_RCC_PWRDN;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_PWRDN2;
 
-	/* X. Setup PLL clock frequency */
+	/* 8. Setup PLL clock frequency */
 	/* 400MHz = (16MHz * (49 + (1024 / 1204) ) / ((0 + 1) * (0 + 1))); */
 
 	SYSCTL->PLLFREQ0 =	(1024 << SYSCTL_PLLFREQ0_MFRAC_S) |
@@ -92,28 +73,28 @@ static void rcc_init(void)
 	SYSCTL->PLLFREQ1 =	(0 << SYSCTL_PLLFREQ1_Q_S) |
 						(0 << SYSCTL_PLLFREQ1_N_S);
 
-	/* X. Wait for PLL clock stabilizes */
+	/* 9. Wait for PLL clock stabilizes */
 	while (SYSCTL->PLLSTAT & SYSCTL_PLLSTAT_LOCK == 0);
 
-	/* X. Ensure that PLL clocks normal*/
+	/* 10. Ensure that PLL clocks normal*/
 	while (SYSCTL->RIS & SYSCTL_RIS_PLLLRIS == 0);
 
-	/* X. Disable PLL clock division by 2 */
+	/* 11. Disable PLL clock division by 2 */
 	SYSCTL->RCC2 |= SYSCTL_RCC2_DIV400;
 
-	/* X. Set up PLL clock divisor for 5 */
+	/* 12. Set up PLL clock divisor for 5 */
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_SYSDIV2_M;
 	SYSCTL->RCC2 |= (0x2 << SYSCTL_RCC2_SYSDIV2_S);
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_SYSDIV2LSB;
 
-	/* X. Use clock divider as source for system clock */
+	/* 13. Use clock divider as source for system clock */
 	SYSCTL->RCC &= ~SYSCTL_RCC_USESYSDIV;
 
-	/* X. Use diveded PLL clock as system clock */
+	/* 14. Use diveded PLL clock as system clock */
 	SYSCTL->RCC &= ~SYSCTL_RCC_BYPASS;
 	SYSCTL->RCC2 &= ~SYSCTL_RCC2_BYPASS2;
 
-	/* X. Disable automatic clock gating */
+	/* 15. Disable automatic clock gating */
 	SYSCTL->RCC &= ~SYSCTL_RCC_ACG;
 }
 
@@ -153,41 +134,6 @@ static void systick_init(uint32_t core_freq, uint32_t period)
  */
 void board_init(void)
 {
-#define RCGCGPIO_GPIOA			(0)
-#define RCGCGPIO_GPIOB			(1)
-#define RCGCGPIO_GPIOC			(2)
-#define RCGCGPIO_GPIOD			(3)
-#define RCGCGPIO_GPIOE			(4)
-#define RCGCGPIO_GPIOF			(5)
-#define RCGCGPIO_GPIOG			(6)
-#define RCGCGPIO_GPIOH			(7)
-
-#define GPIO_PIN_0				(0)
-#define GPIO_PIN_1				(1)
-#define GPIO_PIN_2				(2)
-#define GPIO_PIN_3				(3)
-#define GPIO_PIN_4				(4)
-#define GPIO_PIN_5				(5)
-#define GPIO_PIN_6				(6)
-#define GPIO_PIN_7				(7)
-
-#define GPIOPCTL_F0				(0x0)
-#define GPIOPCTL_F1				(0x1)
-#define GPIOPCTL_F2				(0x2)
-#define GPIOPCTL_F3				(0x3)
-#define GPIOPCTL_F4				(0x4)
-#define GPIOPCTL_F5				(0x5)
-#define GPIOPCTL_F6				(0x6)
-#define GPIOPCTL_F7				(0x7)
-#define GPIOPCTL_F8				(0x8)
-#define GPIOPCTL_F9				(0x9)
-#define GPIOPCTL_F10			(0xA)
-#define GPIOPCTL_F11			(0xB)
-#define GPIOPCTL_F12			(0xC)
-#define GPIOPCTL_F13			(0xD)
-#define GPIOPCTL_F14			(0xE)
-#define GPIOPCTL_F15			(0xF)
-
 	/* 1. General-Purpose Input/Output Run Mode Clock Gating Control */
 	SYSCTL->RCGCGPIO |= (0x1 << RCGCGPIO_GPIOF);
 
