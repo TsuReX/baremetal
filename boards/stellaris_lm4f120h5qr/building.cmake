@@ -74,6 +74,18 @@ add_definitions("-Dgcc")
 # Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
+if (NOT DEFINED PROGRAMMER)
+	set(PROG_SCRIPT	"oocd_ti-icdi.cfg")
+else()
+if (${PROGRAMMER} STREQUAL "FTDI-JTAG")
+	set(PROG_SCRIPT	"oocd_ftdi2232h_jtag.cfg")
+elseif(${PROGRAMMER} STREQUAL "ICDI")
+	set(PROG_SCRIPT	"oocd_ti-icdi.cfg")
+else()
+	return()
+endif ()
+endif ()
+
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
 set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/oocd_ti-icdi.cfg")
@@ -82,7 +94,7 @@ set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/stellaris_lm4f120h5qr/oocd_t
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BRD_PATH}/oocd_ti-icdi.cfg -c \"do flash\")
+					ARGS	-f ${BRD_PATH}/${PROG_SCRIPT} -c \"do flash\")
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки
 add_custom_target("debug" DEPENDS ${PROJ_NAME})
@@ -93,4 +105,4 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BRD_PATH}/oocd_ti-icdi.cfg -c \"do debug\")
+					ARGS	-f ${BRD_PATH}/${PROG_SCRIPT} -c \"do debug\")
