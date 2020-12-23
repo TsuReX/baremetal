@@ -6,6 +6,7 @@
  * @author	Vasily Yurchenko <vasily.v.yurchenko@yandex.ru>
  */
 
+#include <string.h>
 #include "console.h"
 #include "config.h"
 #include "drivers.h"
@@ -57,49 +58,86 @@ void adc_init()
 	LL_ADC_Enable(ADC1);
 }
 
+#define ADC_VREF_MILIVOLTS			(3300)
+#define AMPL_VOLTS					(310)
+#define DIVIDED_AMPL_MILIVOLTS		(2370)
+
+#define VK_10			(((ADC_VREF_MILIVOLTS * 1000) / 4096) * ((AMPL_VOLT * 1000) / DIVIDED_AMPL_MILIVOLTS))
+//#define VK_16			(((ADC_VREF_MILIVOLTS << 10) >> 12) * ((AMPL_VOLTS << 10) / DIVIDED_AMPL_MILIVOLTS)))
+#define VK_16			(((ADC_VREF_MILIVOLTS >> 2) * ((AMPL_VOLTS << 10) / DIVIDED_AMPL_MILIVOLTS)))
+#define CONVERT_10(X)	(((uint32_t)X * VK_10) / 1000000)
+#define CONVERT_16(X)	(((uint32_t)X * VK_16) >> 20)
+
 void adc_start_convertion(void)
 {
-#define VOLTAGE_COUNT	2
-#define VREF			(3300)
-#define VK				(((VREF * 1000) / 4096) * (310000 / 2370))
 
 	LL_ADC_ClearFlag_ADRDY(ADC1);
-	uint16_t voltage[VOLTAGE_COUNT];
-	size_t i = 0;
-//	uint32_t prev_vac = 0xFFFFFFFF;
-	uint32_t cur_vac = 0xFFFFFFFF;
+	uint16_t enc_vac = 0;
+	uint16_t enc_vpfc = 0;
+	uint32_t vac = 0;
 	uint32_t vpfc = 0;
+	uint32_t max_vac = 0;
+	uint32_t max_vpfc = 0;
+
+	size_t sample_num = 0;
+	const size_t sub_sample_count = 128;
+	size_t sub_sample_num = 0;
+	const size_t sample_count = 16;
+//	uint32_t samples_full = 0;
+	uint32_t vacs[sample_count];
+	uint32_t vpfcs[sample_count];
+
+	memset(vacs, 0, sizeof(vacs));
+	memset(vpfcs, 0, sizeof(vpfcs));
 
 	while (1) {
-		if (i == 0)
-			LL_ADC_REG_StartConversion(ADC1);
-
-//		while(LL_ADC_REG_IsConversionOngoing(ADC1));
-
+		LL_ADC_REG_StartConversion(ADC1);
 		while (!LL_ADC_IsActiveFlag_EOC(ADC1));
-		voltage[i++] = LL_ADC_REG_ReadConversionData12(ADC1);
+		enc_vac = LL_ADC_REG_ReadConversionData12(ADC1);
+		LL_ADC_ClearFlag_EOC(ADC1);
+
+		LL_ADC_REG_StartConversion(ADC1);
+		while (!LL_ADC_IsActiveFlag_EOC(ADC1));
+		enc_vpfc = LL_ADC_REG_ReadConversionData12(ADC1);
 		LL_ADC_ClearFlag_EOC(ADC1);
 
 		if (LL_ADC_IsActiveFlag_EOS(ADC1)) {
-			LL_ADC_ClearFlag_EOS(ADC1);
-//			printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X\r\n", voltage[0], voltage[1]);
-			cur_vac = (uint32_t)voltage[0] * VK / 1000000;
-			vpfc = (uint32_t)voltage[1] * VK / 1000000;
-			printk(INFO, "VAC: %ld, VPFC: %ld\r\n", cur_vac, vpfc);
-			i %= VOLTAGE_COUNT;
+			vac = CONVERT_16(enc_vac);
+			vpfc = CONVERT_16(enc_vpfc);
+//			printk(INFO, "VAC: %ld, VPFC: %ld\r\n", vac, vpfc);
 		}
-//		if (cur_vac <= prev_vac) {
-//			prev_vac = cur_vac;
-//			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
-//		} else { /* cur_vac > prev_vac */
-//			prev_vac = cur_vac;
-//			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
-//		}
-//		udelay(100);
+		LL_ADC_ClearFlag_EOS(ADC1);
 
-		mdelay(100);
+		udelay(100);
+
+		if (sub_sample_num++ == sub_sample_count) {
+			vacs[sample_num] = max_vac;
+			vpfcs[sample_num] = max_vpfc;
+			sub_sample_num = 0;
+//			if (samples_full == 0 & sample_num == (sample_count - 1))
+//				samples_full = 1;
+			sample_num++;
+			sample_num %= sample_count;
+		} else {
+			if (vac > max_vac)
+				max_vac = vac;
+			if (vpfc > max_vpfc)
+				max_vpfc = vpfc;
+		}
+
+		uint32_t sum_vac = 0;
+		uint32_t sum_vpfc = 0;
+		size_t i = 0;
+		for (; i < sample_count; i++) {
+			sum_vac += vacs[i];
+			sum_vpfc += vpfcs[i];
+		}
+		uint32_t avg_vac = sum_vac /* / sample_count */ >> 4;
+		uint32_t avg_vpfc = sum_vpfc /* / sample_count */ >> 4;
+
+		console_write((uint8_t *)&avg_vac, sizeof(avg_vac), 1000);
+		console_write((uint8_t *)&avg_vpfc, sizeof(avg_vpfc), 1000);
 	}
-
 }
 
 /**
