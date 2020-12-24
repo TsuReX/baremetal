@@ -92,19 +92,13 @@ void adc_start_convertion(void)
 
 		while (!LL_ADC_IsActiveFlag_EOC(ADC1));
 		enc_vac = LL_ADC_REG_ReadConversionData12(ADC1);
-		udelay(1);
-		LL_ADC_ClearFlag_EOC(ADC1);
 
-		LL_ADC_REG_StartConversion(ADC1);
 		while (!LL_ADC_IsActiveFlag_EOC(ADC1));
 		enc_vpfc = LL_ADC_REG_ReadConversionData12(ADC1);
-		udelay(1);
-		LL_ADC_ClearFlag_EOC(ADC1);
 
-		if (LL_ADC_IsActiveFlag_EOS(ADC1)) {
-			LL_ADC_ClearFlag_EOS(ADC1);
-		}
-		vac = CONVERT_10(enc_vac);
+		LL_ADC_ClearFlag_EOS(ADC1);
+
+		vac = CONVERT_16(enc_vac);
 		vpfc = CONVERT_16(enc_vpfc);
 
 		udelay(100);
