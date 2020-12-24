@@ -45,7 +45,7 @@ static void console_gpio_init(void)
 	GPIOC->DR8R =	(1 << GPIO_PIN_4) |
 					(1 << GPIO_PIN_5);
 
-	GPIOC->DEN =	(1 << GPIO_PIN_4) |
+	GPIOC->DEN |=	(1 << GPIO_PIN_4) |
 					(1 << GPIO_PIN_5);
 
 	/* 2. GPIO Slew Rate Control Select */
@@ -53,11 +53,11 @@ static void console_gpio_init(void)
 					(1 << GPIO_PIN_5);
 
 	/* 3. Enable alternate function for pins */
-	GPIOC->AFSEL =	(1 << GPIO_PIN_4) |
+	GPIOC->AFSEL |=	(1 << GPIO_PIN_4) |
 					(1 << GPIO_PIN_5);
 
 	/* 4. Select function  */
-	GPIOC->PCTL =	(GPIOPCTL_F2 << (GPIO_PIN_4 << 2)) |	// RX
+	GPIOC->PCTL |=	(GPIOPCTL_F2 << (GPIO_PIN_4 << 2)) |	// RX
 					(GPIOPCTL_F2 << (GPIO_PIN_5 << 2));		// TX
 
 
