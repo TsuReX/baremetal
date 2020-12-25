@@ -26,7 +26,7 @@ WEAK void EXTI0_1_IRQHandler(void);
 WEAK void EXTI2_3_IRQHandler(void);
 WEAK void EXTI4_15_IRQHandler(void);
 WEAK void DMA1_Channel1_IRQHandler(void);
-WEAK void DMA1_Channel2_3_IRQHandler(void);
+WEAK void dma1_channel2_3_irq_handler(void);
 WEAK void DMA1_Channel4_5_IRQHandler(void);
 WEAK void ADC1_IRQHandler(void);
 WEAK void TIM1_BRK_UP_TRG_COM_IRQHandler(void);
@@ -41,7 +41,7 @@ WEAK void I2C1_IRQHandler(void);
 WEAK void I2C2_IRQHandler(void);
 WEAK void SPI1_IRQHandler(void);
 WEAK void SPI2_IRQHandler(void);
-WEAK void USART1_IRQHandler(void);
+WEAK void usart1_irq_handler(void);
 WEAK void USART2_IRQHandler(void);
 
 WEAK void WWDG_IRQHandler(void) ALIAS(int_default_handler);
@@ -52,7 +52,7 @@ WEAK void EXTI0_1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void EXTI2_3_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void EXTI4_15_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel1_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void DMA1_Channel2_3_IRQHandler(void) ALIAS(int_default_handler);
+WEAK void dma1_channel2_3_irq_handler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel4_5_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void ADC1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void TIM1_BRK_UP_TRG_COM_IRQHandler(void) ALIAS(int_default_handler);
@@ -67,7 +67,7 @@ WEAK void I2C1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void I2C2_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void SPI1_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void SPI2_IRQHandler(void) ALIAS(int_default_handler);
-WEAK void USART1_IRQHandler(void) ALIAS(int_default_handler);
+WEAK void usart1_irq_handler(void) ALIAS(int_default_handler);
 WEAK void USART2_IRQHandler(void) ALIAS(int_default_handler);
 
 extern int main(void);
@@ -117,7 +117,7 @@ void (* const isr_vector_table[])(void) = {
 	EXTI4_15_IRQHandler,			/* EXTI Line 4 to 15            */
 	0,								/* Reserved                     */
 	DMA1_Channel1_IRQHandler,		/* DMA1 Channel 1               */
-	DMA1_Channel2_3_IRQHandler,		/* DMA1 Channel 2 and Channel 3 */
+	dma1_channel2_3_irq_handler,		/* DMA1 Channel 2 and Channel 3 */
 	DMA1_Channel4_5_IRQHandler,		/* DMA1 Channel 4 and Channel 5 */
 	ADC1_IRQHandler,				/* ADC1                         */
 	TIM1_BRK_UP_TRG_COM_IRQHandler,	/* TIM1 Break, Update, Trigger and Commutation */
@@ -134,7 +134,7 @@ void (* const isr_vector_table[])(void) = {
 	I2C2_IRQHandler,				/* I2C2                         */
 	SPI1_IRQHandler,				/* SPI1                         */
 	SPI2_IRQHandler,				/* SPI2                         */
-	USART1_IRQHandler,				/* USART1                       */
+	usart1_irq_handler,				/* USART1                       */
 	USART2_IRQHandler,				/* USART2                       */
 	0,								/* Reserved                     */
 	0,								/* Reserved                     */
