@@ -13,6 +13,24 @@
 #include "time.h"
 #include "debug.h"
 
+#define ADC_VREF_MILIVOLTS			(3300)
+#define AMPL_VOLTS					(310)
+#define DIVIDED_AMPL_MILIVOLTS		(2370)
+
+#define VK_10			(((ADC_VREF_MILIVOLTS * 1000) / 4096) * ((AMPL_VOLTS * 1000) / DIVIDED_AMPL_MILIVOLTS))
+#define VK_16			(((ADC_VREF_MILIVOLTS >> 2) * ((AMPL_VOLTS << 10) / DIVIDED_AMPL_MILIVOLTS)))
+#define CONVERT_10(X)	(((uint32_t)X * VK_10) / 1000000)
+#define CONVERT_16(X)	(((uint32_t)X * VK_16) >> 20)
+
+struct command{
+	uint8_t en;
+	uint8_t rly;
+	uint8_t hv9;
+	uint8_t data[5];
+};
+
+struct command command;
+
 void adc_init()
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
@@ -22,11 +40,6 @@ void adc_init()
 
 	/** VPFC */
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_1, LL_GPIO_MODE_ANALOG);
-
-	/** STM32_UART1 TX/RX */
-//	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_OUTPUT);
-//	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_OUTPUT);
-
 
 	LL_RCC_HSI14_Enable();
 	mdelay(1);
@@ -58,14 +71,148 @@ void adc_init()
 	LL_ADC_Enable(ADC1);
 }
 
-#define ADC_VREF_MILIVOLTS			(3300)
-#define AMPL_VOLTS					(310)
-#define DIVIDED_AMPL_MILIVOLTS		(2370)
+void comm_init(const void *dst_buffer, size_t dst_buffer_size)
+{
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
-#define VK_10			(((ADC_VREF_MILIVOLTS * 1000) / 4096) * ((AMPL_VOLTS * 1000) / DIVIDED_AMPL_MILIVOLTS))
-#define VK_16			(((ADC_VREF_MILIVOLTS >> 2) * ((AMPL_VOLTS << 10) / DIVIDED_AMPL_MILIVOLTS)))
-#define CONVERT_10(X)	(((uint32_t)X * VK_10) / 1000000)
-#define CONVERT_16(X)	(((uint32_t)X * VK_16) >> 20)
+	/* USART1_TX */
+//	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
+//	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_9, LL_GPIO_AF_1);
+//	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_9, LL_GPIO_SPEED_FREQ_HIGH);
+//	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_9, LL_GPIO_OUTPUT_PUSHPULL);
+//	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_9, LL_GPIO_PULL_UP);
+
+	/* USART1_RX */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_10, LL_GPIO_AF_1);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
+//	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_10, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
+
+	/************************************************************************************************/
+	LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_USART1);
+
+	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
+	LL_USART_SetHWFlowCtrl(USART1, LL_USART_HWCONTROL_NONE);
+	LL_USART_SetOverSampling(USART1, LL_USART_OVERSAMPLING_16);
+
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, LL_USART_OVERSAMPLING_16, 1500000);
+
+	LL_USART_EnableDMAReq_RX(USART1);
+
+	LL_USART_EnableIT_RXNE(USART1);
+
+	NVIC_SetPriority(USART1_IRQn, 0);
+	NVIC_EnableIRQ(USART1_IRQn);
+
+	LL_USART_Enable(USART1);
+	/************************************************************************************************/
+
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+	/* Настройка канала приема. */
+	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_3,
+								LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+								LL_DMA_PRIORITY_HIGH              |
+								LL_DMA_MODE_CIRCULAR              |
+								LL_DMA_PERIPH_NOINCREMENT         |
+								LL_DMA_MEMORY_INCREMENT           |
+								LL_DMA_PDATAALIGN_BYTE            |
+								LL_DMA_MDATAALIGN_BYTE);
+
+	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3,
+								(uint32_t)&(USART1->RDR),
+								(uint32_t)dst_buffer,
+								LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, dst_buffer_size);
+
+//	LL_SYSCFG_SetRemapDMA_USART(LL_SYSCFG_USART1RX_RMP_DMA1CH5);
+
+	/** Генерация прерывания по приему всего буфера. */
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_3);
+
+	NVIC_SetPriority(DMA1_Channel2_3_IRQn, 1);
+	NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+}
+
+void comm_start(void)
+{
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
+	LL_USART_EnableDirectionRx(USART1);
+}
+
+void comm_stop(void)
+{
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
+	LL_USART_DisableDirectionRx(USART1);
+}
+
+void usart1_irq_handler(void)
+{
+//	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
+//	LL_USART_ReceiveData8(USART1);
+}
+
+void rly_enable()
+{
+	LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_1);
+}
+
+void rly_disable()
+{
+	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
+}
+
+void en_enable()
+{
+	LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_0);
+}
+
+void en_disable()
+{
+	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_0);
+}
+
+void hv9_enable()
+{
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+}
+
+void hv9_disable()
+{
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+}
+
+void dma1_channel2_3_irq_handler(void)
+{
+	/* USART1_RX */
+	if (LL_DMA_IsActiveFlag_GI3(DMA1) == 1) {
+
+		if (command.en == 1) {
+			en_enable();
+		} else if (command.en == 0) {
+			en_disable();
+		}
+
+		if (command.hv9 == 1) {
+			hv9_enable();
+		} else if (command.hv9 == 0) {
+			hv9_disable();
+		}
+
+		if (command.rly == 1) {
+			rly_enable();
+		} else if (command.rly == 0) {
+			rly_disable();
+		}
+//		LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_1);
+
+		LL_DMA_ClearFlag_HT3(DMA1);
+		LL_DMA_ClearFlag_TC3(DMA1);
+		LL_DMA_ClearFlag_TE3(DMA1);
+		LL_DMA_ClearFlag_GI3(DMA1);
+	}
+}
 
 void adc_start_convertion(void)
 {
@@ -126,12 +273,10 @@ void adc_start_convertion(void)
 			avg_vac = sum_vac >> 4;
 			avg_vpfc = sum_vpfc >> 4;
 
-			printk(INFO, "VAC: %ld, VPFC: %ld\r\n", avg_vac, avg_vpfc);
-//			printk(INFO, "MAXVAC: %ld, MAXVPFC: %ld\r\n", max_vac, max_vpfc);
 //			printk(INFO, "ENCVAC: %d, ENCVPFC: %d\r\n", enc_vac, enc_vpfc);
 
-//			console_write((uint8_t *)&avg_vac, sizeof(avg_vac), 1000);
-//			console_write((uint8_t *)&avg_vpfc, sizeof(avg_vpfc), 1000);
+			console_write((uint8_t *)&avg_vac, sizeof(avg_vac), 1000);
+			console_write((uint8_t *)&avg_vpfc, sizeof(avg_vpfc), 1000);
 
 		} else {
 			if (vac > max_vac)
@@ -139,8 +284,6 @@ void adc_start_convertion(void)
 			if (vpfc > max_vpfc)
 				max_vpfc = vpfc;
 		}
-		/* TODO: Remove. Used for debugging */
-		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
 	}
 }
 
@@ -159,6 +302,10 @@ int main(void)
 
 	console_init();
 
+	comm_init(&command, sizeof(struct command));
+
+	comm_start();
+
 	adc_init();
 
 	adc_start_convertion();
@@ -170,5 +317,6 @@ int main(void)
 		udelay(500000);
 		LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
 		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+		printk(INFO, "%s\r\n", __func__);
 	}
 }
