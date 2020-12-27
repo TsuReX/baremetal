@@ -41,7 +41,8 @@ china_stm32f407vet6
 nucleo_stm32f303k8t6
 stellaris_lm4f120h5qr
 checkboard_lpc54618j512
-psu_stm32f030r8t6
+psu_hs_stm32f030f4p6
+psu_ls_stm32f030c6t6
 cpe_stm32f030r8t6
 devusb_stm32f103c8t6
 hostusb_mdr32f9

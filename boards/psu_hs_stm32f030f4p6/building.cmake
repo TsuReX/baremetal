@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "psu_stm32f030r8t6")
+set(CURRENT_BOARD_TYPE "psu_hs_stm32f030f4p6")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,7 +18,7 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/psu_stm32f030r8t6")
+set(BRD_PATH 			"${CMAKE_CURRENT_SOURCE_DIR}/boards/psu_hs_stm32f030f4p6")
 
 set(MAIN_INCLUDE		"${BRD_PATH}/include"
 						"${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -28,7 +28,7 @@ set(BOARD_SRC_PATH		"${BRD_PATH}/source/")
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/startup_stm32f030r8t6.c"
 						"${BOARD_SRC_PATH}/system_stm32f0xx.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/psu_main.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/psu_hs_main.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${BOARD_SRC_PATH}/init.c"
