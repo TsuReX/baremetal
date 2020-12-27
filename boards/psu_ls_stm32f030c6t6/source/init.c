@@ -121,21 +121,15 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
 
-	/* HV9 */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+	/* P42 */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
 
-	/* EN */
-	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_0, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_0);
-
-	/* RLY */
-	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_1, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
+	/* P43 */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_7);
 
 }
 

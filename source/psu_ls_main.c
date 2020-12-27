@@ -31,6 +31,13 @@ struct command{
 
 struct command command;
 
+struct measurement {
+	uint32_t vac;
+	uint32_t vpfc;
+};
+
+struct measurement measurement;
+
 void adc_init()
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
@@ -153,59 +160,12 @@ void usart1_irq_handler(void)
 //	LL_USART_ReceiveData8(USART1);
 }
 
-void rly_enable()
-{
-	LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_1);
-}
-
-void rly_disable()
-{
-	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
-}
-
-void en_enable()
-{
-	LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_0);
-}
-
-void en_disable()
-{
-	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_0);
-}
-
-void hv9_enable()
-{
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
-}
-
-void hv9_disable()
-{
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
-}
-
 void dma1_channel2_3_irq_handler(void)
 {
 	/* USART1_RX */
 	if (LL_DMA_IsActiveFlag_GI3(DMA1) == 1) {
 
-		if (command.en == 1) {
-			en_enable();
-		} else if (command.en == 0) {
-			en_disable();
-		}
-
-		if (command.hv9 == 1) {
-			hv9_enable();
-		} else if (command.hv9 == 0) {
-			hv9_disable();
-		}
-
-		if (command.rly == 1) {
-			rly_enable();
-		} else if (command.rly == 0) {
-			rly_disable();
-		}
-//		LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_1);
+		/* TODO: Place code here */
 
 		LL_DMA_ClearFlag_HT3(DMA1);
 		LL_DMA_ClearFlag_TC3(DMA1);
@@ -302,21 +262,17 @@ int main(void)
 
 	console_init();
 
-	comm_init(&command, sizeof(struct command));
+	comm_init(&measurement, sizeof(struct measurement));
 
 	comm_start();
 
-	adc_init();
-
-	adc_start_convertion();
-
 	while (1) {
 		udelay(500000);
-		LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_1);
-		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
+		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_7);
 		udelay(500000);
-		LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
-		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
-		printk(INFO, "%s\r\n", __func__);
+		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
+		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);
+//		printk(INFO, "%s\r\n", __func__);
 	}
 }
