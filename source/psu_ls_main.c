@@ -24,9 +24,7 @@
 
 struct command{
 	uint8_t en;
-	uint8_t rly;
-	uint8_t hv9;
-	uint8_t data[5];
+	uint8_t data[7];
 };
 
 struct command command;
@@ -37,6 +35,23 @@ struct measurement {
 };
 
 struct measurement measurement;
+
+void orange_led_on(void)
+{
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_8);
+}
+void orange_led_off(void)
+{
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_8);
+}
+void green_led_on(void)
+{
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_9);
+}
+void green_led_off(void)
+{
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_9);
+}
 
 void adc_init()
 {
@@ -266,13 +281,23 @@ int main(void)
 
 	comm_start();
 
+	/* TODO: Implement LL_GPIO_PIN_11 high to low transition interrupt. */
 	while (1) {
-		udelay(500000);
-		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
-		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_7);
-		udelay(500000);
-		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
-		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);
-//		printk(INFO, "%s\r\n", __func__);
+		while (1) {
+			mdelay(100);
+			if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_11) == 0) {
+				command.en = 1;
+				console_write((uint8_t *)&command, sizeof(struct command), 1000);
+				break;
+			}
+		}
+		while (1) {
+			mdelay(100);
+			if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_11) == 1) {
+				command.en = 0;
+				console_write((uint8_t *)&command, sizeof(struct command), 1000);
+				break;
+			}
+		}
 	}
 }

@@ -13,6 +13,8 @@
 #include "time.h"
 #include "debug.h"
 
+#define MIN_VAC						(230)
+
 #define ADC_VREF_MILIVOLTS			(3300)
 #define AMPL_VOLTS					(310)
 #define DIVIDED_AMPL_MILIVOLTS		(2370)
@@ -24,9 +26,7 @@
 
 struct command{
 	uint8_t en;
-	uint8_t rly;
-	uint8_t hv9;
-	uint8_t data[5];
+	uint8_t data[7];
 };
 
 struct command command;
@@ -194,17 +194,6 @@ void dma1_channel2_3_irq_handler(void)
 			en_disable();
 		}
 
-		if (command.hv9 == 1) {
-			hv9_enable();
-		} else if (command.hv9 == 0) {
-			hv9_disable();
-		}
-
-		if (command.rly == 1) {
-			rly_enable();
-		} else if (command.rly == 0) {
-			rly_disable();
-		}
 //		LL_GPIO_TogglePin(GPIOF, LL_GPIO_PIN_1);
 
 		LL_DMA_ClearFlag_HT3(DMA1);
@@ -230,6 +219,7 @@ void adc_start_convertion(void)
 	const size_t sample_count = 16;
 	uint32_t vacs[sample_count];
 	uint32_t vpfcs[sample_count];
+	uint32_t avg_vac_diviation = MIN_VAC;
 
 	memset(vacs, 0, sizeof(vacs));
 	memset(vpfcs, 0, sizeof(vpfcs));
@@ -275,6 +265,24 @@ void adc_start_convertion(void)
 
 //			printk(INFO, "ENCVAC: %d, ENCVPFC: %d\r\n", enc_vac, enc_vpfc);
 
+			/* TODO: Compare VAC and VPFC and MIN_VAC */
+			if (avg_vac >= MIN_VAC) {
+				/* TODO: Implement histeresises for time and voltage */
+				if (avg_vpfc >= avg_vac - avg_vac_diviation) {
+					rly_enable();
+					avg_vac_diviation = MIN_VAC - 10;
+				}
+				else {
+					rly_disable();
+					avg_vac_diviation = MIN_VAC;
+				}
+			}
+
+			/*
+			if (vpfc_avg >= MIN_VPFC)
+				send OK to low side controller;
+			*/
+
 			console_write((uint8_t *)&avg_vac, sizeof(avg_vac), 1000);
 			console_write((uint8_t *)&avg_vpfc, sizeof(avg_vpfc), 1000);
 
@@ -311,12 +319,6 @@ int main(void)
 	adc_start_convertion();
 
 	while (1) {
-		udelay(500000);
-		LL_GPIO_SetOutputPin(GPIOF, LL_GPIO_PIN_1);
-		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
-		udelay(500000);
-		LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_1);
-		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
 		printk(INFO, "%s\r\n", __func__);
 	}
 }
