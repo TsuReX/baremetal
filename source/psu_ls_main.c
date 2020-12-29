@@ -290,6 +290,7 @@ int main(void)
 				console_write((uint8_t *)&command, sizeof(struct command), 1000);
 				break;
 			}
+			LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_9);
 		}
 		while (1) {
 			mdelay(100);
@@ -298,6 +299,7 @@ int main(void)
 				console_write((uint8_t *)&command, sizeof(struct command), 1000);
 				break;
 			}
+			LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_8);
 		}
 	}
 }

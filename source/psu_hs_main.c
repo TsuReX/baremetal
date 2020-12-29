@@ -277,6 +277,10 @@ void adc_start_convertion(void)
 					avg_vac_diviation = MIN_VAC;
 				}
 			}
+			else {
+				rly_disable();
+				avg_vac_diviation = MIN_VAC;
+			}
 
 			/*
 			if (vpfc_avg >= MIN_VPFC)
