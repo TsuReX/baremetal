@@ -284,22 +284,24 @@ int main(void)
 	/* TODO: Implement LL_GPIO_PIN_11 high to low transition interrupt. */
 	while (1) {
 		while (1) {
-			mdelay(100);
+			mdelay(250);
 			if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_11) == 0) {
 				command.en = 1;
 				console_write((uint8_t *)&command, sizeof(struct command), 1000);
-				break;
-			}
-			LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_9);
-		}
-		while (1) {
-			mdelay(100);
-			if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_11) == 1) {
-				command.en = 0;
-				console_write((uint8_t *)&command, sizeof(struct command), 1000);
+				LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_8);
 				break;
 			}
 			LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_8);
+		}
+		while (1) {
+			mdelay(250);
+			if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_11) == 1) {
+				command.en = 0;
+				console_write((uint8_t *)&command, sizeof(struct command), 1000);
+				LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_9);
+				break;
+			}
+			LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_9);
 		}
 	}
 }
