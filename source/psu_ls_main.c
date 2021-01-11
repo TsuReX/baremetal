@@ -189,7 +189,7 @@ void dma1_channel2_3_irq_handler(void)
 	}
 }
 
-void adc_start_convertion(void)
+void adc_convertion_cycle_start(void)
 {
 	LL_ADC_ClearFlag_ADRDY(ADC1);
 
