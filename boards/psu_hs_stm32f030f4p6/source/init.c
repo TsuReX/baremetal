@@ -61,8 +61,7 @@ static void flash_config(void)
  *				SYSCLK(Hz)                     = 48000000
  *				HCLK(Hz)                       = 48000000
  *				AHB Prescaler                  = 1
- *				APB1 Prescaler                 = 1
- *				APB2 Prescaler                 = 1
+ *				APB1 Prescaler                 = 2
  *				PLLMUL                         = RCC_PLL_MUL12 (12)
  */
 static void rcc_config(void)

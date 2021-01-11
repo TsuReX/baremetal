@@ -72,7 +72,7 @@ set(LINKER_LIBS 	"-lc"
 					"-lnosys"
 				)
 				
-add_definitions("-DSTM32F030x8")
+add_definitions("-DSTM32F030x6")
 add_definitions("-DUSE_FULL_LL_DRIVER")
 
 ######################################################################

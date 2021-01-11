@@ -31,6 +31,55 @@ struct command{
 
 struct command command;
 
+void tim1_init()
+{
+	uint32_t timer_prescaler = 48;
+	uint32_t timer_reload = 100;
+
+	/* Enable the timer peripheral clock */
+	LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM1);
+
+	/* Set timer pre-scaler value */
+	LL_TIM_SetPrescaler(TIM1, (timer_prescaler - 1));
+
+	LL_TIM_EnableARRPreload(TIM1);
+
+	/* Set timer auto-reload value */
+	LL_TIM_SetAutoReload(TIM1, (timer_reload - 1));
+
+	/* Counter mode: select up-counting mode */
+	LL_TIM_SetCounterMode(TIM1, LL_TIM_COUNTERMODE_UP);
+
+	/* Set the repetition counter */
+	LL_TIM_SetRepetitionCounter(TIM1, 0);
+
+	/* Set timer the trigger output (TRGO) */
+	LL_TIM_SetTriggerOutput(TIM1, LL_TIM_TRGO_UPDATE);
+
+//	NVIC_SetPriority(TIM1_BRK_UP_TRG_COM_IRQn, 4);
+//	NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
+//
+//	LL_TIM_EnableIT_TRIG(TIM1);
+//	LL_TIM_EnableIT_UPDATE(TIM1);
+
+	/* Enable counter */
+	LL_TIM_EnableCounter(TIM1);
+
+	/* Force update generation */
+	LL_TIM_GenerateEvent_UPDATE(TIM1);
+
+}
+
+void tim1_brk_up_trg_com_irq_handler(void)
+{
+	if (LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1) {
+		LL_TIM_ClearFlag_UPDATE(TIM1);
+		/* TODO: DEBUG ONLY */
+		/* Toggle HV9 signal for testing */
+		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
+	}
+}
+
 void adc_init()
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
@@ -320,9 +369,12 @@ int main(void)
 
 	adc_init();
 
+	tim1_init();
+
 	adc_start_convertion();
 
 	while (1) {
-		printk(INFO, "%s\r\n", __func__);
+//		printk(INFO, "%s\r\n", __func__);
+		mdelay(100);
 	}
 }
