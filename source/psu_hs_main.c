@@ -40,7 +40,7 @@ struct sample {
 	uint16_t vac;
 	uint16_t vpfc;
 };
-//uint16_t buf[256];
+
 enum frame_state frame_states[FRAME_COUNT] = {empty, empty};
 struct sample frames[FRAME_COUNT][SAMPLES_PER_FRAME];
 
@@ -50,7 +50,6 @@ struct command {
 };
 
 struct command command;
-
 
 void rly_enable()
 {
@@ -107,36 +106,23 @@ void tim1_init()
 	/* Set timer the trigger output (TRGO) */
 	LL_TIM_SetTriggerOutput(TIM1, LL_TIM_TRGO_UPDATE);
 
-//	NVIC_SetPriority(TIM1_BRK_UP_TRG_COM_IRQn, 4);
-//	NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
-//
-//	LL_TIM_EnableIT_TRIG(TIM1);
-//	LL_TIM_EnableIT_UPDATE(TIM1);
-
 	/* Enable counter */
 	LL_TIM_EnableCounter(TIM1);
-
-	/* Force update generation */
-//	LL_TIM_GenerateEvent_UPDATE(TIM1);
-
 }
 
+#if 0
 void tim1_brk_up_trg_com_irq_handler(void)
 {
 	if (LL_TIM_IsActiveFlag_UPDATE(TIM1) == 1) {
 		LL_TIM_ClearFlag_UPDATE(TIM1);
-		/* TODO: DEBUG ONLY */
-		/* Toggle HV9 signal for testing */
-		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
 	}
 }
+#endif
 
-void adc_dma_init(void)
+void adc_dma_transfer_init(uint32_t working_buffer_num)
 {
-	LL_SYSCFG_SetRemapDMA_ADC(LL_SYSCFG_ADC1_RMP_DMA1_CH1);
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
-	/* Настройка канала приема. */
 	LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_1,
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
 							LL_DMA_PRIORITY_HIGH              |
@@ -148,20 +134,26 @@ void adc_dma_init(void)
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
 							(uint32_t)&(ADC1->DR),
-							(uint32_t)&(frames[current_frame_num]),
-//							(uint32_t)&buf,
+							(uint32_t)&(frames[working_buffer_num]),
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, SAMPLES_PER_FRAME * 2);
 
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+}
 
-	/** Генерация прерывания по приему всего буфера. */
+void adc_dma_init(void)
+{
+	LL_SYSCFG_SetRemapDMA_ADC(LL_SYSCFG_ADC1_RMP_DMA1_CH1);
+
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
 	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
 
 	NVIC_SetPriority(DMA1_Channel1_IRQn, 1);
 	NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
-	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+	adc_dma_transfer_init(current_frame_num);
 }
 
 void dma1_channel1_irq_handler(void)
@@ -179,26 +171,7 @@ void dma1_channel1_irq_handler(void)
 
 			frame_states[current_frame_num] = busy;
 
-			LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
-
-			LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_1,
-										LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
-										LL_DMA_PRIORITY_HIGH              |
-										LL_DMA_MODE_NORMAL       	       |
-										LL_DMA_PERIPH_NOINCREMENT         |
-										LL_DMA_MEMORY_INCREMENT           |
-										LL_DMA_PDATAALIGN_HALFWORD            |
-										LL_DMA_MDATAALIGN_HALFWORD);
-
-			LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
-									(uint32_t)&(ADC1->DR),
-									(uint32_t)(&frames[current_frame_num]),
-//									(uint32_t)&buf,
-									LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
-
-			LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, SAMPLES_PER_FRAME * 2);
-			LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
-
+			adc_dma_transfer_init(current_frame_num);
 		} else {
 			frame_overrun = 1;
 			LL_ADC_REG_StopConversion(ADC1);
@@ -228,7 +201,6 @@ void adc_init(void)
 	LL_ADC_StartCalibration(ADC1);
 	while (LL_ADC_IsCalibrationOnGoing(ADC1));
 	LL_ADC_ClearFlag_ADRDY(ADC1);
-//	LL_ADC_Enable(ADC1);
 	LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_12B);
 
 #if 0
@@ -248,22 +220,16 @@ void adc_init(void)
 	LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
 	LL_ADC_SetLowPowerMode(ADC1, LL_ADC_LP_AUTOWAIT);
 
-//	NVIC_SetPriority(ADC1_IRQn, 4);
-//	NVIC_EnableIRQ(ADC1_IRQn);
-//
-//	LL_ADC_EnableIT_EOC(ADC1);
-
 	LL_ADC_Enable(ADC1);
 }
 
+#if 0
 void adc1_irq_handler(void) {
-//	if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
-//		LL_ADC_ClearFlag_EOC(ADC1);
-//		/* TODO: DEBUG ONLY */
-//		/* Toggle HV9 signal for testing */
-//		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
-//	}
+	if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
+		LL_ADC_ClearFlag_EOC(ADC1);
+	}
 }
+#endif
 
 void comm_init(const void *dst_buffer, size_t dst_buffer_size)
 {
@@ -352,18 +318,16 @@ void dma1_channel2_3_irq_handler(void)
 			en_disable();
 		}
 
-//		LL_DMA_ClearFlag_HT3(DMA1);
-//		LL_DMA_ClearFlag_TC3(DMA1);
-//		LL_DMA_ClearFlag_TE3(DMA1);
 		LL_DMA_ClearFlag_GI3(DMA1);
 	}
 }
 
-//void usart1_irq_handler(void)
-//{
-////	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
-////	LL_USART_ReceiveData8(USART1);
-//}
+#if 0
+void usart1_irq_handler(void)
+{
+	LL_USART_ReceiveData8(USART1);
+}
+#endif
 
 void adc_convertion_start(void)
 {
