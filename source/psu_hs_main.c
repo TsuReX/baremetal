@@ -12,6 +12,7 @@
 #include "drivers.h"
 #include "time.h"
 #include "debug.h"
+#include "ptr_container.h"
 
 #define MIN_VAC						(230)
 
@@ -27,22 +28,14 @@
 #define FRAME_COUNT 2
 #define SAMPLES_PER_FRAME 128
 
-enum frame_state {
-	empty = 0,
-	busy,
-	ready
-};
-
-uint32_t frame_overrun = 0;
-uint32_t current_frame_num = 0;
-
 struct sample {
 	uint16_t vac;
 	uint16_t vpfc;
 };
 
-enum frame_state frame_states[FRAME_COUNT] = {empty, empty};
 struct sample frames[FRAME_COUNT][SAMPLES_PER_FRAME];
+
+void *frames_ptr_list[SAMPLES_PER_FRAME] = {(void*)&frames[0], (void*)(void*)&frames[1]};
 
 struct command {
 	uint8_t en;
@@ -71,6 +64,7 @@ void en_disable()
 	LL_GPIO_ResetOutputPin(GPIOF, LL_GPIO_PIN_0);
 }
 
+#if 0
 void hv9_enable()
 {
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
@@ -80,6 +74,7 @@ void hv9_disable()
 {
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 }
+#endif
 
 void tim1_init()
 {
@@ -119,7 +114,7 @@ void tim1_brk_up_trg_com_irq_handler(void)
 }
 #endif
 
-void adc_dma_transfer_init(uint32_t working_buffer_num)
+void adc_dma_transfer_init(void *buffer)
 {
 	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
 
@@ -134,7 +129,7 @@ void adc_dma_transfer_init(uint32_t working_buffer_num)
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1,
 							(uint32_t)&(ADC1->DR),
-							(uint32_t)&(frames[working_buffer_num]),
+							(uint32_t)buffer,
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, SAMPLES_PER_FRAME * 2);
@@ -153,7 +148,10 @@ void adc_dma_init(void)
 	NVIC_SetPriority(DMA1_Channel1_IRQn, 1);
 	NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
-	adc_dma_transfer_init(current_frame_num);
+	void *buffer;
+	pc_write_get(&buffer);
+
+	adc_dma_transfer_init(buffer);
 }
 
 void dma1_channel1_irq_handler(void)
@@ -163,20 +161,17 @@ void dma1_channel1_irq_handler(void)
 	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
 
 	if (LL_DMA_IsActiveFlag_GI1(DMA1) == 1) {
-		frame_states[current_frame_num] = ready;
 
-		current_frame_num = (current_frame_num + 1) & (FRAME_COUNT - 1);
+		pc_write_set();
 
-		if (frame_states[current_frame_num] == empty) {
+		void *buffer;
 
-			frame_states[current_frame_num] = busy;
+		if (pc_write_get(&buffer) == 0) {
+			adc_dma_transfer_init(buffer);
 
-			adc_dma_transfer_init(current_frame_num);
 		} else {
-			frame_overrun = 1;
 			LL_ADC_REG_StopConversion(ADC1);
 		}
-
 		LL_DMA_ClearFlag_GI1(DMA1);
 	}
 }
@@ -334,7 +329,7 @@ void adc_convertion_start(void)
 	LL_ADC_ClearFlag_ADRDY(ADC1);
 	LL_ADC_REG_StartConversion(ADC1);
 }
-
+#if 0
 void adc_convertion_cycle_start(void)
 {
 	LL_ADC_ClearFlag_ADRDY(ADC1);
@@ -430,6 +425,7 @@ void adc_convertion_cycle_start(void)
 		}
 	}
 }
+#endif
 
 /**
  * @brief	C-code entry point.
@@ -463,11 +459,18 @@ int main(void)
 	while (1) {
 		printk(INFO, "Current frame %ld\r\n", cur_frame_num);
 		mdelay(100);
-
-		if (frame_states[cur_frame_num] == ready) {
-			frame_states[cur_frame_num] = empty;
-			cur_frame_num = (cur_frame_num + 1) & (FRAME_COUNT - 1);
-			/* TODO: Critical!!! Implement overrun handling */
+		struct frame *samples;
+		if (pc_read_get((void*)&samples) == 0) {
+		/* TODO: Samples' processing */
+			pc_read_set();
 		}
+
+//		if ()
+
+//		if (frame_states[cur_frame_num] == ready) {
+//			frame_states[cur_frame_num] = empty;
+//			cur_frame_num = (cur_frame_num + 1) & (FRAME_COUNT - 1);
+//			/* TODO: Critical!!! Implement overrun handling */
+//		}
 	}
 }

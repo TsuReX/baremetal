@@ -28,16 +28,14 @@ set(BOARD_SRC_PATH		"${BRD_PATH}/source/")
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/startup_stm32f030r8t6.c"
 						"${BOARD_SRC_PATH}/system_stm32f0xx.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/psu_hs_main.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${BOARD_SRC_PATH}/init.c"
 						"${BOARD_SRC_PATH}/console.c"
 						"${BOARD_SRC_PATH}/platform.c"
-#						"${BOARD_SRC_PATH}/scheduler.c"
-#						"${BOARD_SRC_PATH}/i2c.c"
-#						"${BOARD_SRC_PATH}/gpio.c"
-#						"${BOARD_SRC_PATH}/pwm.c"
+
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/psu_hs_main.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/ptr_container.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
