@@ -149,9 +149,26 @@ void adc_dma_init(void)
 	NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 	void *buffer;
-	pc_write_get(&buffer);
+	srpl_write_get(&buffer);
 
 	adc_dma_transfer_init(buffer);
+}
+
+void adc_convertion_start(void)
+{
+	if (LL_ADC_REG_IsConversionOngoing(ADC1) == 1)
+		return;
+
+	LL_ADC_ClearFlag_ADRDY(ADC1);
+	LL_ADC_REG_StartConversion(ADC1);
+	printk(INFO, "Convertion start\r\n");
+}
+
+void adc_convertion_stop(void)
+{
+	LL_ADC_ClearFlag_ADRDY(ADC1);
+	LL_ADC_REG_StopConversion(ADC1);
+	printk(INFO, "Convertion stop\r\n");
 }
 
 void dma1_channel1_irq_handler(void)
@@ -162,16 +179,16 @@ void dma1_channel1_irq_handler(void)
 
 	if (LL_DMA_IsActiveFlag_GI1(DMA1) == 1) {
 
-		pc_write_set();
+		srpl_write_set();
 
 		void *buffer;
 
-		if (pc_write_get(&buffer) == 0) {
+		if (srpl_write_get(&buffer) == SRPL_WRITE_OK) {
 			adc_dma_transfer_init(buffer);
-
 		} else {
-			LL_ADC_REG_StopConversion(ADC1);
+			adc_convertion_stop();
 		}
+
 		LL_DMA_ClearFlag_GI1(DMA1);
 	}
 }
@@ -324,11 +341,6 @@ void usart1_irq_handler(void)
 }
 #endif
 
-void adc_convertion_start(void)
-{
-	LL_ADC_ClearFlag_ADRDY(ADC1);
-	LL_ADC_REG_StartConversion(ADC1);
-}
 #if 0
 void adc_convertion_cycle_start(void)
 {
@@ -452,25 +464,32 @@ int main(void)
 
 	tim1_init();
 
+	srpl_init((void**)&frames_ptr_list, SAMPLES_PER_FRAME);
+
 	adc_convertion_start();
 
 	printk(INFO, "Infinite cycle\r\n");
-	uint32_t cur_frame_num = 0;
 	while (1) {
-		printk(INFO, "Current frame %ld\r\n", cur_frame_num);
 		mdelay(100);
-		struct frame *samples;
-		if (pc_read_get((void*)&samples) == 0) {
-		/* TODO: Samples' processing */
-			pc_read_set();
+		struct sample *samples;
+
+		if (srpl_read_get((void*)&samples) == 0) {
+			printk(INFO, "Frame processing\r\n");
+			size_t i = 0;
+			for (; i < SAMPLES_PER_FRAME; ++i) {
+				printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X |", samples[i].vac, samples[i].vpfc);
+				if ((i & 15) == 15) {
+					printk(INFO, "\r\n");
+				}
+			}
+
+			memset(samples, 0, SAMPLES_PER_FRAME * sizeof(struct sample));
+			srpl_read_set();
 		}
 
-//		if ()
+		if (srpl_write_size_get() != 0) {
+			adc_convertion_start();
+		}
 
-//		if (frame_states[cur_frame_num] == ready) {
-//			frame_states[cur_frame_num] = empty;
-//			cur_frame_num = (cur_frame_num + 1) & (FRAME_COUNT - 1);
-//			/* TODO: Critical!!! Implement overrun handling */
-//		}
 	}
 }
