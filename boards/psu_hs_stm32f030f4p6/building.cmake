@@ -66,12 +66,11 @@ set(LINKER_FLAGS	"${LINKER_FLAGS}"
 				)
 
 set(LINKER_LIBS 	"-lc"
-					"-lm"
 					"-lnosys"
 				)
 				
 add_definitions("-DSTM32F030x6")
-add_definitions("-DUSE_FULL_LL_DRIVER")
+#add_definitions("-DUSE_FULL_LL_DRIVER")
 
 ######################################################################
 # Определение дополнительной цели для выполнения операции прошивки

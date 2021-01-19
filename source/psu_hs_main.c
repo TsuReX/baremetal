@@ -79,7 +79,7 @@ void hv9_disable()
 void tim1_init()
 {
 	uint32_t timer_prescaler = 48;
-	uint32_t timer_reload = 10000;
+	uint32_t timer_reload = 10;
 
 	/* Enable the timer peripheral clock */
 	LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM1);
@@ -100,6 +100,14 @@ void tim1_init()
 
 	/* Set timer the trigger output (TRGO) */
 	LL_TIM_SetTriggerOutput(TIM1, LL_TIM_TRGO_UPDATE);
+
+#if 0
+	NVIC_SetPriority(TIM1_BRK_UP_TRG_COM_IRQn, 4);
+	NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
+
+	LL_TIM_EnableIT_TRIG(TIM1);
+	LL_TIM_EnableIT_UPDATE(TIM1);
+#endif
 
 	/* Enable counter */
 	LL_TIM_EnableCounter(TIM1);
@@ -148,44 +156,44 @@ void adc_dma_init(void)
 	NVIC_SetPriority(DMA1_Channel1_IRQn, 1);
 	NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
-	void *buffer;
-	srpl_write_get(&buffer);
-
-	adc_dma_transfer_init(buffer);
 }
 
 void adc_convertion_start(void)
 {
-	if (LL_ADC_REG_IsConversionOngoing(ADC1) == 1)
+	if (LL_ADC_REG_IsConversionOngoing(ADC1) == 1) {
+//		printk(INFO, "Convertion can't be start\r\n");
 		return;
+	}
 
 	LL_ADC_ClearFlag_ADRDY(ADC1);
 	LL_ADC_REG_StartConversion(ADC1);
-	printk(INFO, "Convertion start\r\n");
+//	printk(INFO, "Convertion start\r\n");
 }
 
 void adc_convertion_stop(void)
 {
 	LL_ADC_ClearFlag_ADRDY(ADC1);
 	LL_ADC_REG_StopConversion(ADC1);
-	printk(INFO, "Convertion stop\r\n");
+//	printk(INFO, "Convertion stop\r\n");
 }
 
 void dma1_channel1_irq_handler(void)
 {
 	/* TODO: DEBUG ONLY */
 	/* Toggle HV9 signal for testing */
-	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
+//	LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_1);
 
 	if (LL_DMA_IsActiveFlag_GI1(DMA1) == 1) {
 
-		srpl_write_set();
-
+		int32_t ret_val = srpl_write_set();
+//		printk(INFO, "%s(): srpl_write_set returned: %ld\r\n", __func__, ret_val);
 		void *buffer;
-
-		if (srpl_write_get(&buffer) == SRPL_WRITE_OK) {
+		ret_val = srpl_write_get(&buffer);
+//		printk(INFO, "%s(): srpl_write_get returned: %ld\r\n", __func__, ret_val);
+		if (ret_val == SRPL_WRITE_OK) {
 			adc_dma_transfer_init(buffer);
 		} else {
+//			printk(INFO, "Handler: There aren't elements for writing\r\n");
 			adc_convertion_stop();
 		}
 
@@ -271,11 +279,12 @@ void comm_init(const void *dst_buffer, size_t dst_buffer_size)
 	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, LL_USART_OVERSAMPLING_16, 1500000);
 
 	LL_USART_EnableDMAReq_RX(USART1);
-
+#if 0
 	LL_USART_EnableIT_RXNE(USART1);
 
 	NVIC_SetPriority(USART1_IRQn, 0);
 	NVIC_EnableIRQ(USART1_IRQn);
+#endif
 
 	LL_USART_Enable(USART1);
 	/************************************************************************************************/
@@ -321,6 +330,7 @@ void comm_stop(void)
 
 void dma1_channel2_3_irq_handler(void)
 {
+//	printk(INFO, "%s() \r\n", __func__);
 	/* USART1_RX */
 	if (LL_DMA_IsActiveFlag_GI3(DMA1) == 1) {
 
@@ -464,32 +474,71 @@ int main(void)
 
 	tim1_init();
 
-	srpl_init((void**)&frames_ptr_list, SAMPLES_PER_FRAME);
+	srpl_init((void**)&frames_ptr_list, FRAME_COUNT);
+
+	void *buffer;
+	srpl_write_get(&buffer);
+	adc_dma_transfer_init(buffer);
 
 	adc_convertion_start();
-
-	printk(INFO, "Infinite cycle\r\n");
+//	printk(INFO, "Infinite cycle\r\n");
+	uint32_t avg_vac_diviation = MIN_VAC;
 	while (1) {
 		mdelay(100);
 		struct sample *samples;
-
-		if (srpl_read_get((void*)&samples) == 0) {
-			printk(INFO, "Frame processing\r\n");
+		int32_t ret_val = srpl_read_get((void*)&samples);
+		if (ret_val == 0) {
 			size_t i = 0;
+			uint32_t avg_vac = 0;
+			uint32_t avg_vpfc = 0;
 			for (; i < SAMPLES_PER_FRAME; ++i) {
-				printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X |", samples[i].vac, samples[i].vpfc);
-				if ((i & 15) == 15) {
-					printk(INFO, "\r\n");
+				avg_vac += samples[i].vac;
+				avg_vpfc += samples[i].vpfc;
+//				printk(INFO, "VAC: 0x%03X, VPFC: 0x%03X |", samples[i].vac, samples[i].vpfc);
+//				if ((i & 2) == 2) {
+//					printk(INFO, "\r\n");
+//				}
+			}
+
+			avg_vac /= SAMPLES_PER_FRAME;
+			avg_vpfc /= SAMPLES_PER_FRAME;
+
+			/* TODO: Compare VAC and VPFC and MIN_VAC */
+			if (avg_vac >= MIN_VAC) {
+				/* TODO: Implement histeresises for time and voltage */
+				if (avg_vpfc >= avg_vac - avg_vac_diviation) {
+					rly_enable();
+					avg_vac_diviation = MIN_VAC - 10;
+				}
+				else {
+					rly_disable();
+					avg_vac_diviation = MIN_VAC;
 				}
 			}
+			else {
+				rly_disable();
+				avg_vac_diviation = MIN_VAC;
+			}
+
+			console_write((uint8_t *)&avg_vac, sizeof(avg_vac), 1000);
+			console_write((uint8_t *)&avg_vpfc, sizeof(avg_vpfc), 1000);
+
+//			printk(INFO, "VAC[0]: %ld, VPFC[0]: %ld \r\n", CONVERT_16(samples[0].vac), CONVERT_16(samples[0].vpfc));
+//			printk(INFO, "AVG VAC: 0x%03lX, AVG VPFC: 0x%03lX \r\n", avg_vac, avg_vpfc);
+//			printk(INFO, "AVG VAC: %ld, AVG VPFC: %ld \r\n", CONVERT_16(avg_vac), CONVERT_16(avg_vpfc));
 
 			memset(samples, 0, SAMPLES_PER_FRAME * sizeof(struct sample));
 			srpl_read_set();
+		} else {
+//			printk(INFO, "No elements for processing\r\n");
 		}
 
 		if (srpl_write_size_get() != 0) {
+//			printk(INFO, "There are elements for writing\r\n");
+			void *buffer;
+			srpl_write_get(&buffer);
+			adc_dma_transfer_init(buffer);
 			adc_convertion_start();
 		}
-
 	}
 }
