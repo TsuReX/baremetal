@@ -57,7 +57,17 @@ void spi_flash_test()
 
 }
 
-
+void spi_flash_sfdp_read(uint8_t *flash_sfdp, size_t sfdp_size)
+{
+	uint8_t	cmd[] = {0x5A, 0, 0, 0};
+#if !defined(SPI_DMA)
+	spi_data_xfer(&cmd, NULL, 4);
+	spi_data_xfer(NULL, flash_sfdp, sfdp_size);
+#else
+	spi_dma_data_send(cmd, sizeof(cmd));
+	spi_dma_data_recv(flash_sfdp, sfdp_size);
+#endif
+}
 
 void spi_flash_jdec_id_read(uint8_t flash_jdec_id[3])
 {

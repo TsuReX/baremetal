@@ -47,3 +47,4 @@ cpe_stm32f030r8t6
 devusb_stm32f103c8t6
 hostusb_mdr32f9
 hostusb_stm32f103c8t6
+bluepill_stm32f103c8t6
