@@ -18,12 +18,15 @@ int main(void)
 
 	spi_init();
 
+
 	uint8_t sfdp[256];
 	size_t sfdp_size = 16;
 	memset(sfdp, 0xFF, sizeof(sfdp));
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_flash_sfdp_read(sfdp, sfdp_size);
 	spi_chip_deactivate(FLASH_CHANNEL);
+
+	spi_flash_test();
 
 	uint32_t sfdp_presence = 0;
 	if (strncmp("SFDP", (const char*)sfdp, 4) == 0)
@@ -36,12 +39,12 @@ int main(void)
 
 	if (sfdp_presence == 0) {
 		while(1) {
-			mdelay(1500);
+			mdelay(500);
 			LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 		}
 	} else {
 
-		LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_13);
+		LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 		__WFI();
 	}
 
