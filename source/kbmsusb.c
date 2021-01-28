@@ -139,7 +139,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_conf_descr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s() SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(INFO, "%s() SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 
@@ -153,7 +153,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -2;
 	}
 
@@ -354,7 +354,7 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 {
 	max3421e_master_mode_set(usb_channel);
 
-	mdelay(4000);
+//	mdelay(4000);
 
 	/* TODO: Check return value */
 	if (max3421e_usb_device_detect(usb_channel) == 0){
@@ -368,20 +368,18 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	if (max3421e_usb_device_set_address(usb_channel, usb_dev_addr) != 0)
 		return -2;
 
-	mdelay(50);
+	mdelay(150);
 
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(usb_channel, usb_dev_addr, &conf_descr) != 0)
-//		return -2;
-		;
+		return -8;
 //	usb_conf_descr_print(&conf_descr);
 
 	mdelay(50);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(usb_channel, usb_dev_addr, &dev_descr) != 0)
-//		return -3;
-		;
+		return -3;
 //	usb_dev_descr_print(&dev_descr);
 
 	/* TODO: Check VID and PID dev_descr */
@@ -390,16 +388,14 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 
 	uint8_t full_conf[512];
 	if (usb_device_get_full_conf(usb_channel, usb_dev_addr, full_conf, conf_descr.w_total_length) < 0)
-//		return -4;
-		;
+		return -4;
 //	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
 
 	mdelay(50);
 
 	int16_t conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
-//		return -5;
-		;
+		return -5;
 //	printk(INFO, "configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
@@ -411,8 +407,7 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 
 	conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
-//		return -7;
-		;
+		return -7;
 //	printk(INFO, "configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
@@ -478,7 +473,7 @@ void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffe
 void spi_usb_transmission_start(void)
 {
 	int32_t ret_val = -1;
-//	size_t idx = 0;
+	size_t idx = 0;
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
 
@@ -498,7 +493,7 @@ void spi_usb_transmission_start(void)
 		kb_present = 1;
 	}
 
-	spi_flash_test();
+//	spi_flash_test();
 
 	printk(INFO, "\r\nPrepare mouse channel\r\n");
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
@@ -507,17 +502,17 @@ void spi_usb_transmission_start(void)
 
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
 	if (ret_val != 0) {
-		printk(INFO, "ms_detect_init(): %ld\r\n", ret_val);
+//		printk(INFO, "ms_detect_init(): %ld\r\n", ret_val);
 //		return;
 	} else {
 		ms_present = 1;
 	}
 
 	if (kb_present == 0 && ms_present == 0) {
-		printk(INFO, "There aren't devices. Exit\r\n");
+//		printk(INFO, "There aren't devices. Exit\r\n");
 		return;
 	}
-	return;
+//	return;
 //	printk(INFO, "Start transmission\r\n");
 
 	uint8_t kb_data[8];

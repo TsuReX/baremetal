@@ -177,7 +177,7 @@ __PACKED_STRUCT endpoint_descriptor {
 
 #define IOPINS1_GPOUT1 0x1
 
-#define USBCTL_CHIPRES	0x10
+#define USBCTL_CHIPRES	0x20
 
 #define USBIRQ_OSCOKIRQ	0x01
 

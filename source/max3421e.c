@@ -15,6 +15,8 @@
 #include "console.h"
 #include "debug.h"
 
+#undef SPI_DMA
+
 uint8_t max3421e_usbirq_read(void)
 {
 #if !defined(SPI_DMA)
@@ -745,7 +747,7 @@ void max3421e_chip_reset(uint32_t chip_num)
 	max3421e_usbctl_write(usbctl | USBCTL_CHIPRES);
 	max3421e_chip_deactivate(chip_num);
 
-	mdelay(1);
+	mdelay(10);
 
 	max3421e_chip_activate(chip_num);
 	max3421e_usbctl_write(usbctl);
@@ -772,7 +774,7 @@ void max3421e_master_mode_set(uint32_t chip_num)
 	max3421e_chip_activate(chip_num);
 	uint8_t mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
-	printk(INFO, "0 MODE: 0x%02X\r\n", mode);
+//	printk(INFO, "0 MODE: 0x%02X\r\n", mode);
 
 	max3421e_chip_activate(chip_num);
 	max3421e_mode_write(mode | MODE_DPPULLDN | MODE_DMPULLDN |MODE_HOST);
@@ -781,7 +783,7 @@ void max3421e_master_mode_set(uint32_t chip_num)
 	max3421e_chip_activate(chip_num);
 	mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
-	printk(INFO, "1 MODE: 0x%02X\r\n", mode);
+//	printk(INFO, "1 MODE: 0x%02X\r\n", mode);
 }
 
 void max3421e_usb_sof_stop(uint32_t chip_num)
@@ -822,7 +824,7 @@ void max3421e_usb_sof_start(uint32_t chip_num)
 	max3421e_chip_activate(chip_num);
 	mode = max3421e_mode_read();
 	max3421e_chip_deactivate(chip_num);
-	printk(INFO, "MODE: 0x%02X\r\n", mode);
+//	printk(INFO, "MODE: 0x%02X\r\n", mode);
 }
 
 void max3421e_usb_bus_reset(uint32_t chip_num)
