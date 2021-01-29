@@ -10,5 +10,5 @@
 
 uint32_t log_level_get(void)
 {
-	return CURRENT_DEBUG_LEVEL;
+	return CURRENT_MESSAGE_LEVEL;
 }

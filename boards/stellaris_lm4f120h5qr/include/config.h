@@ -12,6 +12,6 @@
 /* Частота ядра процессора.*/
 #define CORE_FREQ 80000000
 
-#define CURRENT_DEBUG_LEVEL 2
+#define CURRENT_MESSAGE_LEVEL 2
 
 #endif /* _CONFIG_H_ */

@@ -26,13 +26,13 @@ void max3421e_rev_print(uint32_t chip_num)
 {
 	max3421e_chip_activate(chip_num);
 	/* TODO: Implement device presence checking based on revision reading */
-	printk(INFO, "REVISION 0x%02X\r\n", max3421e_rev_read());
+	printk(DEBUG, "REVISION 0x%02X\r\n", max3421e_rev_read());
 	max3421e_chip_deactivate(chip_num);
 }
 
 void kb_ms_power_on(void)
 {
-	printk(INFO, "%s()\r\n", __func__);
+	printk(DEBUG, "%s()\r\n", __func__);
 
 	max3421e_chip_activate(KEYBOARD_CHANNEL);
 	uint8_t iopins1 = max3421e_iopins1_read();
@@ -45,64 +45,64 @@ void kb_ms_power_on(void)
 
 void usb_std_req_print(const struct std_request *std_req)
 {
-	printk(INFO, "bm_request_type: 0x%02X\r\n", std_req->bm_request_type);
-	printk(INFO, "b_request: 0x%02X\r\n", std_req->b_request);
-	printk(INFO, "w_value: 0x%04X\r\n", std_req->w_value);
-	printk(INFO, "w_index: 0x%04X\r\n", std_req->w_index);
-	printk(INFO, "w_length: 0x%04X\r\n", std_req->w_length);
+	printk(DEBUG, "bm_request_type: 0x%02X\r\n", std_req->bm_request_type);
+	printk(DEBUG, "b_request: 0x%02X\r\n", std_req->b_request);
+	printk(DEBUG, "w_value: 0x%04X\r\n", std_req->w_value);
+	printk(DEBUG, "w_index: 0x%04X\r\n", std_req->w_index);
+	printk(DEBUG, "w_length: 0x%04X\r\n", std_req->w_length);
 }
 
 void usb_dev_descr_print(const struct device_descriptor *dev_descr)
 {
-	printk(INFO, "b_length: 0x%02X\r\n", dev_descr->b_length);
-	printk(INFO, "b_descriptor_type: 0x%02X\r\n", dev_descr->b_descriptor_type);
-	printk(INFO, "bcd_usb: 0x%04X\r\n", dev_descr->bcd_usb);
-	printk(INFO, "b_device_class: 0x%02X\r\n", dev_descr->b_device_class);
-	printk(INFO, "b_device_sub_class: 0x%02X\r\n", dev_descr->b_device_sub_class);
-	printk(INFO, "b_device_protocol: 0x%02X\r\n", dev_descr->b_device_protocol);
-	printk(INFO, "b_max_packet_size: 0x%02X\r\n", dev_descr->b_max_packet_size);
-	printk(INFO, "id_vendor: 0x%04X\r\n", dev_descr->id_vendor);
-	printk(INFO, "id_product: 0x%04X\r\n", dev_descr->id_product);
-	printk(INFO, "bcd_device: 0x%04X\r\n", dev_descr->bcd_device);
-	printk(INFO, "i_manufacturer: 0x%02X\r\n", dev_descr->i_manufacturer);
-	printk(INFO, "i_product: 0x%02X\r\n", dev_descr->i_product);
-	printk(INFO, "i_serial_number: 0x%02X\r\n", dev_descr->i_serial_number);
-	printk(INFO, "b_num_configurations: 0x%02X\r\n", dev_descr->b_num_configurations);
+	printk(DEBUG, "b_length: 0x%02X\r\n", dev_descr->b_length);
+	printk(DEBUG, "b_descriptor_type: 0x%02X\r\n", dev_descr->b_descriptor_type);
+	printk(DEBUG, "bcd_usb: 0x%04X\r\n", dev_descr->bcd_usb);
+	printk(DEBUG, "b_device_class: 0x%02X\r\n", dev_descr->b_device_class);
+	printk(DEBUG, "b_device_sub_class: 0x%02X\r\n", dev_descr->b_device_sub_class);
+	printk(DEBUG, "b_device_protocol: 0x%02X\r\n", dev_descr->b_device_protocol);
+	printk(DEBUG, "b_max_packet_size: 0x%02X\r\n", dev_descr->b_max_packet_size);
+	printk(DEBUG, "id_vendor: 0x%04X\r\n", dev_descr->id_vendor);
+	printk(DEBUG, "id_product: 0x%04X\r\n", dev_descr->id_product);
+	printk(DEBUG, "bcd_device: 0x%04X\r\n", dev_descr->bcd_device);
+	printk(DEBUG, "i_manufacturer: 0x%02X\r\n", dev_descr->i_manufacturer);
+	printk(DEBUG, "i_product: 0x%02X\r\n", dev_descr->i_product);
+	printk(DEBUG, "i_serial_number: 0x%02X\r\n", dev_descr->i_serial_number);
+	printk(DEBUG, "b_num_configurations: 0x%02X\r\n", dev_descr->b_num_configurations);
 }
 
 void usb_conf_descr_print(const struct configuration_descriptor *conf_descr)
 {
-	printk(INFO, "b_length: 0x%02X\r\n", conf_descr->b_length);
-	printk(INFO, "b_descriptor_type: 0x%02X\r\n", conf_descr->b_descriptor_type);
-	printk(INFO, "w_total_length: 0x%04X\r\n", conf_descr->w_total_length);
-	printk(INFO, "b_num_interfaces: 0x%02X\r\n", conf_descr->b_num_interfaces);
-	printk(INFO, "b_configuration_value: 0x%02X\r\n", conf_descr->b_configuration_value);
-	printk(INFO, "i_configuration: 0x%02X\r\n", conf_descr->i_configuration);
-	printk(INFO, "bm_attributes: 0x%02X\r\n", conf_descr->bm_attributes);
-	printk(INFO, "b_max_power: 0x%02X\r\n", conf_descr->b_max_power);
+	printk(DEBUG, "b_length: 0x%02X\r\n", conf_descr->b_length);
+	printk(DEBUG, "b_descriptor_type: 0x%02X\r\n", conf_descr->b_descriptor_type);
+	printk(DEBUG, "w_total_length: 0x%04X\r\n", conf_descr->w_total_length);
+	printk(DEBUG, "b_num_interfaces: 0x%02X\r\n", conf_descr->b_num_interfaces);
+	printk(DEBUG, "b_configuration_value: 0x%02X\r\n", conf_descr->b_configuration_value);
+	printk(DEBUG, "i_configuration: 0x%02X\r\n", conf_descr->i_configuration);
+	printk(DEBUG, "bm_attributes: 0x%02X\r\n", conf_descr->bm_attributes);
+	printk(DEBUG, "b_max_power: 0x%02X\r\n", conf_descr->b_max_power);
 }
 
 void usb_iface_descr_print(const struct interface_descriptor *iface_descr)
 {
-	printk(INFO, "b_length: 0x%02X\r\n", iface_descr->b_length);
-	printk(INFO, "b_descriptor_type: 0x%02X\r\n", iface_descr->b_descriptor_type);
-	printk(INFO, "b_interface_number: 0x%02X\r\n", iface_descr->b_interface_number);
-	printk(INFO, "b_alternate_setting: 0x%02X\r\n", iface_descr->b_alternate_setting);
-	printk(INFO, "b_num_endpoints: 0x%02X\r\n", iface_descr->b_num_endpoints);
-	printk(INFO, "b_interface_class: 0x%02X\r\n", iface_descr->b_interface_class);
-	printk(INFO, "b_interface_subclass: 0x%02X\r\n", iface_descr->b_interface_subclass);
-	printk(INFO, "b_interface_protocol: 0x%02X\r\n", iface_descr->b_interface_protocol);
-	printk(INFO, "i_interface: 0x%02X\r\n", iface_descr->i_interface);
+	printk(DEBUG, "b_length: 0x%02X\r\n", iface_descr->b_length);
+	printk(DEBUG, "b_descriptor_type: 0x%02X\r\n", iface_descr->b_descriptor_type);
+	printk(DEBUG, "b_interface_number: 0x%02X\r\n", iface_descr->b_interface_number);
+	printk(DEBUG, "b_alternate_setting: 0x%02X\r\n", iface_descr->b_alternate_setting);
+	printk(DEBUG, "b_num_endpoints: 0x%02X\r\n", iface_descr->b_num_endpoints);
+	printk(DEBUG, "b_interface_class: 0x%02X\r\n", iface_descr->b_interface_class);
+	printk(DEBUG, "b_interface_subclass: 0x%02X\r\n", iface_descr->b_interface_subclass);
+	printk(DEBUG, "b_interface_protocol: 0x%02X\r\n", iface_descr->b_interface_protocol);
+	printk(DEBUG, "i_interface: 0x%02X\r\n", iface_descr->i_interface);
 }
 
 void usb_endp_descr_print(const struct endpoint_descriptor *endp_descr)
 {
-	printk(INFO, "b_length: 0x%02X\r\n", endp_descr->b_length);
-	printk(INFO, "b_descriptor_type: 0x%02X\r\n", endp_descr->b_descriptor_type);
-	printk(INFO, "b_endpoint_address: 0x%02X\r\n", endp_descr->b_endpoint_address);
-	printk(INFO, "bm_attributes: 0x%02X\r\n", endp_descr->bm_attributes);
-	printk(INFO, "w_max_packet_size: 0x%02X\r\n", endp_descr->w_max_packet_size);
-	printk(INFO, "b_interval: 0x%02X\r\n", endp_descr->b_interval);
+	printk(DEBUG, "b_length: 0x%02X\r\n", endp_descr->b_length);
+	printk(DEBUG, "b_descriptor_type: 0x%02X\r\n", endp_descr->b_descriptor_type);
+	printk(DEBUG, "b_endpoint_address: 0x%02X\r\n", endp_descr->b_endpoint_address);
+	printk(DEBUG, "bm_attributes: 0x%02X\r\n", endp_descr->bm_attributes);
+	printk(DEBUG, "w_max_packet_size: 0x%02X\r\n", endp_descr->w_max_packet_size);
+	printk(DEBUG, "b_interval: 0x%02X\r\n", endp_descr->b_interval);
 }
 
 int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct device_descriptor *dev_descr)
@@ -112,7 +112,7 @@ int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct 
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_dev_descr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 
@@ -126,7 +126,7 @@ int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct 
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -2;
 	}
 	return 0;
@@ -139,7 +139,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_conf_descr);
 
 	if (hrslt < 0) {
-		printk(INFO, "%s() SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s() SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 
@@ -153,7 +153,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -2;
 	}
 
@@ -178,7 +178,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 			base += sizeof(struct configuration_descriptor);
 			remain_bytes -= sizeof(struct configuration_descriptor);
 
-			printk(INFO, "Configuration descriptor\r\n");
+			printk(DEBUG, "Configuration descriptor\r\n");
 			usb_conf_descr_print(p_conf_descr);
 			mdelay(200);
 			break;
@@ -189,7 +189,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 			base += sizeof(struct interface_descriptor);
 			remain_bytes -= sizeof(struct interface_descriptor);
 
-			printk(INFO, "Interface descriptor\r\n");
+			printk(DEBUG, "Interface descriptor\r\n");
 			usb_iface_descr_print(p_iface_descr);
 			mdelay(200);
 			break;
@@ -200,7 +200,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 			base += sizeof(struct endpoint_descriptor);
 			remain_bytes -= sizeof(struct endpoint_descriptor);
 
-			printk(INFO, "Endpoint descriptor\r\n");
+			printk(DEBUG, "Endpoint descriptor\r\n");
 			usb_endp_descr_print(p_endp_descr);
 			mdelay(200);
 			break;
@@ -219,7 +219,7 @@ int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	int16_t ret_val = max3421e_usb_setup_send(usb_channel, dev_addr, &get_full_conf);
 
 	if (ret_val < 0) {
-//		printk(INFO, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * ret_val);
+		printk(DEBUG, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * ret_val);
 		return -1;
 	}
 
@@ -233,7 +233,7 @@ int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (ret_val < 0) {
-//		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * ret_val);
+		printk(DEBUG, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * ret_val);
 		return -2;
 	}
 	return 0;
@@ -247,7 +247,7 @@ int16_t usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_ep_status);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 
@@ -261,7 +261,7 @@ int16_t usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -2;
 	}
 	return configuration;
@@ -276,7 +276,7 @@ int32_t usb_device_set_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t conf
 	max3421e_usb_status_in_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 	return 0;
@@ -289,7 +289,7 @@ int32_t usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	int16_t hrslt = max3421e_usb_setup_send(usb_channel, dev_addr, &get_ep_status);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
+		printk(DEBUG, "%s(): SETUP transmission error. HRSLT: 0x%01X\r\n", __func__, -1 * hrslt);
 		return -1;
 	}
 
@@ -303,7 +303,7 @@ int32_t usb_device_get_ep_status(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	max3421e_usb_status_out_send(usb_channel, dev_addr);
 
 	if (hrslt < 0) {
-//		printk(INFO, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__,  -1 * hrslt);
+		printk(DEBUG, "%s(): BULK-IN transmission error. HRSLT: 0x%01X\r\n", __func__,  -1 * hrslt);
 		return -2;
 	}
 
@@ -324,7 +324,7 @@ int32_t ms_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, si
 	}
 
 	if (ret_val < 0) {
-//		printk(INFO, "BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+		printk(DEBUG, "BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
 		return -3;
 	}
 	return ret_val;
@@ -344,7 +344,7 @@ int32_t kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, si
 	}
 
 	if (ret_val < 0) {
-//		printk(INFO, "BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
+		printk(DEBUG, "BULK-IN transmission error. HRSLT: 0x%01X\r\n",  -1 * ret_val);
 		return -3;
 	}
 	return ret_val;
@@ -353,8 +353,6 @@ int32_t kb_usb_data_read(uint8_t dev_addr, uint8_t ep_addr, uint8_t *dst_buf, si
 int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 {
 	max3421e_master_mode_set(usb_channel);
-
-//	mdelay(4000);
 
 	/* TODO: Check return value */
 	if (max3421e_usb_device_detect(usb_channel) == 0){
@@ -373,14 +371,14 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(usb_channel, usb_dev_addr, &conf_descr) != 0)
 		return -8;
-//	usb_conf_descr_print(&conf_descr);
+	usb_conf_descr_print(&conf_descr);
 
 	mdelay(50);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(usb_channel, usb_dev_addr, &dev_descr) != 0)
 		return -3;
-//	usb_dev_descr_print(&dev_descr);
+	usb_dev_descr_print(&dev_descr);
 
 	/* TODO: Check VID and PID dev_descr */
 
@@ -389,14 +387,14 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	uint8_t full_conf[512];
 	if (usb_device_get_full_conf(usb_channel, usb_dev_addr, full_conf, conf_descr.w_total_length) < 0)
 		return -4;
-//	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
 
 	mdelay(50);
 
 	int16_t conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
 		return -5;
-//	printk(INFO, "configuration: 0x%02X\r\n", conf);
+	printk(DEBUG, "configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
 
@@ -408,14 +406,14 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	conf = usb_device_get_conf(usb_channel, usb_dev_addr);
 	if (conf < 0)
 		return -7;
-//	printk(INFO, "configuration: 0x%02X\r\n", conf);
+	printk(DEBUG, "configuration: 0x%02X\r\n", conf);
 
 	mdelay(50);
 
 	uint8_t status[2];
 	if (usb_device_get_ep_status(usb_channel, usb_dev_addr, 0x01, status) == 0) {
-//		printk(INFO, "status[0]: 0x%02X\r\n", status[0]);
-//		printk(INFO, "status[1]: 0x%02X\r\n", status[1]);
+		printk(DEBUG, "status[0]: 0x%02X\r\n", status[0]);
+		printk(DEBUG, "status[1]: 0x%02X\r\n", status[1]);
 	}
 
 	mdelay(50);
@@ -425,7 +423,7 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_size)
 {
 #ifdef USE_MDR1986VE9x
-//	printk(INFO, "%s(): hid_num %ld, buffer_size %d\r\n", __func__, hid_num, buffer_size);
+	printk(DEBUG, "%s(): hid_num %ld, buffer_size %d\r\n", __func__, hid_num, buffer_size);
 	MDR_UART_TypeDef* UARTx = MDR_UART1;
 
 	if (hid_num == 1) {
@@ -453,12 +451,12 @@ uint32_t current_hid_num = 2;
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
 
 	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x50) {
-//		printk(INFO, "R_CTRL + <-\r\n");
+		printk(DEBUG, "R_CTRL + <-\r\n");
 		current_hid_num = 1;
 		return;
 	}
 	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x4F) {
-//		printk(INFO, "R_CTRL + ->\r\n");
+		printk(DEBUG, "R_CTRL + ->\r\n");
 		current_hid_num = 2;
 		return;
 	}
@@ -473,47 +471,41 @@ void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffe
 void spi_usb_transmission_start(void)
 {
 	int32_t ret_val = -1;
-	size_t idx = 0;
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
 
-//	spi_flash_test();
-
-	printk(INFO, "\r\nPrepare keyboard channel\r\n");
+	printk(DEBUG, "\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
 	kb_ms_power_on();
-//
+
 	ret_val = device_detect_init(KEYBOARD_CHANNEL, KB_USB_ADDR);
 	if (ret_val != 0) {
-		printk(INFO, "kb_detect_init(): %ld\r\n", ret_val);
-////		return;
+		printk(DEBUG, "kb_detect_init(): %ld\r\n", ret_val);
+		return;
 	} else {
 		kb_present = 1;
 	}
 
-//	spi_flash_test();
-
-	printk(INFO, "\r\nPrepare mouse channel\r\n");
+	printk(DEBUG, "\r\nPrepare mouse channel\r\n");
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
 	max3421e_rev_print(MOUSE_CHANNEL);
 	max3421e_chip_reset(MOUSE_CHANNEL);
 
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
 	if (ret_val != 0) {
-//		printk(INFO, "ms_detect_init(): %ld\r\n", ret_val);
-//		return;
+		printk(DEBUG, "ms_detect_init(): %ld\r\n", ret_val);
+		return;
 	} else {
 		ms_present = 1;
 	}
 
 	if (kb_present == 0 && ms_present == 0) {
-//		printk(INFO, "There aren't devices. Exit\r\n");
+		printk(DEBUG, "There aren't devices. Exit\r\n");
 		return;
 	}
-//	return;
-//	printk(INFO, "Start transmission\r\n");
+	printk(DEBUG, "Start transmission\r\n");
 
 	uint8_t kb_data[8];
 	uint8_t ms_data[4];
@@ -521,19 +513,26 @@ void spi_usb_transmission_start(void)
 		memset(kb_data, 0, sizeof(kb_data));
 		if (kb_present == 1) {
 			kb_usb_data_read(KB_USB_ADDR, 0x1, kb_data, sizeof(kb_data));
-//			printk(INFO, "kb_data: ");
-//			for (idx = 0; idx < sizeof(kb_data); ++idx)
-//				printk(INFO, "0x%02X ", kb_data[idx]);
-//			printk(INFO, "\r\n");
+
+#if !defined(USE_MDR1986VE9x)
+			printk(INFO, "kb_data: ");
+			size_t idx = 0;
+			for (idx = 0; idx < sizeof(kb_data); ++idx)
+				printk(INFO, "0x%02X ", kb_data[idx]);
+			printk(INFO, "\r\n");
+#endif
 		}
 
 		memset(ms_data, 0, sizeof(ms_data));
 		if (ms_present == 1) {
 			ms_usb_data_read(MS_USB_ADDR, 0x1, ms_data, sizeof(ms_data));
-//			printk(INFO, "ms_data: ");
-//			for (idx = 0; idx < sizeof(ms_data); ++idx)
-//				printk(INFO, "0x%02X ", ms_data[idx]);
-//			printk(INFO, "\r\n");
+#if !defined(USE_MDR1986VE9x)
+			printk(INFO, "ms_data: ");
+			size_t idx = 0;
+			for (idx = 0; idx < sizeof(ms_data); ++idx)
+				printk(INFO, "0x%02X ", ms_data[idx]);
+			printk(INFO, "\r\n");
+#endif
 		}
 		kbms_data_send(kb_data, sizeof(kb_data), ms_data, sizeof(ms_data));
 		mdelay(50);

@@ -16,18 +16,16 @@ int main(void)
 	board_init();
 
 	console_init();
-
+	log_level_set(INFO);
 	spi_init();
 
-	udelay(500000);
+	mdelay(50);
 
 	/* Deassert RESET_N from MAX3421E_0. */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
 
 	/* Deassert RESET_N from MAX3421E_1. */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-
-//	spi_flash_test();
 
 	spi_usb_transmission_start();
 	while(1)

@@ -11,7 +11,7 @@
 /** Частота шины HCLK (работы ядра процессора). */
 #define HCLK_FREQ	48000000
 
-#define CURRENT_DEBUG_LEVEL 2
+#define CURRENT_MESSAGE_LEVEL 2
 
 #define FLASH_CHANNEL 0x0
 
