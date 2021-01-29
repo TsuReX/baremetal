@@ -464,6 +464,7 @@ void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffe
 
 	memcpy(&kbms.kb_data, kb_buffer, sizeof(kbms.kb_data));
 	memcpy(&kbms.ms_data, ms_buffer, sizeof(kbms.ms_data));
+	kbms.hid_num = current_hid_num;
 
 	data_to_hid_transmit(current_hid_num, (uint8_t*)&kbms, sizeof(kbms));
 }

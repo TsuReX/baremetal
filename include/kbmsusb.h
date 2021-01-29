@@ -14,6 +14,7 @@
 struct kbms_data {
 	uint8_t kb_data[8];
 	uint8_t ms_data[4];
+	uint8_t	hid_num;
 };
 
 void max3421e_rev_print(uint32_t chip_num);

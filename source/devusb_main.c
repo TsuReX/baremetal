@@ -28,7 +28,7 @@ uint16_t	SaveState ;
 DEVICE_INFO	device_info;
 USER_STANDARD_REQUESTS  *usb_standard_requests;
 
-uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB};
+uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC};
 
 /** Количество байтов идентификатора SPI Flash. */
 #define SPI_ID_BYTES		64
@@ -98,5 +98,7 @@ int main(void)
 
 	usb_init();
 
-	while(1);
+	while(1) {
+		__WFI();
+	}
 }
