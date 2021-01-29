@@ -68,6 +68,7 @@ set(LINKER_LIBS 		"-lc"
 add_definitions("-DTM4C1233H6PM")
 add_definitions("-DTARGET_IS_TM4C123_RA1")
 add_definitions("-DPART_TM4C1233H6PM")
+add_definitions("-DDBG_OUT")
 add_definitions("-Dgcc")
 
 #######################################################################

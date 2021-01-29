@@ -25,16 +25,20 @@ int32_t main()
 	board_init();
 
 	console_init();
-	printk(INFO, "Console initialized\r\n");
+
+	log_level_set(DEBUG);
+
+	printk(DEBUG, "Console initialized\r\n");
 
 	while(1) {
 
 		GPIOF->DATA = 2;
-		mdelay(500);
+		mdelay(150);
 		GPIOF->DATA = 4;
-		mdelay(500);
+		mdelay(150);
 		GPIOF->DATA = 8;
-		mdelay(500);
+		mdelay(150);
+		printk(DEBUG, "Cycle\r\n");
 	}
 
 	return 0;

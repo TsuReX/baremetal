@@ -171,18 +171,17 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 		period_start(&timeout, usec_timeout);
 #endif
 
-	do {
-			__DSB();
-#if !defined(PERIOD_TIMEOUT)
-			--usec_timeout;
-			if (usec_timeout == 0)
-				break;
-#else
-			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
-				break;
-#endif
-		} while (UART1->FR & UART_FR_TXFE != UART_FR_TXFE);
-//		} while (UART0->FR & UART_FR_BUSY != UART_FR_BUSY);
+		do {
+				__DSB();
+	#if !defined(PERIOD_TIMEOUT)
+				--usec_timeout;
+				if (usec_timeout == 0)
+					break;
+	#else
+				if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
+					break;
+	#endif
+			} while ((UART1->FR & UART_FR_BUSY) == UART_FR_BUSY);
 	}
 	return i;
 }
