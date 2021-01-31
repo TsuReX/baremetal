@@ -270,13 +270,13 @@ int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t bu
 	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
 			;
 	}
-
+	printk(DEBUG, "6\r\n");
 	LL_I2C_TransmitData8(I2C1, chip_addr | 0x1);
 
 	while(!LL_I2C_IsActiveFlag_ADDR(I2C1)) {
 		;
 	}
-
+	printk(DEBUG, "7\r\n");
 	LL_I2C_ClearFlag_ADDR(I2C1);
 
 
@@ -298,6 +298,68 @@ int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t bu
 #else
 #warning "Unknown SoC type"
 #endif
+}
+
+int32_t i2c_stream(uint8_t *buffer, size_t buffer_size)
+{
+	LL_I2C_GenerateStartCondition(I2C1);
+	printk(DEBUG, "1\r\n");
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+		;
+	}
+	printk(DEBUG, "2\r\n");
+
+	LL_I2C_TransmitData8(I2C1, 0x40);
+	printk(DEBUG, "3\r\n");
+
+	while(!LL_I2C_IsActiveFlag_BTF(I2C1)) {
+		;
+	}
+	printk(DEBUG, "4\r\n");
+	LL_I2C_GenerateStopCondition(I2C1);
+
+/*******************************************************/
+
+	LL_I2C_GenerateStartCondition(I2C1);
+
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+			;
+	}
+	printk(DEBUG, "6\r\n");
+
+	printk(DEBUG, "7\r\n");
+
+	size_t i = 0;
+	while(i < buffer_size) {
+
+		LL_I2C_TransmitData8(I2C1, buffer[i++]);
+
+		while(!LL_I2C_IsActiveFlag_BTF(I2C1)) {
+			if (LL_I2C_IsActiveFlag_AF(I2C1))
+				return -1;
+		}
+	}
+
+	LL_I2C_GenerateStopCondition(I2C1);
+
+	/*******************************************************/
+
+	LL_I2C_GenerateStartCondition(I2C1);
+	printk(DEBUG, "8\r\n");
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+		;
+	}
+	printk(DEBUG, "9\r\n");
+
+	LL_I2C_TransmitData8(I2C1, 0x88);
+	printk(DEBUG, "A\r\n");
+
+	while(!LL_I2C_IsActiveFlag_BTF(I2C1)) {
+		;
+	}
+	printk(DEBUG, "B\r\n");
+	LL_I2C_GenerateStopCondition(I2C1);
+	return 0;
 }
 
 int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t data_size)

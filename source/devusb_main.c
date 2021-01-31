@@ -107,17 +107,19 @@ int main(void)
 	}
 #else
 	console_init();
-//	log_level_set(DEBUG);
-	log_level_set(INFO);
+	log_level_set(DEBUG);
+//	log_level_set(INFO);
 	printk(INFO, "%s()\r\n", __func__);
 	i2c_init();
-	uint8_t buffer = 0xFF;
-	while(1) {
-		i2c_read(0xD0, 0x0, &buffer, sizeof(buffer));
+	uint8_t val = 0xFF;
+	while(0) {
+		i2c_read(0xD0, 0x0, &val, sizeof(val));
 
-		printk(INFO, "0x%02X\r\n", buffer);
+		printk(INFO, "0x%02X\r\n", val);
 		mdelay(50);
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 	}
+	uint8_t buffer[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+	i2c_stream(buffer, sizeof(buffer));
 #endif
 }
