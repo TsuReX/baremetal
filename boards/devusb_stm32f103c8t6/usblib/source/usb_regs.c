@@ -1,6 +1,7 @@
 #include "usb_regs.h"
 #include "usb_lib.h"
 #include "console.h"
+#include "debug.h"
 
 void _SetEPTxAddr(uint32_t ep_ind, uint16_t ep_tx_addr)
 {
@@ -68,8 +69,8 @@ void pma_print(uint16_t offset_usb_word, uint16_t word_count)
 {
 	uint16_t *ptr_pma = (uint16_t*)(PACKAGE_MEMORY_ADDR + offset_usb_word * 2);
 	size_t dword_ind = 0;
-	d_print("PMA\r\n");
+	printk(DEBUG, "PMA\r\n");
 	for (; dword_ind < word_count; ++dword_ind) {
-		d_print("0x%08lX:0x%04X\r\n", ((uint32_t)ptr_pma) + dword_ind * 4, ptr_pma[dword_ind * 2]);
+		printk(DEBUG, "0x%08lX:0x%04X\r\n", ((uint32_t)ptr_pma) + dword_ind * 4, ptr_pma[dword_ind * 2]);
 	}
 }

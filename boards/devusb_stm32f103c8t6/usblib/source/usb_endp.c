@@ -2,13 +2,14 @@
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "console.h"
+#include "debug.h"
 
 //static uint32_t keyboard_cntr = 1;
 //static uint32_t mouse_cntr = 1;
 
 void keyboard_ep_in_handle (void)
 {
-//	d_print("%s()\r\n",  __func__);
+//	printk(DEBUG, "%s()\r\n",  __func__);
 
 //	keyboard.keycode_1 = 'Q';
 
@@ -24,7 +25,7 @@ void keyboard_ep_in_handle (void)
 
 void mouse_ep_in_handle (void)
 {
-//	d_print("%s()\r\n",  __func__);
+//	printk(DEBUG, "%s()\r\n",  __func__);
 
 //	mouse.x_displacement = mouse_cntr;
 //	mouse.y_displacement = mouse_cntr++ + 100;
@@ -40,12 +41,12 @@ void mouse_ep_in_handle (void)
 
 void keyboard_ep_out_handle (void)
 {
-	d_print("%s()\r\n",  __func__);
+	printk(DEBUG, "%s()\r\n",  __func__);
 	_SetEPRxValid(ENDP1);
 }
 
 void mouse_ep_out_handle (void)
 {
-	d_print("%s()\r\n",  __func__);
+	printk(DEBUG, "%s()\r\n",  __func__);
 	_SetEPRxValid(ENDP2);
 }

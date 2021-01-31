@@ -35,7 +35,7 @@ static void sysclk_init_48mhz_hse()
 
 	/* Установка источника сигнала для PLL - PLLSRC.
 	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_4);
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_6);
 
 	/* Включение PLL. */
 	LL_RCC_PLL_Enable();

@@ -34,6 +34,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 #						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 #						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
 #						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${BOARD_SRC_PATH}/source/system_stm32f103xb.c"
 						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/console.c"
@@ -41,6 +42,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/spi.c"
 						"${BOARD_SRC_PATH}/source/communication.c"
 						"${BOARD_SRC_PATH}/source/delay.c"
+						"${BOARD_SRC_PATH}/source/i2c.c"
 
 						"${BOARD_SRC_PATH}/usblib/source/usb_desc.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_endp.c"
@@ -91,6 +93,7 @@ set(LINKER_LIBS			"-lc"
 		
 add_definitions("-DSTM32F103xB")
 add_definitions("-DUSE_FULL_LL_DRIVER")
+add_definitions("-DDBG_OUT")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки

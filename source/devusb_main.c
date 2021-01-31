@@ -16,6 +16,8 @@
 #include "communication.h"
 #include "max3421e.h"
 #include "init.h"
+#include "i2c.h"
+#include "debug.h"
 
 #include "kbmsusb.h"
 #include "usb_core.h"
@@ -92,6 +94,8 @@ int main(void)
 
 	board_init();
 
+#if defined(USB_DEVICE)
+
 	comm_init(&comm_buff, sizeof(comm_buff));
 
 	comm_start();
@@ -101,4 +105,19 @@ int main(void)
 	while(1) {
 		__WFI();
 	}
+#else
+	console_init();
+//	log_level_set(DEBUG);
+	log_level_set(INFO);
+	printk(INFO, "%s()\r\n", __func__);
+	i2c_init();
+	uint8_t buffer = 0xFF;
+	while(1) {
+		i2c_read(0xD0, 0x0, &buffer, sizeof(buffer));
+
+		printk(INFO, "0x%02X\r\n", buffer);
+		mdelay(50);
+		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+	}
+#endif
 }

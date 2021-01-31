@@ -1,8 +1,8 @@
 #include "usb_core.h"
 #include "usb_prop.h"
 #include "usb_endp.h"
-
 #include "console.h"
+#include "debug.h"
 
 //__IO uint16_t	usb_irq_flags;  /* ISTR register last read value */
 //__IO uint8_t	bIntPackSOF = 0;  /* SOFs received between 2 consecutive packets */
@@ -37,7 +37,7 @@ __IO uint32_t remotewakeupon=0;
 void ep0_handle(void)
 {
 	uint16_t usb_ep0_register = _GetENDPOINT(ENDP0);
-//	d_print("%s() USB_EP0R: 0x%04X\r\n",  __func__, usb_ep0_register);
+//	printk(DEBUG, "%s() USB_EP0R: 0x%04X\r\n",  __func__, usb_ep0_register);
 
 	ep0_rx_state = usb_ep0_register;
 	ep0_tx_state = ep0_rx_state & EPTX_STAT;
@@ -48,10 +48,10 @@ void ep0_handle(void)
 	if ((_GetISTR() & ISTR_DIR) == 0) {
 		_ClearEP_CTR_TX(ENDP0);
 		ep0_in_process();
-//		d_print("EP0_TX_COUNT: 0x%04X\r\n", _GetEPTxCount(ENDP0));
+//		printk(DEBUG, "EP0_TX_COUNT: 0x%04X\r\n", _GetEPTxCount(ENDP0));
 	}  else {
 
-//		d_print("EP0_RX_COUNT: 0x%04X\r\n", _GetEPRxCount(ENDP0));
+//		printk(DEBUG, "EP0_RX_COUNT: 0x%04X\r\n", _GetEPRxCount(ENDP0));
 //		usb_ep0_register = _GetENDPOINT(ENDP0);
 		if ((usb_ep0_register & EP_SETUP) != 0) {
 
@@ -67,17 +67,17 @@ void ep0_handle(void)
 
 //			_ClearEP_CTR_TX(ENDP0);
 //			ep0_in_process();
-//			d_print("ERROR state r: 0x%04X\r\n",  usb_ep0_register);
+//			printk(DEBUG, "ERROR state r: 0x%04X\r\n",  usb_ep0_register);
 		}
 	}
-	//	d_print("ep0_rx_state: 0x%04X, ep0_tx_state: 0x%04X\r\n",  ep0_rx_state, ep0_tx_state);
+	//	printk(DEBUG, "ep0_rx_state: 0x%04X, ep0_tx_state: 0x%04X\r\n",  ep0_rx_state, ep0_tx_state);
 
 	_SetEPRxTxStatus(ENDP0, ep0_rx_state, ep0_tx_state);
 }
 
 void ep_handle(uint32_t ep_index)
 {
-//	d_print("%s()\r\n",  __func__);
+//	printk(DEBUG, "%s()\r\n",  __func__);
 	uint16_t usb_ep_register = 0;
 
 	usb_ep_register = _GetENDPOINT(ep_index);
@@ -99,7 +99,7 @@ void ep_handle(uint32_t ep_index)
 
 void lp_ctr_handle( void)
 {
-//	d_print("%s()\r\n",  __func__);
+//	printk(DEBUG, "%s()\r\n",  __func__);
 	uint16_t usb_irq_flags = _GetISTR();
 	uint32_t ep_index;
 	while ((usb_irq_flags & ISTR_CTR) != 0) {
@@ -117,7 +117,7 @@ void lp_ctr_handle( void)
 
 void hp_ctr_handle(void)
 {
-//	d_print("%s()\r\n",  __func__);
+//	printk(DEBUG, "%s()\r\n",  __func__);
 	uint32_t usb_ep_register = 0;
 	uint32_t ep_index;
 	uint16_t usb_irq_flags = _GetISTR();
@@ -218,15 +218,15 @@ void resume(void)
 void usb_lp_can1_rx0_handle(void)
 {
 	uint16_t usb_irq_flags = _GetISTR();
-//	d_print("\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
+//	printk(DEBUG, "\r\n%s() begin ISTR: 0x%04X\r\n", __func__, usb_irq_flags);
 
 //	if (usb_irq_flags & ISTR_SOF) {
-////		 d_print("ISTR_SOF\r\n");
+////		 printk(DEBUG, "ISTR_SOF\r\n");
 //		_SetISTR(CLR_SOF);
 //	}
 
 	if (usb_irq_flags & ISTR_CTR) {
-//		d_print("ISTR_CTR\r\n");
+//		printk(DEBUG, "ISTR_CTR\r\n");
 		lp_ctr_handle();
 		_SetISTR(CLR_CTR);
 	}
@@ -235,8 +235,8 @@ void usb_lp_can1_rx0_handle(void)
 		_SetISTR(CLR_RESET);
 //		if ((_GetFNR() & (FNR_RXDM | FNR_RXDP)) == 0x0) {
 //			LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
-//			d_print("ISTR_RESET\r\n");
-//			d_print("ISTR_RESET USB_FNR: 0x%04X\r\n", _GetFNR() & (FNR_RXDM | FNR_RXDP));
+//			printk(DEBUG, "ISTR_RESET\r\n");
+//			printk(DEBUG, "ISTR_RESET USB_FNR: 0x%04X\r\n", _GetFNR() & (FNR_RXDM | FNR_RXDP));
 			reset();
 //			LL_mDelay(1);
 //			LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
@@ -255,32 +255,32 @@ void usb_lp_can1_rx0_handle(void)
 //	if (usb_irq_flags & ISTR_WKUP) {
 //		uint16_t usb_fnr = _GetFNR();
 //		if ((usb_fnr & (FNR_RXDM | FNR_RXDP)) == (FNR_RXDM)) {
-//			d_print("ISTR_WKUP\r\n");
-//			d_print("USB_FNR: 0x%04X\r\n", usb_fnr);
+//			printk(DEBUG, "ISTR_WKUP\r\n");
+//			printk(DEBUG, "USB_FNR: 0x%04X\r\n", usb_fnr);
 //			resume();
 //		}
 //		_SetISTR(CLR_WKUP);
 //	}
 //
 //	if (usb_irq_flags & ISTR_ESOF) {
-////		 d_print("ISTR_ESOF\r\n");
+////		 printk(DEBUG, "ISTR_ESOF\r\n");
 //		_SetISTR(CLR_ESOF);
 //	}
 //
 //	if (usb_irq_flags & ISTR_SUSP) {
-////		 d_print("ISTR_SUSP\r\n");
+////		 printk(DEBUG, "ISTR_SUSP\r\n");
 ////		 suspend();
 //		_SetISTR(CLR_SUSP);
 //	}
 //
-//	d_print("%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());
+//	printk(DEBUG, "%s() end ISTR: 0x%04X\r\n", __func__, _GetISTR());
 }
 
 void usbwakeup_handle(void)
 {
-//	d_print("usbwakeup_handle() begin ISTR: 0x%04X\r\n", _GetISTR());
+//	printk(DEBUG, "usbwakeup_handle() begin ISTR: 0x%04X\r\n", _GetISTR());
 	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_18);
 //	LL_EXTI_DisableEvent_0_31(LL_EXTI_LINE_18);
 //	LL_EXTI_DisableIT_0_31(LL_EXTI_LINE_18);
-//	d_print("usbwakeup_handle() end ISTR: 0x%04X\r\n", _GetISTR());
+//	printk(DEBUG, "usbwakeup_handle() end ISTR: 0x%04X\r\n", _GetISTR());
 }
