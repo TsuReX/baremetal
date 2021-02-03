@@ -25,7 +25,7 @@ WEAK void RCC_IRQHandler(void);
 WEAK void exti_0_1_irq_handler(void);
 WEAK void exti_2_3_irq_handler(void);
 WEAK void exti_4_15_irq_handler(void);
-WEAK void DMA1_Channel1_IRQHandler(void);
+WEAK void dma1_channel1_irq_handler(void);
 WEAK void DMA1_Channel2_3_IRQHandler(void);
 WEAK void DMA1_Channel4_5_IRQHandler(void);
 WEAK void ADC1_IRQHandler(void);
@@ -51,7 +51,7 @@ WEAK void RCC_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void exti_0_1_irq_handler(void) ALIAS(int_default_handler);
 WEAK void exti_2_3_irq_handler(void) ALIAS(int_default_handler);
 WEAK void exti_4_15_irq_handler(void) ALIAS(int_default_handler);
-WEAK void DMA1_Channel1_IRQHandler(void) ALIAS(int_default_handler);
+WEAK void dma1_channel1_irq_handler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel2_3_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void DMA1_Channel4_5_IRQHandler(void) ALIAS(int_default_handler);
 WEAK void ADC1_IRQHandler(void) ALIAS(int_default_handler);
@@ -116,7 +116,7 @@ void (* const isr_vector_table[])(void) = {
 	exti_2_3_irq_handler,				/* EXTI Line 2 and 3            */
 	exti_4_15_irq_handler,			/* EXTI Line 4 to 15            */
 	0,								/* Reserved                     */
-	DMA1_Channel1_IRQHandler,		/* DMA1 Channel 1               */
+	dma1_channel1_irq_handler,		/* DMA1 Channel 1               */
 	DMA1_Channel2_3_IRQHandler,		/* DMA1 Channel 2 and Channel 3 */
 	DMA1_Channel4_5_IRQHandler,		/* DMA1 Channel 4 and Channel 5 */
 	ADC1_IRQHandler,				/* ADC1                         */

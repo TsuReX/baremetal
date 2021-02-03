@@ -27,13 +27,13 @@ WEAK void EXTI1_IRQHandler(void);
 WEAK void EXTI2_IRQHandler(void);
 WEAK void EXTI3_IRQHandler(void);
 WEAK void EXTI4_IRQHandler(void);
-WEAK void DMA1_Channel1_IRQHandler(void);
-WEAK void DMA1_Channel2_IRQHandler(void);
-WEAK void DMA1_Channel3_IRQHandler(void);
-WEAK void DMA1_Channel4_IRQHandler(void);
+WEAK void dma1_channel1_irq_handler(void);
+WEAK void dma1_channel2_irq_handler(void);
+WEAK void dma1_channel3_irq_handler(void);
+WEAK void dma1_channel4_irq_handler(void);
 WEAK void dma1_channel5_irq_handler(void);
-WEAK void DMA1_Channel6_IRQHandler(void);
-WEAK void DMA1_Channel7_IRQHandler(void);
+WEAK void dma1_channel6_irq_handler(void);
+WEAK void dma1_channel7_irq_handler(void);
 WEAK void ADC1_2_IRQHandler(void);
 WEAK void USB_HP_CAN1_TX_IRQHandler(void);
 WEAK void usb_lp_can1_rx0_handle(void);
@@ -108,13 +108,13 @@ void (* const isr_vector_table[])(void) = {
 	EXTI2_IRQHandler,
 	EXTI3_IRQHandler,
 	EXTI4_IRQHandler,
-	DMA1_Channel1_IRQHandler,
-	DMA1_Channel2_IRQHandler,
-	DMA1_Channel3_IRQHandler,
-	DMA1_Channel4_IRQHandler,
+	dma1_channel1_irq_handler,
+	dma1_channel2_irq_handler,
+	dma1_channel3_irq_handler,
+	dma1_channel4_irq_handler,
 	dma1_channel5_irq_handler,
-	DMA1_Channel6_IRQHandler,
-	DMA1_Channel7_IRQHandler,
+	dma1_channel6_irq_handler,
+	dma1_channel7_irq_handler,
 	ADC1_2_IRQHandler,
 	USB_HP_CAN1_TX_IRQHandler,
 	usb_lp_can1_rx0_handle,
@@ -297,19 +297,19 @@ WEAK void EXTI4_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel1_IRQHandler(void)
+WEAK void dma1_channel1_irq_handler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel2_IRQHandler(void)
+WEAK void dma1_channel2_irq_handler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel3_IRQHandler(void)
+WEAK void dma1_channel3_irq_handler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel4_IRQHandler(void)
+WEAK void dma1_channel4_irq_handler(void)
 {	while(1) {}
 }
 
@@ -317,11 +317,11 @@ WEAK void dma1_channel5_irq_handler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel6_IRQHandler(void)
+WEAK void dma1_channel6_irq_handler(void)
 {	while(1) {}
 }
 
-WEAK void DMA1_Channel7_IRQHandler(void)
+WEAK void dma1_channel7_irq_handler(void)
 {	while(1) {}
 }
 

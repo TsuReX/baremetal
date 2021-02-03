@@ -419,7 +419,7 @@ void d_print(const char *format, ...)
  *		возникла ошибка передачи (пока не реализовано).
  *	Данный канал DMA связан с каналом передачи (TX) USART 1.
  */
-void DMA1_Channel4_IRQHandler(void)
+void dma1_channel4_irq_handler(void)
 {
 	/*LL_DMA_IsActiveFlag_GI4(DMA1);
 	LL_DMA_IsActiveFlag_TC4(DMA1);
