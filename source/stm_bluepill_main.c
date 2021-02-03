@@ -8,83 +8,46 @@
 #include "debug.h"
 #include "spi_flash.h"
 
-void max7219_check(void)
+#define DECMODE		0x0009
+#define INTENSITY	0x000A
+#define SCANLIM		0x000B
+#define SHUTDOWN	0x000C
+
+void max7219_digit_value_set(size_t dig_num, uint32_t value)
 {
-	mdelay(1000);
+	dig_num = (dig_num & 0x7) + 1; /* (0-7)->(1-8) */
+	value &= 0xF;
+
+	uint16_t cmd = (value << 8) | dig_num;
+	spi_chip_activate(0);
+	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
+	spi_chip_deactivate(0);
+
+}
+
+void max7219_init(void)
+{
 	uint16_t	cmd = 0x0;
 
-	cmd = 0x0701;
+	cmd = (0x0F << 8) | INTENSITY;
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
 	spi_chip_deactivate(FLASH_CHANNEL);
 
-	cmd = 0x0F0A;
+	cmd = (0xFF << 8) | DECMODE;
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
 	spi_chip_deactivate(FLASH_CHANNEL);
 
-	cmd = 0xFF09;
+	cmd = (0x0F << 8) | SCANLIM;
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
 	spi_chip_deactivate(FLASH_CHANNEL);
 
-	cmd = 0x0F0B;
+	cmd = (0x01 << 8) | SHUTDOWN;
 	spi_chip_activate(FLASH_CHANNEL);
 	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
 	spi_chip_deactivate(FLASH_CHANNEL);
-
-	cmd = 0x010C;
-	spi_chip_activate(FLASH_CHANNEL);
-	spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-	spi_chip_deactivate(FLASH_CHANNEL);
-
-//	mdelay(2000);
-	uint8_t val = 0;
-	while (1) {
-		cmd = (val << 8) | 0x1;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x2;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x3;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x4;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x5;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x6;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x7;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		cmd = (val << 8) | 0x8;
-		spi_chip_activate(FLASH_CHANNEL);
-		spi_dma_data_send((uint8_t*)&cmd, sizeof(cmd));
-		spi_chip_deactivate(FLASH_CHANNEL);
-
-		val = (val + 1) % 9;
-
-		mdelay(500);
-	}
 
 }
 
@@ -128,13 +91,23 @@ int main(void)
 
 	console_init();
 
+	log_level_set(DEBUG);
+
 	spi_init();
 
 #if (FUNC == 0)
 	sfdp_check();
 #elif (FUNC == 1)
-	max7219_check();
-	__WFI();
+	max7219_init();
+	size_t dig_num = 0;
+	size_t value = 0;
+	while (1) {
+		for (dig_num = 0; dig_num < 8; ++dig_num){
+			max7219_digit_value_set(dig_num, dig_num + value);
+		}
+		value++;
+		mdelay(200);
+	}
 #endif
 
 	return 0;
