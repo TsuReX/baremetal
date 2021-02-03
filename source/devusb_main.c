@@ -7,18 +7,9 @@
  */
 #include <string.h>
 
-#include "time.h"
 #include "drivers.h"
-#include "config.h"
-#include "console.h"
-#include "scheduler.h"
-#include "spi.h"
 #include "communication.h"
-#include "max3421e.h"
 #include "init.h"
-#include "i2c.h"
-#include "debug.h"
-
 #include "kbmsusb.h"
 #include "usb_core.h"
 
@@ -32,32 +23,8 @@ USER_STANDARD_REQUESTS  *usb_standard_requests;
 
 uint8_t comm_buff[sizeof(struct kbms_data)] = {0,1,2,3,4,5,6,7,8,9,0xA,0xB,0xC};
 
-/** Количество байтов идентификатора SPI Flash. */
-#define SPI_ID_BYTES		64
-/** Количество байтов в одной странице данных SPI Flash. */
-#define SPI_PAGE_SIZE		256
-
-/** Код команды чтения идентификатора SPI Flash. */
-#define SPI_CMD_RDID		0x9F
-/** Код команды включения записи SPI Flash. */
-#define SPI_CMD_WREN		0x06
-/** Код команды полного стирания SPI Flash. */
-#define SPI_CMD_BE		0x60
-/** Код команды чтения статусного регистра SPI Flash. */
-#define SPI_CMD_RDSR1		0x05
-/** Код команды выключения записи SPI Flash. */
-#define SPI_CMD_WRDI		0x04
-/** Код команды записи одной страницы данных в SPI Flash. */
-#define SPI_CMD_PP		0x02
-/** Код команды чтения данных SPI Flash. */
-#define SPI_CMD_READ		0x03
-
-//#define USB_DEVICE
-#define USB_MASTER
-
 void usb_init(void)
 {
-
 	NVIC_SetPriorityGrouping(2);
 
 	NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 2);
@@ -71,11 +38,15 @@ void usb_init(void)
 	usb_device_property = &property;
 	usb_standard_requests = &standard_requests;
 
-//	  EXTI_ClearITPendingBit(EXTI_Line18);
-//	  EXTI_InitStructure.EXTI_Line = EXTI_Line18;
-//	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-//	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-//	  EXTI_Init(&EXTI_InitStructure);
+#if 0
+
+	EXTI_ClearITPendingBit(EXTI_Line18);
+	EXTI_InitStructure.EXTI_Line = EXTI_Line18;
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+	EXTI_Init(&EXTI_InitStructure);
+
+#endif
 
 	LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_18);
 	LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_18);
@@ -83,18 +54,12 @@ void usb_init(void)
 
 	usb_device_property->init();
 }
-/**
- * @brief	C-code entry point.
- *
- * @retval	0 in case of success, otherwise error code
- */
+
 int main(void)
 {
 	soc_init();
 
 	board_init();
-
-#if defined(USB_DEVICE)
 
 	comm_init(&comm_buff, sizeof(comm_buff));
 
@@ -105,21 +70,4 @@ int main(void)
 	while(1) {
 		__WFI();
 	}
-#else
-	console_init();
-	log_level_set(DEBUG);
-//	log_level_set(INFO);
-	printk(INFO, "%s()\r\n", __func__);
-	i2c_init();
-	uint8_t val = 0xFF;
-	while(0) {
-		i2c_read(0xD0, 0x0, &val, sizeof(val));
-
-		printk(INFO, "0x%02X\r\n", val);
-		mdelay(50);
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-	}
-	uint8_t buffer[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-	i2c_stream(buffer, sizeof(buffer));
-#endif
 }

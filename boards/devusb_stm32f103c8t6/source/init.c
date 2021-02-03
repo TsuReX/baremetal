@@ -35,8 +35,11 @@ static void sysclk_init_48mhz_hse()
 
 	/* Установка источника сигнала для PLL - PLLSRC.
 	 * Установка множителя PLL - PLLMUL.*/
+#if defined(DEVUSB)
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_4);
+#else
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_6);
-
+#endif
 	/* Включение PLL. */
 	LL_RCC_PLL_Enable();
 	/* Ожидание активации PLL. */
@@ -47,32 +50,6 @@ static void sysclk_init_48mhz_hse()
 	/* Ожидание активации переключателя. */
 	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
 }
-
-/**
- * @brief TODO
- */
-//static void sysclk_init_24mhz()
-//{
-//	/* Включение внутреннего источника тактирования HSI.
-//	 * HSI активен по умолчанию. */
-//	LL_RCC_HSI_Enable();
-//	/* Ожидание активации источника HSI. */
-//	while (LL_RCC_HSI_IsReady() != 1);
-//
-//	/* Установка источника сигнала для PLL - PLLSRC.
-//	 * Установка множителя PLL - PLLMUL.*/
-//	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_9);
-//
-//	/* Включение PLL. */
-//	LL_RCC_PLL_Enable();
-//	/* Ожидание активации PLL. */
-//	while (LL_RCC_PLL_IsReady() != 1);
-//
-//	/* Настройка источника тактирования для SYSCLK. */
-//	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-//	/* Ожидание активации переключателя. */
-//	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
-//}
 
 /**
  * @brief TODO
@@ -134,7 +111,6 @@ static void mco_init_sysclk()
  */
 static void rcc_init(void)
 {
-//	sysclk_init_24mhz();
 	sysclk_init_48mhz_hse();
 
 	ahbclk_init_48mhz();

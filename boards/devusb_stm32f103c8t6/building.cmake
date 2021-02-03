@@ -31,18 +31,10 @@ set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/startup_stm32f103xb.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/devusb_main.c"
-#						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
-#						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
-#						"${BOARD_SRC_PATH}/source/stm32f1xx_it.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${BOARD_SRC_PATH}/source/system_stm32f103xb.c"
 						"${BOARD_SRC_PATH}/source/init.c"
-						"${BOARD_SRC_PATH}/source/console.c"
-						"${BOARD_SRC_PATH}/source/scheduler.c"
-						"${BOARD_SRC_PATH}/source/spi.c"
 						"${BOARD_SRC_PATH}/source/communication.c"
 						"${BOARD_SRC_PATH}/source/delay.c"
-						"${BOARD_SRC_PATH}/source/i2c.c"
 
 						"${BOARD_SRC_PATH}/usblib/source/usb_desc.c"
 						"${BOARD_SRC_PATH}/usblib/source/usb_endp.c"
@@ -83,49 +75,42 @@ set(LINKER_FLAGS		"${LINKER_FLAGS}"
 						"-mcpu=cortex-m3"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
-#						"-nostdlib"
 				)
 
 set(LINKER_LIBS			"-lc"
 						"-lm"
 						"-lnosys"
 				)
-		
+
 add_definitions("-DSTM32F103xB")
 add_definitions("-DUSE_FULL_LL_DRIVER")
-add_definitions("-DDBG_OUT")
+add_definitions("-DDEVUSB")
+#add_definitions("-DDBG_OUT")
 
 #######################################################################
-# Определение дополнительной цели для выполнения операции прошивки
-#add_custom_target("flash" DEPENDS ${PROJ_NAME})
-
-# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
-# Смотреть FLASHER_TYPE в README.md
-
-# Определение команд для цели flash
-#add_custom_command(	TARGET "flash"
-#					POST_BUILD
-#					COMMAND openocd
-#					ARGS	-f ${OOCD_CONFIG} -c \"init$<SEMICOLON>
-#							reset halt$<SEMICOLON>
-#							flash write_image erase ${CMAKE_BINARY_DIR}/${PROJ_NAME}${CMAKE_EXECUTABLE_SUFFIX}$<SEMICOLON>
-#							reset$<SEMICOLON>
-#							exit\")
-							
-#######################################################################
-#set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/oocd_stlinkv2.cfg")
-set(OOCD_CONFIG "${CMAKE_CURRENT_SOURCE_DIR}/boards/devusb_stm32f103c8t6/oocd_jlink.cfg")
 # Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME})
 
 # Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
 # Смотреть FLASHER_TYPE в README.md
 
+if (NOT DEFINED PROGRAMMER)
+	set(PROG_SCRIPT	"oocd_jlink.cfg")
+else()
+if (${PROGRAMMER} STREQUAL "ST2")
+	set(PROG_SCRIPT	"oocd_stlinkv2.cfg")
+elseif(${PROGRAMMER} STREQUAL "JLINK")
+	set(PROG_SCRIPT	"oocd_jlink.cfg")
+else()
+	return()
+endif ()
+endif ()
+
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG} -c \"do flash\")
+					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do flash\")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции отладки
@@ -137,5 +122,5 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${OOCD_CONFIG} -c \"do debug\")
+					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do debug\")
 							
