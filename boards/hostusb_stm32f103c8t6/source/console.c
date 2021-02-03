@@ -41,18 +41,18 @@ static void console_gpio_1_init(void)
  */
 static void console_gpio_2_init(void)
 {
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOA);
 
-	/* USART1 TX */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_2, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_2, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_2, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_2, LL_GPIO_PULL_UP);
+	/* USART2 TX */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_2, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_2, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_2, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_2, LL_GPIO_PULL_UP);
 
-	/* USART1 RX */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_FLOATING);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_3, LL_GPIO_PULL_UP);
+	/* USART2 RX */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_FLOATING);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinPull(GPIOA, LL_GPIO_PIN_3, LL_GPIO_PULL_UP);
 
 }
 
@@ -63,13 +63,13 @@ static void console_gpio_3_init(void)
 {
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
 
-	/* USART1 TX */
+	/* USART3 TX */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
 	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_10, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_10, LL_GPIO_OUTPUT_PUSHPULL);
 	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_10, LL_GPIO_PULL_UP);
 
-	/* USART1 RX */
+	/* USART3 RX */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_11, LL_GPIO_MODE_FLOATING);
 	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_11, LL_GPIO_SPEED_FREQ_HIGH);
 	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_11, LL_GPIO_PULL_UP);
@@ -154,7 +154,7 @@ static void console_usart1_close(void)
 }
 
 /*
- * @brief Отключение USART1.
+ * @brief Отключение USART2.
  */
 static void console_usart2_close(void)
 {
@@ -165,7 +165,7 @@ static void console_usart2_close(void)
 }
 
 /*
- * @brief Отключение USART1.
+ * @brief Отключение USART3.
  */
 static void console_usart3_close(void)
 {

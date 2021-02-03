@@ -43,6 +43,7 @@ void kb_ms_power_on(void)
 	max3421e_chip_deactivate(KEYBOARD_CHANNEL);
 }
 
+#ifndef USE_MDR1986VE9x
 void usb_std_req_print(const struct std_request *std_req)
 {
 	printk(DEBUG, "bm_request_type: 0x%02X\r\n", std_req->bm_request_type);
@@ -104,6 +105,7 @@ void usb_endp_descr_print(const struct endpoint_descriptor *endp_descr)
 	printk(DEBUG, "w_max_packet_size: 0x%02X\r\n", endp_descr->w_max_packet_size);
 	printk(DEBUG, "b_interval: 0x%02X\r\n", endp_descr->b_interval);
 }
+#endif
 
 int32_t usb_device_get_dev_descr(uint32_t usb_channel, uint8_t dev_addr, struct device_descriptor *dev_descr)
 {
@@ -160,6 +162,7 @@ int32_t usb_device_get_conf_descr(uint32_t usb_channel, uint8_t dev_addr, struct
 	return 0;
 }
 
+#ifndef USE_MDR1986VE9x
 void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 {
 	size_t remain_bytes = full_conf_size;
@@ -211,6 +214,7 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 		};
 	}
 }
+#endif
 
 int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t *full_conf, size_t full_conf_size)
 {
@@ -371,14 +375,14 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(usb_channel, usb_dev_addr, &conf_descr) != 0)
 		return -8;
-	usb_conf_descr_print(&conf_descr);
+//	usb_conf_descr_print(&conf_descr);
 
 	mdelay(50);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(usb_channel, usb_dev_addr, &dev_descr) != 0)
 		return -3;
-	usb_dev_descr_print(&dev_descr);
+//	usb_dev_descr_print(&dev_descr);
 
 	/* TODO: Check VID and PID dev_descr */
 
@@ -387,7 +391,7 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	uint8_t full_conf[512];
 	if (usb_device_get_full_conf(usb_channel, usb_dev_addr, full_conf, conf_descr.w_total_length) < 0)
 		return -4;
-	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+//	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
 
 	mdelay(50);
 
@@ -422,15 +426,15 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 
 void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_size)
 {
-#ifdef USE_MDR1986VE9x
 	printk(DEBUG, "%s(): hid_num %ld, buffer_size %d\r\n", __func__, hid_num, buffer_size);
+#ifdef USE_MDR1986VE9x
 	MDR_UART_TypeDef* UARTx = MDR_UART1;
-
 	if (hid_num == 1) {
 		UARTx = MDR_UART1;
 	} else if (hid_num == 2){
 		UARTx = MDR_UART2;
 	}
+
 	uint32_t	ms_timeout = 200000;
 	size_t i;
 	for (i = 0; i < buffer_size; ++i) {
@@ -443,7 +447,37 @@ void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_s
 				break;
 		} while (UART_GetFlagStatus (UARTx, UART_FLAG_TXFE) != 1);
 	}
+#else
+	USART_TypeDef* UARTx = USART1;
+	if (hid_num == 1) {
+		UARTx = USART1;
+	} else if (hid_num == 2){
+		UARTx = USART2;
+	}
+	size_t i;
+	for (i = 0; i < buffer_size; ++i) {
+		LL_USART_TransmitData8(UARTx, src_buffer[i]);
+
+#if defined(PERIOD_TIMEOUT)
+		struct period timeout;
+		period_start(&timeout, 100000);
 #endif
+
+		do {
+			__DSB();
+#if !defined(PERIOD_TIMEOUT)
+			--usec_timeout;
+			if (usec_timeout == 0)
+				break;
+#else
+			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
+				break;
+#endif
+		} while (LL_USART_IsActiveFlag_TXE(UARTx) != 1);
+	}
+#endif
+
+
 }
 
 uint32_t current_hid_num = 2;
@@ -474,13 +508,14 @@ void spi_usb_transmission_start(void)
 	int32_t ret_val = -1;
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
-
+	mdelay(2000);
 	printk(DEBUG, "\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
+#ifndef USE_MDR1986VE9x
 	max3421e_rev_print(KEYBOARD_CHANNEL);
+#endif
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
 	kb_ms_power_on();
-
 	ret_val = device_detect_init(KEYBOARD_CHANNEL, KB_USB_ADDR);
 	if (ret_val != 0) {
 		printk(DEBUG, "kb_detect_init(): %ld\r\n", ret_val);
@@ -491,7 +526,9 @@ void spi_usb_transmission_start(void)
 
 	printk(DEBUG, "\r\nPrepare mouse channel\r\n");
 	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
+#ifndef USE_MDR1986VE9x
 	max3421e_rev_print(MOUSE_CHANNEL);
+#endif
 	max3421e_chip_reset(MOUSE_CHANNEL);
 
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
