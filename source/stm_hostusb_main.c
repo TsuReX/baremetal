@@ -16,7 +16,7 @@ int main(void)
 	board_init();
 
 	console_init();
-	log_level_set(INFO);
+	log_level_set(DEBUG);
 	spi_init();
 
 	mdelay(50);
