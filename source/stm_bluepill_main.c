@@ -98,11 +98,12 @@ int main(void)
 #if (FUNC == 0)
 	sfdp_check();
 #elif (FUNC == 1)
+	mdelay(1000);
 	max7219_init();
 	size_t dig_num = 0;
 	size_t value = 0;
 	while (1) {
-		for (dig_num = 0; dig_num < 8; ++dig_num){
+		for (dig_num = 0; dig_num < 8; ++dig_num) {
 			max7219_digit_value_set(dig_num, dig_num + value);
 		}
 		value++;
