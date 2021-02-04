@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <system_MDR32F9Qx.h>
+#include "drivers.h"
 
 #define WEAK __attribute__ ((weak))
 #define WEAK_AV __attribute__ ((weak, section(".after_vectors")))
@@ -78,6 +79,7 @@ void (* const isr_vector_table[])(void) = {
 	0,                          // Reserved
 	pendsv_handler,             // The PendSV handler
 	systick_handler,            // The SysTick handler
+#if 0
 	CAN1_IRQHandler,
 	CAN2_IRQHandler,
 	USB_IRQHandler,
@@ -110,6 +112,7 @@ void (* const isr_vector_table[])(void) = {
 	EXT_INT2_IRQHandler,
 	EXT_INT3_IRQHandler,
 	EXT_INT4_IRQHandler,
+#endif
 };
 
 __attribute__ ((section(".after_vectors.init_data")))
@@ -173,7 +176,13 @@ void reset_handler(void) {
 	//	BX      R0
 	//	ENDP
 
-	SystemInit();
+//	SystemInit();
+
+	uint32_t i = 0x004FFFFF;
+	for (; i != 0; --i) {
+		__ISB();
+	}
+
     main();
 
     while (1) {
@@ -221,6 +230,7 @@ WEAK_AV void systick_handler(void)
 {	while(1) {}
 }
 
+#if 0
 
 WEAK_AV void IntDefaultHandler(void)
 {	while(1) {}
@@ -312,4 +322,4 @@ WEAK void EXT_INT3_IRQHandler(void)
 WEAK void EXT_INT4_IRQHandler(void)
 {	while(1) {}
 }
-
+#endif
