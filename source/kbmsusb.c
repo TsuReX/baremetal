@@ -22,6 +22,7 @@
 #define USB_NAK		0x04
 #define USB_TOGERR	0x06
 
+#ifndef USE_MDR1986VE9x
 void max3421e_rev_print(uint32_t chip_num)
 {
 	max3421e_chip_activate(chip_num);
@@ -29,6 +30,7 @@ void max3421e_rev_print(uint32_t chip_num)
 	printk(DEBUG, "REVISION 0x%02X\r\n", max3421e_rev_read());
 	max3421e_chip_deactivate(chip_num);
 }
+#endif
 
 void kb_ms_power_on(void)
 {
@@ -214,7 +216,6 @@ void usb_device_full_conf_print(uint8_t *full_conf, size_t full_conf_size)
 		};
 	}
 }
-#endif
 
 int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t *full_conf, size_t full_conf_size)
 {
@@ -242,6 +243,7 @@ int32_t usb_device_get_full_conf(uint32_t usb_channel, uint8_t dev_addr, uint8_t
 	}
 	return 0;
 }
+#endif
 
 int16_t usb_device_get_conf(uint32_t usb_channel, uint8_t dev_addr)
 {
@@ -375,23 +377,27 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 	struct configuration_descriptor conf_descr;
 	if (usb_device_get_conf_descr(usb_channel, usb_dev_addr, &conf_descr) != 0)
 		return -8;
-//	usb_conf_descr_print(&conf_descr);
-
+#ifndef USE_MDR1986VE9x
+	usb_conf_descr_print(&conf_descr);
+#endif
 	mdelay(50);
 
 	struct device_descriptor dev_descr;
 	if (usb_device_get_dev_descr(usb_channel, usb_dev_addr, &dev_descr) != 0)
 		return -3;
-//	usb_dev_descr_print(&dev_descr);
-
+#ifndef USE_MDR1986VE9x
+	usb_dev_descr_print(&dev_descr);
+#endif
 	/* TODO: Check VID and PID dev_descr */
 
 	mdelay(50);
 
+#ifndef USE_MDR1986VE9x
 	uint8_t full_conf[512];
 	if (usb_device_get_full_conf(usb_channel, usb_dev_addr, full_conf, conf_descr.w_total_length) < 0)
 		return -4;
-//	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+	usb_device_full_conf_print(full_conf, conf_descr.w_total_length);
+#endif
 
 	mdelay(50);
 
@@ -414,11 +420,13 @@ int32_t device_detect_init(uint32_t usb_channel, uint8_t usb_dev_addr)
 
 	mdelay(50);
 
+#ifndef USE_MDR1986VE9x
 	uint8_t status[2];
 	if (usb_device_get_ep_status(usb_channel, usb_dev_addr, 0x01, status) == 0) {
 		printk(DEBUG, "status[0]: 0x%02X\r\n", status[0]);
 		printk(DEBUG, "status[1]: 0x%02X\r\n", status[1]);
 	}
+#endif
 
 	mdelay(50);
 	return 0;
