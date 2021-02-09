@@ -28,37 +28,58 @@ static void flash_init(void)
  */
 static void sysclk_init_64mhz()
 {
+#if defined(EXT_CRYSTAL_8MHZ_CPU_64MHZ)
+
 	RST_CLK_HSEconfig(RST_CLK_HSE_ON);
-	if (RST_CLK_HSEstatus() == SUCCESS) {
-		/* Good HSE clock */
-		/* Select HSE clock as CPU_PLL input clock source */
 
-		/* Set PLL multiplier to 8 */
-		RST_CLK_CPU_PLLconfig(RST_CLK_CPU_PLLsrcHSEdiv1, RST_CLK_CPU_PLLmul8);
+	while (RST_CLK_HSEstatus() != SUCCESS);
 
-		/* Enable CPU_PLL */
-		RST_CLK_CPU_PLLcmd(ENABLE);
+	/* Good HSE clock */
+	/* Select HSE clock as CPU_PLL input clock source */
 
-		if (RST_CLK_HSEstatus() == SUCCESS) {
-			/* Good CPU PLL */
-			/* Set CPU_C3_prescaler to 1 */
-			RST_CLK_CPUclkPrescaler(RST_CLK_CPUclkDIV1);
+	/* Set PLL multiplier to 8 */
+	RST_CLK_CPU_PLLconfig(RST_CLK_CPU_PLLsrcHSEdiv1, RST_CLK_CPU_PLLmul8);
 
-			/* Set CPU_C2_SEL to CPU_PLL output instead of CPU_C1 clock */
-			RST_CLK_CPU_PLLuse(ENABLE);
+	/* Enable CPU_PLL */
+	RST_CLK_CPU_PLLcmd(ENABLE);
 
-			/* Select CPU_C3 clock on the CPU clock MUX */
-			RST_CLK_CPUclkSelection(RST_CLK_CPUclkCPU_C3);
+	while (RST_CLK_CPU_PLLstatus() != SUCCESS);
 
-		} else {
-			/* CPU_PLL timeout */
-//			IndicateError();
-		}
+	/* Good CPU PLL */
+	/* Set CPU_C3_prescaler to 1 */
+	RST_CLK_CPUclkPrescaler(RST_CLK_CPUclkDIV1);
 
-	} else {
-		/* HSE timeout */
-//		IndicateError();
-	}
+	/* Set CPU_C2_SEL to CPU_PLL output instead of CPU_C1 clock */
+	RST_CLK_CPU_PLLuse(ENABLE);
+
+	/* Select CPU_C3 clock on the CPU clock MUX */
+	RST_CLK_CPUclkSelection(RST_CLK_CPUclkCPU_C3);
+
+#elif defined(INT_CRYSTAL_8MHZ_CPU_64MHZ)
+
+	/* Select HSI/2 clock as CPU_PLL input clock source */
+	RST_CLK_CPU_PLLconfig(RST_CLK_CPU_PLLsrcHSIdiv1, RST_CLK_CPU_PLLmul8);
+
+	/* Enable CPU_PLL */
+	RST_CLK_CPU_PLLcmd(ENABLE);
+
+	while (RST_CLK_CPU_PLLstatus() != SUCCESS);
+
+	/* Set CPU_C3_prescaler to 1 */
+	RST_CLK_CPUclkPrescaler(RST_CLK_CPUclkDIV1);
+
+	/* Switch CPU_C2_SEL to CPU_C1 clock instead of CPU_PLL output */
+	RST_CLK_CPU_PLLuse(ENABLE);
+
+	/* Select CPU_C3 clock on the CPU clock MUX */
+	RST_CLK_CPUclkSelection(RST_CLK_CPUclkCPU_C3);
+
+#else
+
+#error "Crystal type must be defined"
+
+#endif
+
 }
 
 /**
