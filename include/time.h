@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#include "init.h"
+#include "systimer.h"
 
 #define NOT_RESTART_PERIOD	0
 #define RESTART_PERIOD		1

@@ -28,17 +28,19 @@ set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/hostusb_main.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/systimer.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 						"${BRD_PATH}/source/startup_mdr32f9qx.c"
 #						"${BRD_PATH}/source/system_MDR32F9Qx.c"
 						"${BRD_PATH}/source/console.c"
 						"${BRD_PATH}/source/spi.c"
-						"${BRD_PATH}/source/delay.c"
+#						"${BRD_PATH}/source/delay.c"
 						"${BRD_PATH}/source/init.c"
 						"${BRD_PATH}/source/platform.c"
 						"${BRD_PATH}/source/communication.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/hostusb_main.c"
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")

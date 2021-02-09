@@ -7,6 +7,7 @@
  */
 
 #include "init.h"
+#include "systimer.h"
 #include "drivers.h"
 #include "config.h"
 
@@ -77,7 +78,7 @@ static void rcc_init(void)
 {
 	sysclk_init_64mhz();
 }
-
+#if 0
 /**
  * @brief	Наcтраивает системный таймер ядра (SysTick)
  *
@@ -92,7 +93,7 @@ static void systick_init(uint32_t hclk_freq)
 	SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
 				   SysTick_CTRL_ENABLE_Msk;                   /* Enable the Systick Timer */
 }
-
+#endif
 /**
  * @brief	Настройка устройств платформы(платы)
  */
@@ -169,6 +170,6 @@ void soc_init(void)
 	/* Настройка подсистемы тактирования. */
 	rcc_init();
 	/* Настраивает системный таймер ядра. */
-	systick_init(HCLK_FREQ);
+	systimer_init(HCLK_FREQ, 10);
 }
 
