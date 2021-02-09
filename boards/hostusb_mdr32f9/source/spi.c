@@ -12,19 +12,21 @@
 
 void spi_init(void)
 {
-	PORT_InitTypeDef port_descriptor;
 
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
 
-	/*SPI GPIO*/
-	port_descriptor.PORT_Pin   = (PORT_Pin_3);
-	port_descriptor.PORT_OE    = PORT_OE_IN;
+	PORT_InitTypeDef port_descriptor;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_ALTER;
 	port_descriptor.PORT_MODE  = PORT_MODE_DIGITAL;
 	port_descriptor.PORT_SPEED = PORT_SPEED_FAST;
 
+	/*SPI MISO*/
+	port_descriptor.PORT_Pin   = (PORT_Pin_3);
+	port_descriptor.PORT_OE    = PORT_OE_IN;
+
 	PORT_Init(MDR_PORTF, &port_descriptor);
 
+	/*SPI MOSI CLK*/
 	port_descriptor.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1);
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
 
@@ -35,13 +37,19 @@ void spi_init(void)
 
 	SSP_DeInit(MDR_SSP1);
 
-	uint32_t temp= MDR_RST_CLK->SSP_CLOCK;
+#if 0
+//	uint32_t temp= MDR_RST_CLK->SSP_CLOCK;
+//
+//	temp |= RST_CLK_SSP_CLOCK_SSP1_CLK_EN;
+//	temp &= ~RST_CLK_SSP_CLOCK_SSP1_BRG_Msk;
+//	temp |= SSP_HCLKdiv1;
+//
+//	MDR_RST_CLK->SSP_CLOCK = temp;
+#else
+	SSP_BRGInit(MDR_SSP1, SSP_HCLKdiv2);
+#endif
 
-	temp |= RST_CLK_SSP_CLOCK_SSP1_CLK_EN;
-	temp &= ~RST_CLK_SSP_CLOCK_SSP1_BRG_Msk;
-	temp |= SSP_HCLKdiv1;
-
-	MDR_RST_CLK->SSP_CLOCK = temp;
+#if 0
 
 	MDR_SSP1->CPSR = 0x04;
 
@@ -54,6 +62,26 @@ void spi_init(void)
 	MDR_SSP1->CR1 = SSP_HardwareFlowControl_None | SSP_ModeMaster;
 
 	MDR_SSP1->CR1 |= 0x2;
+
+#else
+
+	SSP_InitTypeDef sSSP;
+	SSP_StructInit (&sSSP);
+
+	sSSP.SSP_CPSDVSR = 0x04;
+	sSSP.SSP_SCR  = 0x00;
+	sSSP.SSP_Mode = SSP_ModeMaster;
+	sSSP.SSP_WordLength = SSP_WordLength8b;
+	sSSP.SSP_SPH = SSP_SPH_1Edge;
+	sSSP.SSP_SPO = SSP_SPO_Low;
+	sSSP.SSP_FRF = SSP_FRF_SPI_Motorola;
+	sSSP.SSP_HardwareFlowControl = SSP_HardwareFlowControl_None;
+
+	SSP_Init (MDR_SSP1, &sSSP);
+
+	SSP_Cmd(MDR_SSP1, ENABLE);
+
+#endif
 }
 
 uint32_t spi_data_xfer(const uint8_t *src_buf, uint8_t *dst_buf, size_t data_size)
