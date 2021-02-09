@@ -20,7 +20,7 @@ static void flash_init(void)
 	/* Настройка времени задержки доступа к флешке.
 	 * Это необходимо для корректной работы флешки при различных частотах HCLK.
 	 */
-//	LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
+	EEPROM_SetLatency(2);
 }
 
 /**
