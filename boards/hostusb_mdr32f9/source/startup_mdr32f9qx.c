@@ -178,7 +178,7 @@ void reset_handler(void) {
 
 //	SystemInit();
 
-	uint32_t i = 0x004FFFFF;
+	uint32_t i = 0x002FFFFF;
 	for (; i != 0; --i) {
 		__ISB();
 	}
@@ -186,7 +186,7 @@ void reset_handler(void) {
     main();
 
     while (1) {
-        ;
+        __WFE();
     }
 }
 
