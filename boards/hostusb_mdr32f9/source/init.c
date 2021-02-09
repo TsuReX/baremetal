@@ -103,8 +103,10 @@ void board_init(void)
 
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTA, ENABLE);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTB, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTC, ENABLE);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTD, ENABLE);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTE, ENABLE);
+	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTF, ENABLE);
 
 	port_descriptor.PORT_OE    = PORT_OE_OUT;
 	port_descriptor.PORT_FUNC  = PORT_FUNC_PORT;
@@ -141,6 +143,18 @@ void board_init(void)
 	port_descriptor.PORT_Pin   = (PORT_Pin_0);
 	PORT_Init(MDR_PORTD, &port_descriptor);
 	PORT_SetBits(MDR_PORTD, PORT_Pin_0);
+#endif
+
+#if 1
+	/* PF0,1,3 DEBUG */
+	port_descriptor.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1 | PORT_Pin_3);
+	PORT_Init(MDR_PORTF, &port_descriptor);
+#endif
+
+#if 1
+	/* PC0,1 DEBUG */
+	port_descriptor.PORT_Pin   = (PORT_Pin_0 | PORT_Pin_1);
+	PORT_Init(MDR_PORTC, &port_descriptor);
 #endif
 
 }
