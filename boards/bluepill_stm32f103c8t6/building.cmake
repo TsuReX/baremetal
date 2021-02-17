@@ -82,6 +82,7 @@ set(LINKER_LIBS			"-lc"
 		
 add_definitions("-DSTM32F103xB")
 add_definitions("-DUSE_FULL_LL_DRIVER")
+add_definitions("-DDBG_OUT")
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки

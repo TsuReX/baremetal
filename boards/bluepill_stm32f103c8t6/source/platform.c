@@ -26,8 +26,3 @@ void spi_chip_deactivate(uint32_t chip_num)
 			break;
 	};
 }
-
-uint32_t log_level_get(void)
-{
-	return CURRENT_MESSAGE_LEVEL;
-}
