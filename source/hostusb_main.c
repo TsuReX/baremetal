@@ -9,6 +9,8 @@
 #include "communication.h"
 #include "debug.h"
 
+void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_size);
+
 int main(void)
 {
 /*****************************************************************************************/
@@ -26,16 +28,22 @@ int main(void)
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 
 	spi_usb_transmission_start();
-
+//	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
 /*****************************************************************************************/
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 	while(1)
 	{
+
+#if	0
+		uint8_t buf[4] = {'a', 'b', 'c', '\n'};
+		data_to_hid_transmit(1, buf, sizeof(buf));
+		data_to_hid_transmit(2, buf, sizeof(buf));
+#endif
 #if 0
-		max3421e_chip_activate(KEYBOARD_CHANNEL);
-		mdelay(1);
-		max3421e_rev_read();
-		max3421e_chip_deactivate(KEYBOARD_CHANNEL);
+//		max3421e_chip_activate(KEYBOARD_CHANNEL);
+//		mdelay(1);
+//		max3421e_rev_read();
+//		max3421e_chip_deactivate(KEYBOARD_CHANNEL);
 
 		max3421e_chip_activate(MOUSE_CHANNEL);
 		mdelay(1);

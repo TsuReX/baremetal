@@ -91,7 +91,7 @@ static void usart1_init(void)
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 1500000);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 1000000);
 
 #if 0
 	NVIC_SetPriority(USART1_IRQn, 0);
@@ -168,7 +168,7 @@ static void dma_ch5_usart1_rx_init()
 
 	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_5,
 							(uint32_t)&USART1->DR,
-							(uint32_t)usart3_rx_buf,
+							(uint32_t)usart1_rx_buf,
 							LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_5, usart1_rx_buf_len);
@@ -233,7 +233,7 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 {
 
 	usart1_rx_buf_len = dst_buffer_size;
-	usart3_rx_buf = dst_buffer;
+	usart1_rx_buf = dst_buffer;
 
 	usart2_rx_buf_len = dst_buffer_size;
 	usart2_rx_buf = dst_buffer;
@@ -279,14 +279,18 @@ void comm_stop(void)
  */
 void dma1_channel5_irq_handler(void)
 {
-	if (((struct kbms_data*)usart1_rx_buf)->hid_num == 2) {
-		copy_to_usb((uint8_t*)&((struct kbms_data*)usart1_rx_buf)->kb_data, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
+	struct kbms_data* kbms = (struct kbms_data*)usart1_rx_buf;
+
+	if (kbms->hid_num == 2) {
+		LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_7);
+		copy_to_usb((uint8_t*)&kbms->kb_data, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
 		_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
 		_SetEPTxStatus(ENDP1, EP_TX_VALID);
 
-		copy_to_usb((uint8_t*)&((struct kbms_data*)usart1_rx_buf)->ms_data, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
+		copy_to_usb((uint8_t*)&kbms->ms_data, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
 		_SetEPTxCount(ENDP2, EP2_MAX_PACKET_SIZE);
 		_SetEPTxStatus(ENDP2, EP_TX_VALID);
+
 	}
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));

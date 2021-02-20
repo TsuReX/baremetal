@@ -13,6 +13,9 @@
 static size_t	buffer_size;
 static void*	buffer;
 
+#define UART_CLOCK_DIVISOR UART_HCLKdiv4
+#define UART_BAUDRATE 1000000
+
 void comm_init(void* dst_buffer, size_t dst_buffer_size)
 {
 	buffer_size = dst_buffer_size;
@@ -45,14 +48,17 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 	PORT_Init(MDR_PORTB, &port_descriptor);
 
 	UART_InitTypeDef UART_InitStructure;
+
+	UART_DeInit(MDR_UART1);
+
 	/* Enables the CPU_CLK clock on UART1, UART2 */
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART1, ENABLE);
 
 	/* Set the HCLK division factor = 1 for UART1,UART2*/
-	UART_BRGInit(MDR_UART1, UART_HCLKdiv1);
+	UART_BRGInit(MDR_UART1, UART_CLOCK_DIVISOR);
 
 	/* Initialize UART_InitStructure */
-	UART_InitStructure.UART_BaudRate            = 1500000;
+	UART_InitStructure.UART_BaudRate            = UART_BAUDRATE;
 	UART_InitStructure.UART_WordLength         	= UART_WordLength8b;
 	UART_InitStructure.UART_StopBits           	= UART_StopBits1;
 	UART_InitStructure.UART_Parity           	= UART_Parity_No;
@@ -60,7 +66,7 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 	UART_InitStructure.UART_HardwareFlowControl	= UART_HardwareFlowControl_RXE | UART_HardwareFlowControl_TXE;
 
 	/* Configure UART1 parameters*/
-	UART_Init(MDR_UART1,&UART_InitStructure);
+	UART_Init(MDR_UART1, &UART_InitStructure);
 
 #endif
 
@@ -72,7 +78,7 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 	port_descriptor.PORT_PD_SHM = PORT_PD_SHM_OFF;
 	port_descriptor.PORT_PD = PORT_PD_DRIVER;
 	port_descriptor.PORT_GFEN = PORT_GFEN_OFF;
-	port_descriptor.PORT_FUNC = PORT_FUNC_ALTER;
+	port_descriptor.PORT_FUNC = PORT_FUNC_OVERRID;
 	port_descriptor.PORT_SPEED = PORT_SPEED_MAXFAST;
 	port_descriptor.PORT_MODE = PORT_MODE_DIGITAL;
 
@@ -86,13 +92,14 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 	port_descriptor.PORT_Pin = PORT_Pin_0;
 	PORT_Init(MDR_PORTD, &port_descriptor);
 
+	UART_DeInit(MDR_UART2);
+
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART2, ENABLE);
 
-	UART_BRGInit(MDR_UART2, UART_HCLKdiv1);
-
+	UART_BRGInit(MDR_UART2, UART_CLOCK_DIVISOR);
 
 	/* Initialize UART_InitStructure */
-	UART_InitStructure.UART_BaudRate            = 1500000;
+	UART_InitStructure.UART_BaudRate            = UART_BAUDRATE;
 	UART_InitStructure.UART_WordLength			= UART_WordLength8b;
 	UART_InitStructure.UART_StopBits            = UART_StopBits1;
 	UART_InitStructure.UART_Parity              = UART_Parity_No;

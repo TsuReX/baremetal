@@ -437,11 +437,11 @@ void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_s
 	printk(DEBUG, "%s(): hid_num %ld, buffer_size %d\r\n", __func__, hid_num, buffer_size);
 #ifdef USE_MDR1986VE9x
 	MDR_UART_TypeDef* UARTx = MDR_UART1;
-	if (hid_num == 1) {
-		UARTx = MDR_UART1;
-	} else if (hid_num == 2){
-		UARTx = MDR_UART2;
-	}
+//	if (hid_num == 1) {
+//		UARTx = MDR_UART1;
+//	} else if (hid_num == 2){
+//		UARTx = MDR_UART2;
+//	}
 
 	uint32_t	ms_timeout = 200000;
 	size_t i;
@@ -516,14 +516,16 @@ void spi_usb_transmission_start(void)
 	int32_t ret_val = -1;
 	uint32_t kb_present = 0;
 	uint32_t ms_present = 0;
-	mdelay(2000);
+	mdelay(1000);
 	printk(DEBUG, "\r\nPrepare keyboard channel\r\n");
 	max3421e_fullduplex_spi_set(KEYBOARD_CHANNEL);
 #ifndef USE_MDR1986VE9x
 	max3421e_rev_print(KEYBOARD_CHANNEL);
 #endif
 	max3421e_chip_reset(KEYBOARD_CHANNEL);
+	mdelay(1000);
 	kb_ms_power_on();
+	mdelay(5000);
 	ret_val = device_detect_init(KEYBOARD_CHANNEL, KB_USB_ADDR);
 	if (ret_val != 0) {
 		printk(DEBUG, "kb_detect_init(): %ld\r\n", ret_val);
@@ -538,7 +540,7 @@ void spi_usb_transmission_start(void)
 	max3421e_rev_print(MOUSE_CHANNEL);
 #endif
 	max3421e_chip_reset(MOUSE_CHANNEL);
-
+	mdelay(1000);
 	ret_val = device_detect_init(MOUSE_CHANNEL, MS_USB_ADDR);
 	if (ret_val != 0) {
 		printk(DEBUG, "ms_detect_init(): %ld\r\n", ret_val);

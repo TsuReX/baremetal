@@ -68,6 +68,6 @@ int main(void)
 	usb_init();
 
 	while(1) {
-		__WFI();
+//		__WFI();
 	}
 }

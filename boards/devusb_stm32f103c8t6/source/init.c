@@ -186,8 +186,9 @@ void board_init(void)
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USB);
 
 
-	/* PA7 set low level. */
-//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
+	/* PB7 set low level. */
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);
 	/* Green led */
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 	/* MCO output enable. */
