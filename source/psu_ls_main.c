@@ -12,6 +12,7 @@
 #include "drivers.h"
 #include "time.h"
 #include "debug.h"
+#include "init.h"
 
 #define ADC_VREF_MILIVOLTS			(3300)
 #define AMPL_VOLTS					(310)
@@ -274,7 +275,7 @@ int main(void)
 
 	/** Configure board's peripherals. */
 	board_init();
-
+	return 0;
 	console_init();
 
 	comm_init(&measurement, sizeof(struct measurement));

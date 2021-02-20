@@ -13,6 +13,7 @@
 #include "time.h"
 #include "debug.h"
 #include "ptr_container.h"
+#include "init.h"
 
 #define MIN_VAC						(230)
 
@@ -461,7 +462,7 @@ int main(void)
 
 	/** Configure board's peripherals. */
 	board_init();
-
+	return 0;
 	console_init();
 
 	comm_init(&command, sizeof(struct command));
