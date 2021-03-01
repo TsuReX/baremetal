@@ -53,7 +53,7 @@ WEAK void I2C2_EV_IRQHandler(void);
 WEAK void I2C2_ER_IRQHandler(void);
 WEAK void spi1_irq_handler(void);
 WEAK void SPI2_IRQHandler(void);
-WEAK void USART1_IRQHandler(void);
+WEAK void usart1_irq_handler(void);
 WEAK void USART2_IRQHandler(void);
 WEAK void USART3_IRQHandler(void);
 WEAK void EXTI15_10_IRQHandler(void);
@@ -134,7 +134,7 @@ void (* const isr_vector_table[])(void) = {
 	I2C2_ER_IRQHandler,
 	spi1_irq_handler,
 	SPI2_IRQHandler,
-	USART1_IRQHandler,
+	usart1_irq_handler,
 	USART2_IRQHandler,
 	USART3_IRQHandler,
 	EXTI15_10_IRQHandler,
@@ -401,7 +401,7 @@ WEAK void SPI2_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void USART1_IRQHandler(void)
+WEAK void usart1_irq_handler(void)
 {	while(1) {}
 }
 

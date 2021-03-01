@@ -66,7 +66,7 @@ int main(void)
 	comm_start();
 
 	usb_init();
-
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);
 	while(1) {
 //		__WFI();
 	}

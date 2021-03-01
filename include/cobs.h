@@ -8,6 +8,9 @@
 #ifndef COBS_H_
 #define COBS_H_
 
+#include <stdint.h>
+#include <stddef.h>
+
 void cobs_encode(uint8_t marker, const void *data_buf, size_t data_buf_len, void *enc_buf);
 void cobs_decode(uint8_t marker, const void *encoded_buf, size_t encoded_buf_len, void *dec_buf);
 

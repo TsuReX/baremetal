@@ -5,6 +5,9 @@
  *      Author: user
  */
 
+#include "cobs.h"
+#include <stdint.h>
+#include <stddef.h>
 
 static size_t cobs_marker_find(uint8_t marker, size_t start_index, const void *data_buf, size_t data_buf_len)
 {

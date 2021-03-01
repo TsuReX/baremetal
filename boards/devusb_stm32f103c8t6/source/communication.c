@@ -14,6 +14,7 @@
 #include "usb_desc.h"
 #include "usb_mem.h"
 #include "console.h"
+#include "cobs.h"
 
 
 static void		*usart1_rx_buf;
@@ -93,14 +94,16 @@ static void usart1_init(void)
 
 	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 1000000);
 
-#if 0
+#if 1
 	NVIC_SetPriority(USART1_IRQn, 0);
 	NVIC_EnableIRQ(USART1_IRQn);
 #endif
 
-	LL_USART_EnableDMAReq_RX(USART1);
+	LL_USART_EnableIT_RXNE(USART1);
 
-	LL_USART_EnableDirectionTx(USART1);
+//	LL_USART_EnableDMAReq_RX(USART1);
+
+//	LL_USART_EnableDirectionTx(USART1);
 	LL_USART_EnableDirectionRx(USART1);
 
 	LL_USART_Enable(USART1);
@@ -258,7 +261,7 @@ void comm_init(void* dst_buffer, size_t dst_buffer_size)
 
 void comm_start(void)
 {
-	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
+//	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
 
 	LL_USART_EnableDirectionRx(USART1);
 	LL_USART_EnableDirectionTx(USART1);
@@ -267,13 +270,54 @@ void comm_start(void)
 void comm_stop(void)
 {
 	/* Включить приемный канал 5 DMA1. */
-	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
+//	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
 
 	/* Включить приемник USART1. */
 	LL_USART_DisableDirectionRx(USART1);
 	LL_USART_DisableDirectionTx(USART1);
 }
 
+uint32_t header = 0;
+uint32_t tail = 1;
+size_t buf_ind = 0;
+struct kbms_data kbms;
+#define MARKER	0xFF
+void usart1_irq_handler(void)
+{
+	uint8_t data = LL_USART_ReceiveData8(USART1);
+
+	if (header == 0 && data == MARKER) {
+		buf_ind = 0;
+		((uint8_t*)usart1_rx_buf)[buf_ind++] = data;
+		header = 1;
+	} else if (header == 1 && data == MARKER && ((uint8_t*)usart1_rx_buf)[buf_ind - 1] != MARKER) {
+		tail = 1;
+		header = 0;
+		((uint8_t*)usart1_rx_buf)[buf_ind] = data;
+		/* TODO: Data processing */
+		if ((buf_ind + 1) == sizeof(struct kbms_data) + 3) {
+			cobs_decode(MARKER, usart1_rx_buf, buf_ind + 1, &kbms);
+
+			if (kbms.hid_num == 1) {
+				LL_GPIO_TogglePin(GPIOB, LL_GPIO_PIN_7);
+				copy_to_usb((uint8_t*)&kbms.kb_data, _GetEPTxAddr(ENDP1), sizeof(struct keyboard_state));
+				_SetEPTxCount(ENDP1, EP1_MAX_PACKET_SIZE);
+				_SetEPTxStatus(ENDP1, EP_TX_VALID);
+
+				copy_to_usb((uint8_t*)&kbms.ms_data, _GetEPTxAddr(ENDP2), sizeof(struct mouse_state));
+				_SetEPTxCount(ENDP2, EP2_MAX_PACKET_SIZE);
+				_SetEPTxStatus(ENDP2, EP_TX_VALID);
+
+			}
+		}
+	} else if (header == 1 && data != MARKER) {
+
+		((uint8_t*)usart1_rx_buf)[buf_ind++] = data;
+	}
+
+	LL_USART_ClearFlag_RXNE(USART1);
+}
+#if 0
 /*
  * USART1 RX handler
  */
@@ -295,7 +339,9 @@ void dma1_channel5_irq_handler(void)
 
 	WRITE_REG(DMA1->IFCR, (DMA_IFCR_CGIF5 | DMA_IFCR_CTCIF5 | DMA_IFCR_CHTIF5 | DMA_IFCR_CTEIF5));
 }
-#if 1
+#endif
+
+#if 0
 /*
  * USART2 RX handler
  */
@@ -314,7 +360,7 @@ void dma1_channel6_irq_handler(void)
 }
 #endif
 
-#if 1
+#if 0
 /*
  * USART3 RX handler
  */

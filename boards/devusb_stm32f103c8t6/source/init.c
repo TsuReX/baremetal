@@ -188,7 +188,7 @@ void board_init(void)
 
 	/* PB7 set low level. */
 	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);
+
 	/* Green led */
 	LL_GPIO_ResetOutputPin(GPIOC, LL_GPIO_PIN_13);
 	/* MCO output enable. */
