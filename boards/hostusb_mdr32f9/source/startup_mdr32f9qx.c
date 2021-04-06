@@ -178,7 +178,7 @@ void reset_handler(void) {
 
 //	SystemInit();
 
-	uint32_t i = 0x002FFFFF;
+	uint32_t i = 0x004FFFFF;
 	for (; i != 0; --i) {
 		__ISB();
 	}

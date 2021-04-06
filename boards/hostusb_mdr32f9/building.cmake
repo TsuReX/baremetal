@@ -20,8 +20,6 @@ set(BOARD_TYPE_STATUS "SET")
 ## Подключение файло исходных кодов и заголовков
 set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/")
 
-#set(MAIN_ASM_SOURCES    "${BRD_PATH}/source/startup_MDR32F9Qx.s")
-
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
 						"${BRD_PATH}/include"
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -34,10 +32,9 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/systimer.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 						"${BRD_PATH}/source/startup_mdr32f9qx.c"
-#						"${BRD_PATH}/source/system_MDR32F9Qx.c"
 						"${BRD_PATH}/source/console.c"
 						"${BRD_PATH}/source/spi.c"
-#						"${BRD_PATH}/source/delay.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${BRD_PATH}/source/init.c"
 						"${BRD_PATH}/source/platform.c"
 						"${BRD_PATH}/source/communication.c"
@@ -80,7 +77,7 @@ set(LINKER_LIBS			"-lc"
 				)
 		
 add_definitions("-DUSE_MDR1986VE9x")
-
+#add_definitions("-DDBG_OUT")
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
 add_custom_target("flash" DEPENDS ${PROJ_NAME} fprog)
@@ -91,7 +88,7 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME} fprog)
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
-					COMMAND openocd
+					COMMAND sudo openocd
 					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do flash\")
 
 #######################################################################
@@ -103,7 +100,7 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 # Определение команд для цели flash
 add_custom_command(	TARGET "debug"
 					POST_BUILD
-					COMMAND openocd
+					COMMAND sudo openocd
 					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do debug\")
 				
 include(${BRD_PATH}/fprog_building.cmake)

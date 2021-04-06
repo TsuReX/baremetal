@@ -107,3 +107,29 @@ void console_close(void)
 {
 	console_usart1_close();
 }
+
+size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t usec_timeout)
+{
+	size_t i;
+	for (i = 0; i < src_buffer_size; ++i) {
+		UART_SendData (MDR_UART1, src_buffer[i]);
+
+#if defined(PERIOD_TIMEOUT)
+		struct period timeout;
+		period_start(&timeout, usec_timeout);
+#endif
+
+	do {
+			__DSB();
+#if !defined(PERIOD_TIMEOUT)
+			--usec_timeout;
+			if (usec_timeout == 0)
+				break;
+#else
+			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
+				break;
+#endif
+		} while (UART_GetFlagStatus (MDR_UART1, UART_FLAG_TXFE) != 1);
+	}
+	return i;
+}

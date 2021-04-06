@@ -18,12 +18,11 @@ int main(void)
 	board_init();
 	mdelay(100);
 //	console_init();
-//	log_level_set(DEBUG);
+	log_level_set(DEBUG);
 	comm_init(0, 0);
 	comm_start();
-
 	spi_init();
-
+	printk(DEBUG, "Debug output\r\n");
 	/* Fire DEBUG_LED */
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 
