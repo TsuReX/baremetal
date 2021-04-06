@@ -12,6 +12,7 @@
 #include "console.h"
 #include "max3421e.h"
 #include "kbmsusb.h"
+#include "cobs.h"
 
 #include "time.h"
 #include "spi_flash.h"
@@ -508,7 +509,11 @@ void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffe
 	memcpy(&kbms.ms_data, ms_buffer, sizeof(kbms.ms_data));
 	kbms.hid_num = current_hid_num;
 
-	data_to_hid_transmit(current_hid_num, (uint8_t*)&kbms, sizeof(kbms));
+	uint8_t enc_kbms[sizeof(kbms) + 3];
+
+	cobs_encode(0xFF, &kbms, sizeof(kbms), &enc_kbms);
+
+	data_to_hid_transmit(current_hid_num, (uint8_t*)&enc_kbms, sizeof(enc_kbms));
 }
 
 void spi_usb_transmission_start(void)
