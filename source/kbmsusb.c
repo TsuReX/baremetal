@@ -491,6 +491,14 @@ void data_to_hid_transmit(uint32_t hid_num, uint8_t *src_buffer, size_t buffer_s
 
 uint32_t current_hid_num = 2;
 
+void buf_print(const void *buffer, size_t buffer_size)
+{
+	size_t ind = 0;
+	for (;ind < buffer_size; ++ind)
+		printk(DEBUG, "%02X ",((uint8_t*)buffer)[ind]);
+	printk(DEBUG, "\r\n");
+}
+
 void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffer, size_t ms_buffer_size) {
 
 	if (kb_buffer[0] == 0x10 && kb_buffer[2] == 0x50) {
@@ -511,7 +519,11 @@ void kbms_data_send(uint8_t *kb_buffer, size_t kb_buffer_size, uint8_t *ms_buffe
 
 	uint8_t enc_kbms[sizeof(kbms) + 3];
 
+	buf_print(&kbms, sizeof(kbms));
+
 	cobs_encode(0xFF, &kbms, sizeof(kbms), &enc_kbms);
+
+	buf_print(&enc_kbms, sizeof(enc_kbms));
 
 	data_to_hid_transmit(current_hid_num, (uint8_t*)&enc_kbms, sizeof(enc_kbms));
 }

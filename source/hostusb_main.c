@@ -27,12 +27,10 @@ int main(void)
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 
 	spi_usb_transmission_start();
-//	max3421e_fullduplex_spi_set(MOUSE_CHANNEL);
 /*****************************************************************************************/
 	PORT_SetBits(MDR_PORTD, PORT_Pin_7);
 	while(1)
 	{
-
 #if	0
 		uint8_t buf[4] = {'a', 'b', 'c', '\n'};
 		data_to_hid_transmit(1, buf, sizeof(buf));
