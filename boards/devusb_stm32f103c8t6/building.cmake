@@ -110,7 +110,7 @@ endif ()
 # Определение команд для цели flash
 add_custom_command(	TARGET "flash"
 					POST_BUILD
-					COMMAND openocd
+					COMMAND sudo openocd
 					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do flash\")
 
 #######################################################################
@@ -122,6 +122,6 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 # Определение команд для цели flash
 add_custom_command(	TARGET "debug"
 					POST_BUILD
-					COMMAND openocd
+					COMMAND sudo openocd
 					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do debug\")
 							
