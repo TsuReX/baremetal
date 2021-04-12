@@ -4,6 +4,8 @@
 #include <TIVA.h>
 #include "hw_sysctl.h"
 #include "hw_uart.h"
+#include "hw_timer.h"
+#include "hw_ints.h"
 
 #define RCC_MOSCDIS				(0)
 #define RCC_OSCSRC				(4)
@@ -40,6 +42,8 @@
 #define RCGCUART_UART5			(5)
 #define RCGCUART_UART6			(6)
 #define RCGCUART_UART7			(7)
+
+#define RCGCTIMER_TIMER0		(0)
 
 #define GPIO_PIN_0				(0)
 #define GPIO_PIN_1				(1)

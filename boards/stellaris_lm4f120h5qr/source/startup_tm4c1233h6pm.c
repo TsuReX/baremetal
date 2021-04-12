@@ -15,6 +15,9 @@ WEAK void svc_handler(void);
 WEAK void debugmon_handler(void);
 WEAK void pendsv_handler(void);
 WEAK void systick_handler(void);
+
+WEAK void timer0a_handler(void);
+
 WEAK void IntDefaultHandler(void);
 
 extern int main(void);
@@ -77,7 +80,7 @@ void (* const isr_vector_table[])(void) = {
 	IntDefaultHandler,                      // ADC Sequence 2
 	IntDefaultHandler,                      // ADC Sequence 3
 	IntDefaultHandler,                      // Watchdog timer
-	IntDefaultHandler,                      // Timer 0 subtimer A
+	timer0a_handler,	                      // Timer 0 subtimer A
 	IntDefaultHandler,                      // Timer 0 subtimer B
 	IntDefaultHandler,                      // Timer 1 subtimer A
 	IntDefaultHandler,                      // Timer 1 subtimer B

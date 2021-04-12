@@ -136,31 +136,39 @@ void board_init(void)
 {
 	/* 1. General-Purpose Input/Output Run Mode Clock Gating Control */
 	SYSCTL->RCGCGPIO |= (0x1 << RCGCGPIO_GPIOF);
+	/* 16/32-Bit General-Purpose Timer 0 Run Mode Clock Gating Control */
+	SYSCTL->RCGCTIMER |= (0x1 << RCGCTIMER_TIMER0);
 
 	/* 2. GPIO Direction */
-	GPIOF->DIR = 	(1 << GPIO_PIN_1) |
-					(1 << GPIO_PIN_2) |
-					(1 << GPIO_PIN_3);
+
+	GPIOF->DIR =	(1 << GPIO_PIN_0) |		// 1MHz out
+					(1 << GPIO_PIN_1) |		// RED_LED
+					(1 << GPIO_PIN_2) |		// BLUE_LED
+					(1 << GPIO_PIN_3);		// GREEN LED
 
 	/* 3. GPIO Alternate Function Select */
-	GPIOF->AFSEL =	(0 << GPIO_PIN_1) |
+	GPIOF->AFSEL =	(0 << GPIO_PIN_0) |
+					(0 << GPIO_PIN_1) |
 					(0 << GPIO_PIN_2) |
 					(0 << GPIO_PIN_3);
 
 	/* 4. GPIO Port Control */
-	GPIOF->PCTL =	(GPIOPCTL_F0 << (GPIO_PIN_1 << 2)) |
+	GPIOF->PCTL =	(GPIOPCTL_F0 << (GPIO_PIN_0 << 2)) |
+					(GPIOPCTL_F0 << (GPIO_PIN_1 << 2)) |
 					(GPIOPCTL_F0 << (GPIO_PIN_2 << 2)) |
 					(GPIOPCTL_F0 << (GPIO_PIN_3 << 2));
 
 	/* 5. GPIO Digital Enable */
-	GPIOF->DEN =	(1 << GPIO_PIN_1) |
+	GPIOF->DEN =	(1 << GPIO_PIN_0) |
+					(1 << GPIO_PIN_1) |
 					(1 << GPIO_PIN_2) |
 					(1 << GPIO_PIN_3);
 
 	/* 6. GPIO 2-mA Drive Select */
 	GPIOF->DR2R =	(1 << GPIO_PIN_3) |
 					(1 << GPIO_PIN_2) |
-					(1 << GPIO_PIN_1);
+					(1 << GPIO_PIN_1) |
+					(1 << GPIO_PIN_0);
 
 	/* 7. GPIO Pull-Up Select */
 //	GPIOF->PUR =	(1 << GPIO_PIN_3) |
