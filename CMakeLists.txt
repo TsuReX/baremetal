@@ -158,6 +158,19 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "psu_ls_stm32f030c6t6")
 	include(${BOARD_SCRIPT_CMAKE})
 	
 #######################################################################
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "imx8m")
+	
+	set(PROJ_NAME imx8m)
+	
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
+		message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
+	endif()
+
+	include(${BOARD_SCRIPT_CMAKE})
+	
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "cpe_stm32f030r8t6")
 	
 	set(PROJ_NAME cpe_stm32f030r8t6)
@@ -213,12 +226,14 @@ target_link_libraries(${PROJ_NAME} ${LINKER_LIBS} ${LINKER_FLAGS} ringbuf)
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND arm-none-eabi-objcopy -O binary
+#        COMMAND arm-none-eabi-objcopy -O binary
+        COMMAND aarch64-none-elf-objcopy -O binary
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.bin)
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND arm-none-eabi-objdump -SD
+#        COMMAND arm-none-eabi-objdump -SD
+        COMMAND aarch64-none-elf-objdump -SD
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf >
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf.objdump)
