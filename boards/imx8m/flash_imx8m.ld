@@ -9,7 +9,7 @@
 MEMORY
 {
     PROGRAM_FLASH (RX) : ORIGIN = 0x00000000, LENGTH = 0x00040000
-    SRAM (WX)  : ORIGIN = 0x20000000, LENGTH = 0x00008000
+    SRAM (WX)  : ORIGIN = 0x00000000, LENGTH = 0x00008000
 }
 	/* Define a symbol for the top of each memory region */
 __flash_start__	= ORIGIN(PROGRAM_FLASH); /* PROGRAM_FLASH */

@@ -32,6 +32,15 @@
 	openocd -f ../boards/stellaris_lm4f120h5qr/oocd_ti-icdi.cfg -c "init; reset halt;" > /dev/null &  arm-none-eabi-gdb ; echo shutdown | nc 127.0.0.1 4444
 TODO: Автоматизировать отладку через использование цели сборки
 
+7. Запуск в qemu
+ARMv8:
+qemu-system-aarch64 -machine type=virt,virtualization=on,secure=on -cpu cortex-a53 -s -S -bios ./imx8m.bin
+
+aarch64-none-elf-gdb -ex "target remote localhost:1234" -ex "layout asm" -ex "symbol-file imx8m.elf" -ex "focus cmd"
+
+* virtualization=on добавляет уровень EL2
+* secure=on добавляет уровень EL3
+
 Переменные, используемые на этапе (3) конфигурирования:
 
 CMAKE_C_COMPILER - путь и имя компилятора или просто имя, если путь к нему прописан в PATH;
