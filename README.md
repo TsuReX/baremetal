@@ -34,9 +34,9 @@ TODO: Автоматизировать отладку через использ�
 
 7. Запуск в qemu
 ARMv8:
-qemu-system-aarch64 -machine type=virt,virtualization=on,secure=on -cpu cortex-a53 -s -S -bios ./imx8m.bin
+qemu-system-aarch64 -machine type=virt,virtualization=on,secure=on -cpu cortex-a53 -smp cpus=2 -s -S -bios ./imx8m.bin
 
-aarch64-none-elf-gdb -ex "target remote localhost:1234" -ex "layout asm" -ex "symbol-file imx8m.elf" -ex "focus cmd"
+aarch64-none-elf-gdb -ex "target remote localhost:1234" -ex "layout asm" -ex "symbol-file imx8m.elf" -ex "focus cmd" -ex "info  thread"
 
 * virtualization=on добавляет уровень EL2
 * secure=on добавляет уровень EL3
