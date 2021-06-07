@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.5)
 
 set(PROJ_NAME debug-dev)
 
+set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+
 ## Предотвращение проверки работоспособности компилятора
 ## (необходимо для избежания проблемы при кросс-сборке)
 
@@ -226,14 +228,12 @@ target_link_libraries(${PROJ_NAME} ${LINKER_LIBS} ${LINKER_FLAGS} ringbuf)
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
-#        COMMAND arm-none-eabi-objcopy -O binary
-        COMMAND aarch64-none-elf-objcopy -O binary
+        COMMAND "${CMAKE_C_COMPILER_PREFIX}objcopy" -O binary
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.bin)
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
-#        COMMAND arm-none-eabi-objdump -SD
-        COMMAND aarch64-none-elf-objdump -SD
+        COMMAND "${CMAKE_C_COMPILER_PREFIX}objdump" -SD
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf >
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf.objdump)

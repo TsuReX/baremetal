@@ -19,7 +19,7 @@
 	cd build
 	clear ;\
 	rm -rf ../build/* ;\
-	cmake .. -DCMAKE_C_COMPILER=arm-none-eabi-gcc -DBOARD_TYPE=nucleo_stm32f303k8t6
+	cmake .. -DCMAKE_C_COMPILER_PREFIX=arm-none-eabi- -DBOARD_TYPE=nucleo_stm32f303k8t6
 	
 4. Выполнение сборки
 	cmake --build . --clean-first -- -j8
@@ -43,7 +43,7 @@ aarch64-none-elf-gdb -ex "target remote localhost:1234" -ex "layout asm" -ex "sy
 
 Переменные, используемые на этапе (3) конфигурирования:
 
-CMAKE_C_COMPILER - путь и имя компилятора или просто имя, если путь к нему прописан в PATH;
+CMAKE_C_COMPILER_PREFIX - путь и префикс имени набора утилит сборки, например arm-none-eabi- или aarch64-none-elf-;
 
 BOARD_TYPE - используемая платформа - имя директории в директории boards, возможные варианты типов платформ: 
 china_stm32f407vet6
