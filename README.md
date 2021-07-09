@@ -48,3 +48,4 @@ devusb_stm32f103c8t6
 hostusb_mdr32f9
 hostusb_stm32f103c8t6
 bluepill_stm32f103c8t6
+baikalbmc_stm32f103ret6
