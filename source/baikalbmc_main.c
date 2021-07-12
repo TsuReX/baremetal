@@ -15,49 +15,49 @@ int32_t power_on(void)
 	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
-	mdelay(1);
+	mdelay(10);
 	uint32_t pg = LL_GPIO_ReadInputPort(PG_VDD_PORT) & PG_VDD_PIN;
 	if (!(pg & PG_VDD_PIN))
 		return -1;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VL_PORT, EN_VL_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_VL_PORT) & PG_VL_PIN;
 	if (!(pg & PG_VL_PIN))
 		return -2;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VCORE_PORT, EN_VCORE_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_VCORE_PORT) & PG_VCORE_PIN;
 	if (!(pg & PG_VCORE_PIN))
 		return -3;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VLL_PORT, EN_VLL_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_VLL_PORT) & PG_VLL_PIN;
 	if (!(pg & PG_VLL_PIN))
 		return -4;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VDRAM_PORT, EN_VDRAM_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_VDRAM_PORT) & PG_VDRAM_PIN;
 	if (!(pg & PG_VDRAM_PIN))
 		return -5;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_AUX_PORT, EN_AUX_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_AUX_PORT) & PG_AUX_PIN;
 	if (!(pg & PG_AUX_PIN))
 		return -6;
-	mdelay(10);
+//	mdelay(10);
 
 	LL_GPIO_SetOutputPin(EN_VCC_PORT, EN_VCC_PIN);
-	mdelay(1);
+	mdelay(10);
 	pg = LL_GPIO_ReadInputPort(PG_VCC_PORT) & PG_VCC_PIN;
 	if (!(pg & PG_VCC_PIN))
 		return -7;
@@ -104,14 +104,31 @@ int main(void)
 
 	log_level_set(DEBUG);
 
+	printk(DEBUG, "BAIKAL BMC\r\n");
+
 	int32_t ret_val = power_on();
-
-	if (ret_val != 0 )
+	if (ret_val != 0) {
+		printk(DEBUG, "Error step %ld\r\n", ret_val);
 		power_off();
+	}
 
-	__WFE();
+	while(1) {
+//		printk(DEBUG, "BAIKAL BMC LOOP\r\n");
+		mdelay(500);
 
-	while(1);
+		LL_GPIO_ResetOutputPin(LED_PWR_PORT, LED_PWR_PIN);
+		mdelay(100);
+		LL_GPIO_ResetOutputPin(LED_STAT_PORT, LED_STAT_PIN);
+		mdelay(100);
+		LL_GPIO_ResetOutputPin(LED_AUX_PORT, LED_AUX_PIN);
+		mdelay(100);
+		LL_GPIO_SetOutputPin(LED_PWR_PORT, LED_PWR_PIN);
+		mdelay(100);
+		LL_GPIO_SetOutputPin(LED_STAT_PORT, LED_STAT_PIN);
+		mdelay(100);
+		LL_GPIO_SetOutputPin(LED_AUX_PORT, LED_AUX_PIN);
+
+	}
 
 	return 0;
 }
