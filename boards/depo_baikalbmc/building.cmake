@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "nucleo_stm32f401ret6u")
+set(CURRENT_BOARD_TYPE "depo_baikalbmc")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,21 +18,22 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f401ret6u/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_baikalbmc/")
 
 set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
-						"${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f401ret6u/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_baikalbmc/include"
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 						"${BOARD_SRC_PATH}/usblib/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/nucleo_stm32f401ret6u.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_baikalbmc.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
-						"${BOARD_SRC_PATH}/source/startup_stm32f401ret6u.c"
+						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
 						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/platform.c"
 						"${BOARD_SRC_PATH}/source/console.c"
+						"${BOARD_SRC_PATH}/source/system_stm32f4xx.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 
 				)
@@ -49,7 +50,8 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 #						"${DRV_SOURCES_PATH}/stm32f4xx_ll_i2c.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_gpio.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_usart.c"
-#						"${DRV_SOURCES_PATH}/stm32f4xx_ll_dma.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_ll_rcc.c"
+#						"${DRV_SOURCES_PATH}/stm32f4xx_ll_bus.c"
 #						"${DRV_SOURCES_PATH}/stm32f4xx_ll_tim.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_utils.c"
 				)
@@ -62,10 +64,10 @@ set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4 -Wall -Werror")
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
-						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/nucleo_stm32f401ret6u/flash_stm32f401ret6u.ld"
+						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_baikalbmc/flash.ld"
 						"-mcpu=cortex-m4"
 						"-specs=nano.specs"
-						"-Wl,--gc-sections"
+#						"-Wl,--gc-sections"
 #						"-nostdlib"
 				)
 
@@ -74,7 +76,7 @@ set(LINKER_LIBS			"-lc"
 						"-lnosys"
 				)
 		
-add_definitions("-DSTM32F401xE")
+add_definitions("-DSTM32F407xx")
 add_definitions("-DUSE_FULL_LL_DRIVER")
 add_definitions("-DDBG_OUT")
 

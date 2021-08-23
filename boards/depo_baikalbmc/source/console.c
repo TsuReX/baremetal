@@ -12,8 +12,9 @@
 
 #include "ringbuf.h"
 #include "console.h"
-#include "drivers.h"
+
 #include "config.h"
+#include "drivers.h"
 #include "debug.h"
 
 /** Количество байтов передаваемых через USART1. */
@@ -33,50 +34,44 @@ static void console_gpio_init(void)
 {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
-	/* USART2 TX */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_2, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_2, LL_GPIO_SPEED_FREQ_HIGH);
-//	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_PUSHPULL);
-//	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
+	/* USART1 TX */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_2, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_2, LL_GPIO_SPEED_FREQ_HIGH);
 
+	/* USART1 RX */
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinSpeed(GPIOA, LL_GPIO_PIN_3, LL_GPIO_SPEED_FREQ_HIGH);
 
-	/* USART2 RX */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_3, LL_GPIO_MODE_ALTERNATE);
-//	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
-//	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
-
+	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_2, LL_GPIO_AF_7);
+	LL_GPIO_SetAFPin_0_7(GPIOA, LL_GPIO_PIN_3, LL_GPIO_AF_7);
 }
 
 /*
- * @brief Настройка USART1 для работы на скорости 1500000, включение прерываний.
+ * @brief Настройка USART2 для работы на скорости 1500000, включение прерываний.
  */
-static void console_usart1_init(void)
+static void console_usart2_init(void)
 {
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
 
 	LL_USART_ConfigCharacter(USART2, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART2, HCLK_FREQ >> 1, LL_USART_OVERSAMPLING_8, 115200);
+	LL_USART_SetBaudRate(USART2, 30000000, LL_USART_OVERSAMPLING_16, 115200);
 
+	LL_USART_EnableDirectionTx(USART2);
+	LL_USART_EnableDirectionRx(USART2);
 
-//	NVIC_SetPriority(USART1_IRQn, 0);
-//	NVIC_EnableIRQ(USART1_IRQn);
-
-	LL_USART_EnableDirectionTx(USART1);
-	LL_USART_EnableDirectionRx(USART1);
-
-	LL_USART_Enable(USART1);
+	LL_USART_Enable(USART2);
 }
 
 /*
  * @brief Отключение USART1.
  */
-static void console_usart1_close(void)
+static void console_usart2_close(void)
 {
-	LL_USART_DisableDirectionTx(USART1);
-	LL_USART_DisableDirectionRx(USART1);
+	LL_USART_DisableDirectionTx(USART2);
+	LL_USART_DisableDirectionRx(USART2);
 
-	LL_USART_Disable(USART1);
+	LL_USART_Disable(USART2);
 }
 
 /*
@@ -89,7 +84,7 @@ void console_init(void)
 	console_gpio_init();
 
 	/* Настройка USART1. */
-	console_usart1_init();
+	console_usart2_init();
 
 	printk(INFO, "Console initialized\n\r");
 }
@@ -99,7 +94,7 @@ void console_init(void)
  */
 void console_close(void)
 {
-	console_usart1_close();
+	console_usart2_close();
 }
 
 int32_t console_process(void)
@@ -162,7 +157,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 {
 	size_t i;
 	for (i = 0; i < src_buffer_size; ++i) {
-		LL_USART_TransmitData8(USART1, src_buffer[i]);
+		LL_USART_TransmitData8(USART2, src_buffer[i]);
 
 #if defined(PERIOD_TIMEOUT)
 		struct period timeout;
@@ -179,7 +174,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
 				break;
 #endif
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+		} while (LL_USART_IsActiveFlag_TXE(USART2) != 1);
 	}
 	return i;
 }

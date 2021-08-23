@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stddef.h>
-//#include <system_stm32f4xx.h>
 
 #define WEAK __attribute__ ((weak))
 #define WEAK_AV __attribute__ ((weak, section(".after_vectors")))
@@ -90,6 +89,7 @@ extern uint32_t __bss_start__;
 extern uint32_t __bss_end__;
 extern uint32_t __stack_start__;
 extern uint32_t __stack_end__;
+
 extern void (* const isr_vector_table[])(void);
 
 __attribute__ ((used, section(".isr_vector")))

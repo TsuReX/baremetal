@@ -183,9 +183,9 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "baikalbmc_stm32f103ret6")
 
 	include(${BOARD_SCRIPT_CMAKE})
 ######################################################################
-elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "nucleo_stm32f401ret6u")
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "depo_baikalbmc")
 	
-	set(PROJ_NAME nucleo_stm32f401ret6u)
+	set(PROJ_NAME depo_baikalbmc)
 	
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 

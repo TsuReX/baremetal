@@ -9,7 +9,7 @@
 #define _CONFIG_H_
 
 /** Частота шины HCLK (работы ядра процессора). */
-#define HCLK_FREQ	48000000
+#define HCLK_FREQ	120000000
 
 #define CURRENT_MESSAGE_LEVEL 2
 
