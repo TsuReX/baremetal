@@ -12,8 +12,12 @@ int32_t power_on(void)
 {
 	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
 	mdelay(10);
+	printk(DEBUG, "DRVRST_PIN HIGH\r\n");
+
 	LL_GPIO_ResetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
 	mdelay(10);
+	printk(DEBUG, "CORE_CLOCK_PIN LOW\r\n");
+
 
 	LL_GPIO_SetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
 	mdelay(100);
@@ -22,12 +26,22 @@ int32_t power_on(void)
 	if (!pg)
 		return -1;
 
+	// Y5 automatic starts with VDD
+
+	LL_GPIO_ResetOutputPin(EN_CLKDIST_PORT, EN_CLKDIST_PIN);
+	printk(DEBUG, "EN_CLKDIST_PIN LOW\r\n");
+	mdelay(10);
+
 	LL_GPIO_SetOutputPin(EN_VLL_PORT, EN_VLL_PIN);
 	mdelay(100);
 	pg = LL_GPIO_IsInputPinSet(PG_VLL_PORT, PG_VLL_PIN);
 	printk(DEBUG, "PG_VLL_PIN 0x%01lX\r\n", pg);
 	if (!pg)
 		return -2;
+
+	LL_GPIO_SetOutputPin(EN_VDDPLL_PORT, EN_VDDPLL_PIN);
+	mdelay(100);
+	printk(DEBUG, "EN_VDDPLL_PIN HIGH\r\n");
 
 	LL_GPIO_SetOutputPin(EN_VDRAM_PORT, EN_VDRAM_PIN);
 	mdelay(100);
@@ -52,6 +66,7 @@ int32_t power_on(void)
 
 	LL_GPIO_SetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
 	mdelay(100);
+	printk(DEBUG, "CORE_CLOCK_PIN HIGH\r\n");
 
 	LL_GPIO_SetOutputPin(EN_AUX_PORT, EN_AUX_PIN);
 	mdelay(100);
@@ -68,6 +83,7 @@ int32_t power_on(void)
 		return -7;
 
 	LL_GPIO_ResetOutputPin(DRVRST_PORT, DRVRST_PIN);
+	printk(DEBUG, "DRVRST_PIN LOW\r\n");
 
 	return 0;
 }
@@ -89,6 +105,8 @@ void power_off(void)
 	LL_GPIO_ResetOutputPin(EN_VCORE_PORT, EN_VCORE_PIN);
 
 	LL_GPIO_ResetOutputPin(EN_VL_PORT, EN_VL_PIN);
+
+	LL_GPIO_ResetOutputPin(EN_VDDPLL_PORT, EN_VDDPLL_PIN);
 
 	LL_GPIO_ResetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
 }
