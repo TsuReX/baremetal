@@ -57,6 +57,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${DRV_SOURCES_PATH}/stm32l4xx_ll_usart.c"
 						"${DRV_SOURCES_PATH}/stm32l4xx_ll_utils.c"
 						"${DRV_SOURCES_PATH}/stm32l4xx_ll_gpio.c"
+						"${DRV_SOURCES_PATH}/stm32l4xx_ll_i2c.c"
 				)
 
 #######################################################################
