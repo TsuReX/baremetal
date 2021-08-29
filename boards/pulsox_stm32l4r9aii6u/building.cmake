@@ -38,6 +38,8 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/console.c"
 						"${BOARD_SRC_PATH}/source/scheduler.c"
+						"${BOARD_SRC_PATH}/source/maxm86161.c"
+						"${BOARD_SRC_PATH}/source/pulsometr.c"
 				)
 
 set(INCLUDE				"${INCLUDE}"
