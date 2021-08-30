@@ -21,7 +21,7 @@
 #define JTAG_RST_PIN		LL_GPIO_PIN_8
 #define JTAG_RST_PORT		GPIOA
 
-#define DRVRST_PIN		LL_GPIO_PIN_15
+#define DRVRST_PIN		LL_GPIO_PIN_4
 #define DRVRST_PORT		GPIOA
 
 #define LED_PWR_PIN		LL_GPIO_PIN_9
@@ -72,8 +72,8 @@
 #define EN_AUX_PIN		LL_GPIO_PIN_2
 #define EN_AUX_PORT		GPIOD
 
-#define PG_AUX_PIN		LL_GPIO_PIN_3
-#define PG_AUX_PORT		GPIOB
+#define PG_AUX_PIN		LL_GPIO_PIN_5
+#define PG_AUX_PORT		GPIOA
 
 #define EN_VCC_PIN		LL_GPIO_PIN_9
 #define EN_VCC_PORT		GPIOC

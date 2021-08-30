@@ -10,13 +10,13 @@
 
 int32_t power_on(void)
 {
-	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
-	mdelay(10);
-	printk(DEBUG, "DRVRST_PIN HIGH\r\n");
-
-	LL_GPIO_ResetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
-	mdelay(10);
-	printk(DEBUG, "CORE_CLOCK_PIN LOW\r\n");
+//	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
+//	mdelay(10);
+//	printk(DEBUG, "DRVRST_PIN HIGH\r\n");
+//
+//	LL_GPIO_ResetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
+//	mdelay(10);
+//	printk(DEBUG, "CORE_CLOCK_PIN LOW\r\n");
 
 
 	LL_GPIO_SetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
@@ -26,11 +26,12 @@ int32_t power_on(void)
 	if (!pg)
 		return -1;
 
-	// Y5 automatic starts with VDD
+	printk(DEBUG, "Y5 100MHz clock automatic starts with VDD\r\n");
+	mdelay(100);
 
-	LL_GPIO_ResetOutputPin(EN_CLKDIST_PORT, EN_CLKDIST_PIN);
-	printk(DEBUG, "EN_CLKDIST_PIN LOW\r\n");
-	mdelay(10);
+	LL_GPIO_SetOutputPin(EN_CLKDIST_PORT, EN_CLKDIST_PIN);
+	printk(DEBUG, "EN_CLKDIST_PIN HIGH\r\n");
+	mdelay(100);
 
 	LL_GPIO_SetOutputPin(EN_VLL_PORT, EN_VLL_PIN);
 	mdelay(100);
@@ -49,6 +50,10 @@ int32_t power_on(void)
 	printk(DEBUG, "PG_VDRAM_PIN 0x%01lX\r\n", pg);
 	if (!pg)
 		return -3;
+
+	LL_GPIO_ResetOutputPin(JTAG_RST_PORT, JTAG_RST_PIN);
+	printk(DEBUG, "JTAG_RST_PIN LOW\r\n");
+	mdelay(100);
 
 	LL_GPIO_SetOutputPin(EN_VL_PORT, EN_VL_PIN);
 	mdelay(100);
@@ -91,24 +96,17 @@ int32_t power_on(void)
 void power_off(void)
 {
 	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
-
 	LL_GPIO_ResetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VCC_PORT, EN_VCC_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_AUX_PORT, EN_AUX_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VDRAM_PORT, EN_VDRAM_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VLL_PORT, EN_VLL_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VCORE_PORT, EN_VCORE_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VL_PORT, EN_VL_PIN);
-
-	LL_GPIO_ResetOutputPin(EN_VDDPLL_PORT, EN_VDDPLL_PIN);
-
 	LL_GPIO_ResetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
+	LL_GPIO_ResetOutputPin(EN_VLL_PORT, EN_VLL_PIN);
+	LL_GPIO_ResetOutputPin(EN_CLKDIST_PORT, EN_CLKDIST_PIN);
+	LL_GPIO_ResetOutputPin(EN_VDRAM_PORT, EN_VDRAM_PIN);
+	LL_GPIO_SetOutputPin(JTAG_RST_PORT, JTAG_RST_PIN);
+	LL_GPIO_ResetOutputPin(EN_VL_PORT, EN_VL_PIN);
+	LL_GPIO_ResetOutputPin(EN_VDDPLL_PORT, EN_VDDPLL_PIN);
+	LL_GPIO_ResetOutputPin(EN_VCORE_PORT, EN_VCORE_PIN);
+	LL_GPIO_ResetOutputPin(EN_AUX_PORT, EN_AUX_PIN);
+	LL_GPIO_ResetOutputPin(EN_VCC_PORT, EN_VCC_PIN);
 }
 
 int main(void)
