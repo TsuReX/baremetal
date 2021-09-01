@@ -48,7 +48,7 @@ static void console_usart1_init(void)
 	LL_USART_InitTypeDef USART_InitStruct = {0};
 
 	USART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
-	USART_InitStruct.BaudRate = 1500000;
+	USART_InitStruct.BaudRate = 1500000 / 2;
 	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
 	USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
 	USART_InitStruct.Parity = LL_USART_PARITY_NONE;
@@ -56,10 +56,7 @@ static void console_usart1_init(void)
 	USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
 	USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
 	LL_USART_Init(USART1, &USART_InitStruct);
-	LL_USART_SetTXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_1_8);
-	LL_USART_SetRXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_1_8);
-	LL_USART_DisableFIFO(USART1);
-	LL_USART_ConfigAsyncMode(USART1);
+
 	LL_USART_Enable(USART1);
 }
 
@@ -131,7 +128,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 {
 	size_t i;
 	for (i = 0; i < src_buffer_size; ++i) {
-		LL_USART_TransmitData8(USART2, src_buffer[i]);
+		LL_USART_TransmitData8(USART1, src_buffer[i]);
 
 #if defined(PERIOD_TIMEOUT)
 		struct period timeout;
@@ -148,7 +145,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
 				break;
 #endif
-		} while (LL_USART_IsActiveFlag_TXE(USART2) != 1);
+		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
 	}
 	return i;
 }

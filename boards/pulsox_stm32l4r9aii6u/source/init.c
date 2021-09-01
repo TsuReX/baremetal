@@ -74,7 +74,7 @@ static void hse_sysclk_120mhz_init()
 	}
 
 	/* Intermediate AHB prescaler 2 when target frequency clock is higher than 80 MHz */
-	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
 
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 

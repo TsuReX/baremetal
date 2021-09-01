@@ -586,7 +586,7 @@ int main(void)
 
 	board_init();
 
-	i2c2_init();
+//	i2c2_init();
 
 	mdelay(100);
 
@@ -597,12 +597,11 @@ int main(void)
 	printk(DEBUG, "pulsox_stm32l4r9aii6u\r\n");
 
 	/// Power-On LSM6DSLTR/TMP117/MAXM86161
-//	HAL_GPIO_WritePin(EN_LDO_GPIO_Port, EN_LDO_Pin, GPIO_PIN_SET);
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOH);
 	LL_GPIO_SetPinMode(EN_LDO_GPIO_Port, EN_LDO_Pin, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(EN_LDO_GPIO_Port, EN_LDO_Pin);
 
-	maxm86161_test();
-
+//	maxm86161_test();
 	while(1) {
 		printk(DEBUG, "pulsox_stm32l4r9aii6u LOOP\r\n");
 		mdelay(500);
