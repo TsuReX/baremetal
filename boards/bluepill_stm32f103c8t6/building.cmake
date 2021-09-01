@@ -58,6 +58,7 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_dma.c"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_tim.c"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_utils.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_adc.c"
 				)
 
 #######################################################################
