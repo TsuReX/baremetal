@@ -13,6 +13,8 @@
 #define SCANLIM		0x000B
 #define SHUTDOWN	0x000C
 
+uint16_t adc_buf[2] = {0, 0};
+
 void tim2_init(void)
 {
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
@@ -147,37 +149,55 @@ void adc1_init(void)
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/** Common config
-	*/
 	ADC_InitStruct.DataAlignment = LL_ADC_DATA_ALIGN_RIGHT;
-	ADC_InitStruct.SequencersScanMode = LL_ADC_SEQ_SCAN_DISABLE;
+	ADC_InitStruct.SequencersScanMode = LL_ADC_SEQ_SCAN_ENABLE;
 	LL_ADC_Init(ADC1, &ADC_InitStruct);
 	ADC_CommonInitStruct.Multimode = LL_ADC_MULTI_INDEPENDENT;
 	LL_ADC_CommonInit(__LL_ADC_COMMON_INSTANCE(ADC1), &ADC_CommonInitStruct);
 	ADC_REG_InitStruct.TriggerSource = LL_ADC_REG_TRIG_SOFTWARE;
-	ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_DISABLE;
+	ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS;
 	ADC_REG_InitStruct.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
-	ADC_REG_InitStruct.ContinuousMode = LL_ADC_REG_CONV_CONTINUOUS;
-	ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_NONE;
+	ADC_REG_InitStruct.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
+	ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_UNLIMITED;
 	LL_ADC_REG_Init(ADC1, &ADC_REG_InitStruct);
-	/** Configure Regular Channel
-	*/
+
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_4);
 	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_4, LL_ADC_SAMPLINGTIME_1CYCLE_5);
+
+	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_2, LL_ADC_CHANNEL_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_5, LL_ADC_SAMPLINGTIME_1CYCLE_5);
 
 	LL_ADC_Enable(ADC1);
 	LL_ADC_StartCalibration(ADC1);
 	while (LL_ADC_IsCalibrationOnGoing(ADC1));
-}
 
-void adc1_start()
-{
-	LL_ADC_REG_StartConversionSWStart(ADC1);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+	LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+	LL_DMA_SetChannelPriorityLevel(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PRIORITY_HIGH);
+	LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
+	LL_DMA_SetPeriphIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PERIPH_NOINCREMENT);
+	LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
+	LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+	LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
+
+	LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_1, (uint32_t)&adc_buf);
+	LL_DMA_SetPeriphAddress(DMA1, LL_DMA_CHANNEL_1, (uint32_t)&(ADC1->DR));
+
+	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, 2);
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 }
 
 void adc1_value_print()
 {
-	printk(DEBUG, "ADC 1 : 0x%08lX\r\n", LL_ADC_REG_ReadConversionData32(ADC1));
+
+	LL_ADC_REG_StartConversionSWStart(ADC1);
+
+	while (!LL_DMA_IsActiveFlag_TC1(DMA1));
+	LL_DMA_ClearFlag_TC1(DMA1);
+	printk(DEBUG, "ADC 1 0: 0x%03X\r\n", adc_buf[0]);
+
+	printk(DEBUG, "ADC 1 1: 0x%03X\r\n", adc_buf[1]);
 }
 
 void max7219_digit_value_set(size_t dig_num, uint32_t value)
@@ -291,18 +311,21 @@ int main(void)
 
 //	tim3_start();
 
-//	adc1_init();
+	adc1_init();
 
 //	adc1_start();
+	uint32_t i = 0;
 	while (1) {
 
-//		encoder3_value_print();
+		printk(DEBUG, "Blue pill %ld\r\n", i++);
 
-//		adc1_value_print();
 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-		mdelay(500);
-		printk(DEBUG, "Blue pill\r\n");
 
+		encoder3_value_print();
+
+		adc1_value_print();
+
+		mdelay(500);
 	}
 
 #endif
