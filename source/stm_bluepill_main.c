@@ -93,20 +93,20 @@ void tim3_init(void)
 	LL_TIM_SetEncoderMode(TIM3, LL_TIM_ENCODERMODE_X2_TI1);
 
 	LL_TIM_IC_SetActiveInput(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ACTIVEINPUT_DIRECTTI);
-	LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ICPSC_DIV1);
-	LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_FILTER_FDIV1);
+	LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ICPSC_DIV8);
+	LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_FILTER_FDIV32_N8);
 	LL_TIM_IC_SetPolarity(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_POLARITY_RISING);
 
 	LL_TIM_IC_SetActiveInput(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_ACTIVEINPUT_DIRECTTI);
-	LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_ICPSC_DIV1);
-	LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_IC_FILTER_FDIV1);
+	LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_ICPSC_DIV8);
+	LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_IC_FILTER_FDIV32_N8);
 	LL_TIM_IC_SetPolarity(TIM3, LL_TIM_CHANNEL_CH2, LL_TIM_IC_POLARITY_RISING);
 
 	LL_TIM_InitTypeDef TIM_InitStruct = {0};
 	TIM_InitStruct.Prescaler = 0;
 	TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
 	TIM_InitStruct.Autoreload = 100;
-	TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+	TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV4;
 	LL_TIM_Init(TIM3, &TIM_InitStruct);
 	LL_TIM_DisableARRPreload(TIM3);
 	LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_RESET);
@@ -121,8 +121,8 @@ void tim2_start() {
 
 void tim3_start() {
 	LL_TIM_SetCounter(TIM3, 50);
-
-	LL_TIM_EnableCounter(TIM2);
+	LL_TIM_CC_EnableChannel(TIM3, LL_TIM_CHANNEL_CH1 | LL_TIM_CHANNEL_CH2);
+	LL_TIM_EnableCounter(TIM3);
 }
 
 void encoder3_value_print() {
@@ -190,14 +190,17 @@ void adc1_init(void)
 
 void adc1_value_print()
 {
+#define uref_value		3300000 /* micro volts */
+#define uvolts_per_bit	(uref_value >> 12)
 
 	LL_ADC_REG_StartConversionSWStart(ADC1);
 
 	while (!LL_DMA_IsActiveFlag_TC1(DMA1));
 	LL_DMA_ClearFlag_TC1(DMA1);
-	printk(DEBUG, "ADC 1 0: 0x%03X\r\n", adc_buf[0]);
 
-	printk(DEBUG, "ADC 1 1: 0x%03X\r\n", adc_buf[1]);
+	printk(DEBUG, "ADC 1 0: %d\r\n", adc_buf[0] * uvolts_per_bit / 1000);
+
+	printk(DEBUG, "ADC 1 1: %d\r\n", adc_buf[1] * uvolts_per_bit / 1000);
 }
 
 void max7219_digit_value_set(size_t dig_num, uint32_t value)
@@ -307,9 +310,9 @@ int main(void)
 
 	tim2_start();
 
-//	tim3_init();
+	tim3_init();
 
-//	tim3_start();
+	tim3_start();
 
 	adc1_init();
 
@@ -325,7 +328,7 @@ int main(void)
 
 		adc1_value_print();
 
-		mdelay(500);
+		mdelay(100);
 	}
 
 #endif
