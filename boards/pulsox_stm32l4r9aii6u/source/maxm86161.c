@@ -1,5 +1,6 @@
 #include "maxm86161.h"
-
+#include <stddef.h>
+#include "debug.h"
 // --------------------- PRIVATE FUNCTION DECLARATIONS -----------------------
 
 //Function for checking data if it's 1 or 0
@@ -26,6 +27,10 @@ static uint8_t maxm86161_sequence_check ( uint8_t value );
 //Function for delay after reset bit is set to 1
 static void maxm86161_soft_reset_delay( void );
 
+
+int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size);
+int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t data_size);
+
 //Function for letting I2C wait after status check
 //static void maxm86161_dev_i2c_delays(void);
 
@@ -41,9 +46,12 @@ int32_t maxm86161_i2c_read_from_register(uint8_t address) {
 //      I2C_MEMADD_SIZE_8BIT, &bufp, 1, 1000);
 //
 //  return bufp;
-	return 0;
-#warning Implement
 
+	uint8_t reg = 0xFF;
+	int32_t ret_val = i2c_read(MAXM86161_SLAVE_ADDRESS, address, &reg, sizeof(reg));
+	if (ret_val < 0)
+		printk(DEBUG, "%s i2c_read: %d\r\n", __func__, ret_val);
+	return reg;
 }
 
 void maxm86161_i2c_block_write(uint8_t address, uint8_t length, uint8_t *values) {

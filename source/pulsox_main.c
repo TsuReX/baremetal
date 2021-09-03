@@ -337,6 +337,71 @@
 
 #define GUARD_COUNTER_INIT	1000
 
+
+maxm86161_device_config_t default_maxim_config = {
+
+	/* uint8_t int_level */
+	3,
+
+	/* maxm86161_ledsq_cfg_t ledsq_cfg */
+	{
+#if (PROX_SELECTION & PROX_USE_IR)
+		0x02,//LED2 - IR
+		0x01,//LED1 - green
+		0x03,//LED3 - RED
+#elif (PROX_SELECTION & PROX_USE_RED)
+		0x03,//LED3 - RED
+		0x02,//LED2 - IR
+		0x01,//LED1 - green
+#else // default use GREEN
+		0x01,//LED1 - green
+		0x02,//LED2 - IR
+		0x03,//LED3 - RED
+#endif
+		0x00,
+		0x00,
+		0x00,
+	},
+
+	/* maxm86161_ledpa_t ledpa_cfg */
+	{
+			0xFB,// green
+			0x00,// IR
+			0x00,// LED
+	},
+
+	/* maxm86161_ppg_cfg_t ppg_cfg */
+	{
+		MAXM86161_PPG_CFG_ALC_DS,
+		MAXM86161_PPG_CFG_OFFSET_NO,
+//	  	MAXM86161_PPG_CFG_TINT_117p3_US,
+		MAXM86161_PPG_CFG_TINT_58p7_US, //
+//		MAXM86161_PPG_CFG_TINT_29p4_US,//��������
+//		MAXM86161_PPG_CFG_LED_RANGE_16k,
+		MAXM86161_PPG_CFG_LED_RANGE_32k,
+//		MAXM86161_PPG_CFG_SMP_RATE_P1_24sps,
+//		MAXM86161_PPG_CFG_SMP_RATE_P1_50sps,
+		MAXM86161_PPG_CFG_SMP_RATE_P1_512sps,
+		MAXM86161_PPG_CFG_SMP_AVG_1
+	},
+
+	/* maxm86161_int_t int_cfg */
+	{
+		MAXM86161_INT_ENABLE,  //full_fifo
+		MAXM86161_INT_DISABLE, //data_rdy
+		MAXM86161_INT_DISABLE, //alc_ovf
+#ifdef PROXIMITY
+		MAXM86161_INT_ENABLE, //proximity
+#else
+		MAXM86161_INT_DISABLE,
+#endif
+		MAXM86161_INT_DISABLE, //led_compliant
+		MAXM86161_INT_DISABLE, //die_temp
+		MAXM86161_INT_DISABLE, //pwr_rdy
+		MAXM86161_INT_DISABLE  //sha
+	}
+};
+
 static void i2c2_init(void)
 {
 	/**I2C2 GPIO Configuration
@@ -352,16 +417,16 @@ static void i2c2_init(void)
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_14|LL_GPIO_PIN_13;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/* Peripheral clock enable */
-
-	LL_RCC_SetI2CClockSource(LL_RCC_I2C2_CLKSOURCE_PCLK1);
+	LL_RCC_SetI2CClockSource(LL_RCC_I2C2_CLKSOURCE_SYSCLK);
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C2);
+
+	LL_I2C_Disable(I2C2);
 
 	/** I2C Initialization*/
 	LL_I2C_EnableAutoEndMode(I2C2);
@@ -372,7 +437,7 @@ static void i2c2_init(void)
 	LL_I2C_InitTypeDef I2C_InitStruct = {0};
 
 	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStruct.Timing = 0x307075B1;
+	I2C_InitStruct.Timing = 0x30807DAA;
 	I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
 	I2C_InitStruct.DigitalFilter = 0;
 	I2C_InitStruct.OwnAddress1 = 0;
@@ -382,48 +447,51 @@ static void i2c2_init(void)
 	LL_I2C_Init(I2C2, &I2C_InitStruct);
 	LL_I2C_SetOwnAddress2(I2C2, 0, LL_I2C_OWNADDRESS2_NOMASK);
 
+	LL_I2C_Enable(I2C2);
 }
 
 int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
 {
 	uint32_t guard_counter = GUARD_COUNTER_INIT;
 
-	LL_I2C_HandleTransfer(I2C1, chip_addr, LL_I2C_ADDRSLAVE_7BIT, 1, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_START_WRITE);
+	LL_I2C_ClearFlag_NACK(I2C2);
 
-	if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+	LL_I2C_HandleTransfer(I2C2, chip_addr, LL_I2C_ADDRSLAVE_7BIT, 1, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_START_WRITE);
+
+	if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 		return -1;
 
 	while (1) {
 
-		if (LL_I2C_IsActiveFlag_TXIS(I2C1) == 1)
-			LL_I2C_TransmitData8(I2C1, reg_addr);
+		if (LL_I2C_IsActiveFlag_TXIS(I2C2) == 1)
+			LL_I2C_TransmitData8(I2C2, reg_addr);
 
-		if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+		if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 			return -2;
 
-		if (LL_I2C_IsActiveFlag_TC(I2C1) == 1)
+		if (LL_I2C_IsActiveFlag_TC(I2C2) == 1)
 			break;
 
 		if (guard_counter-- == 0)
 			return -3;
 	}
 
-	LL_I2C_HandleTransfer(I2C1, chip_addr, LL_I2C_ADDRSLAVE_7BIT, buffer_size & 0xFF, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_RESTART_7BIT_READ);
+	LL_I2C_HandleTransfer(I2C2, chip_addr, LL_I2C_ADDRSLAVE_7BIT, buffer_size & 0xFF, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_RESTART_7BIT_READ);
 
-	if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+	if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 		return -4;
 
 	size_t pos = 0;
 	guard_counter = GUARD_COUNTER_INIT;
 	while (1) {
 
-		if (LL_I2C_IsActiveFlag_RXNE(I2C1) == 1) {
-			buffer[pos] = LL_I2C_ReceiveData8(I2C1);
+		if (LL_I2C_IsActiveFlag_RXNE(I2C2) == 1) {
+			buffer[pos] = LL_I2C_ReceiveData8(I2C2);
 			++pos;
 		}
 
-		if (LL_I2C_IsActiveFlag_TC(I2C1) == 1) {
-			LL_I2C_GenerateStopCondition(I2C1);
+		if (LL_I2C_IsActiveFlag_TC(I2C2) == 1) {
+			LL_I2C_GenerateStopCondition(I2C2);
 			break;
 		}
 
@@ -437,19 +505,21 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t dat
 {
 	uint32_t guard_counter = GUARD_COUNTER_INIT;
 
-	LL_I2C_HandleTransfer(I2C1, chip_addr, LL_I2C_ADDRSLAVE_7BIT, data_size + 1, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_START_WRITE);
+	LL_I2C_ClearFlag_NACK(I2C2);
 
-	if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+	LL_I2C_HandleTransfer(I2C2, chip_addr, LL_I2C_ADDRSLAVE_7BIT, data_size + 1, LL_I2C_MODE_SOFTEND, LL_I2C_GENERATE_START_WRITE);
+
+	if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 		return -1;
 
 	while (1) {
 
-		if (LL_I2C_IsActiveFlag_TXIS(I2C1) == 1) {
-			LL_I2C_TransmitData8(I2C1, reg_addr);
+		if (LL_I2C_IsActiveFlag_TXIS(I2C2) == 1) {
+			LL_I2C_TransmitData8(I2C2, reg_addr);
 			break;
 		}
 
-		if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+		if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 			return -2;
 
 		if (guard_counter-- == 0)
@@ -461,16 +531,16 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t dat
 
 	while (1) {
 
-		if (LL_I2C_IsActiveFlag_TXIS(I2C1) == 1) {
-			LL_I2C_TransmitData8(I2C1, data[pos++]);
+		if (LL_I2C_IsActiveFlag_TXIS(I2C2) == 1) {
+			LL_I2C_TransmitData8(I2C2, data[pos++]);
 			break;
 		}
 
-		if (LL_I2C_IsActiveFlag_NACK(I2C1) == 1)
+		if (LL_I2C_IsActiveFlag_NACK(I2C2) == 1)
 			return -4;
 
-		if (LL_I2C_IsActiveFlag_TC(I2C1) == 1) {
-			LL_I2C_GenerateStopCondition(I2C1);
+		if (LL_I2C_IsActiveFlag_TC(I2C2) == 1) {
+			LL_I2C_GenerateStopCondition(I2C2);
 			break;
 		}
 
@@ -480,65 +550,11 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t dat
 
 	return pos;
 }
-maxm86161_device_config_t default_maxim_config = {
-  3,//interrupt level
-  {
-#if (PROX_SELECTION & PROX_USE_IR)
-    0x02,//LED2 - IR
-    0x01,//LED1 - green
-    0x03,//LED3 - RED
-#elif (PROX_SELECTION & PROX_USE_RED)
-    0x03,//LED3 - RED
-    0x02,//LED2 - IR
-    0x01,//LED1 - green
-#else // default use GREEN
-    0x01,//LED1 - green
-    0x02,//LED2 - IR
-    0x03,//LED3 - RED
-#endif
-    0x00,
-    0x00,
-    0x00,
-  },
-  {
-    0xFB,// green
-    0x00,// IR
-    0x00,// LED
-  },
-  {
-    MAXM86161_PPG_CFG_ALC_DS,
-    MAXM86161_PPG_CFG_OFFSET_NO,
-//    MAXM86161_PPG_CFG_TINT_117p3_US,
-		MAXM86161_PPG_CFG_TINT_58p7_US, //
-//		MAXM86161_PPG_CFG_TINT_29p4_US,//��������
-    //MAXM86161_PPG_CFG_LED_RANGE_16k,
-		MAXM86161_PPG_CFG_LED_RANGE_32k,
-   // MAXM86161_PPG_CFG_SMP_RATE_P1_24sps,
-	//	MAXM86161_PPG_CFG_SMP_RATE_P1_50sps,
-		MAXM86161_PPG_CFG_SMP_RATE_P1_512sps,
-
-    MAXM86161_PPG_CFG_SMP_AVG_1
-  },
-  {
-    MAXM86161_INT_ENABLE,  //full_fifo
-    MAXM86161_INT_DISABLE, //data_rdy
-    MAXM86161_INT_DISABLE, //alc_ovf
-#ifdef PROXIMITY
-    MAXM86161_INT_ENABLE, //proximity
-#else
-    MAXM86161_INT_DISABLE,
-#endif
-    MAXM86161_INT_DISABLE, //led_compliant
-    MAXM86161_INT_DISABLE, //die_temp
-    MAXM86161_INT_DISABLE, //pwr_rdy
-    MAXM86161_INT_DISABLE  //sha
-  }
-};
 
 int32_t maxm86161_hrm_identify_part(int16_t *part_id) {
 	int32_t valid_part = 0;
 
-	*part_id = maxm86161_i2c_read_from_register(MAXM86161_REG_PART_ID);
+	*part_id = maxm86161_i2c_read_from_register(0xFE);
 
 	switch(*part_id) { // Static HRM/SpO2 supports all maxm86161 parts
 
@@ -557,9 +573,15 @@ int maxm86161_test(void) {
 	int16_t part_id;
 	maxm86161_device_config_t device_config = default_maxim_config;
 
-	if (!maxm86161_hrm_identify_part(&part_id)) {
-		return 1;
+//	if (!maxm86161_hrm_identify_part(&part_id)) {
+//		return 1;
+//	}
+	while (1) {
+		maxm86161_hrm_identify_part(&part_id);
+		printk(DEBUG, "part_id: 0x%X \r\n", part_id);
+		mdelay(100);
 	}
+	return 0;
 
 	maxm86161_init_device(device_config);
 	// maxm86161_shutdown_device(0);
@@ -586,8 +608,6 @@ int main(void)
 
 	board_init();
 
-//	i2c2_init();
-
 	mdelay(100);
 
 	console_init();
@@ -600,10 +620,31 @@ int main(void)
 	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOH);
 	LL_GPIO_SetPinMode(EN_LDO_GPIO_Port, EN_LDO_Pin, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(EN_LDO_GPIO_Port, EN_LDO_Pin);
+	printk(DEBUG, "EN_LDO set HIGH\r\n");
+
+	i2c2_init();
+	printk(DEBUG, "I2C2 controller initialized \r\n");
 
 //	maxm86161_test();
+
+	uint32_t i = 0;
 	while(1) {
-		printk(DEBUG, "pulsox_stm32l4r9aii6u LOOP\r\n");
-		mdelay(500);
+		printk(DEBUG, "pulsox_stm32l4r9aii6u %d\r\n", i++);
+
+		uint8_t chip_addr = 0x40;
+		for (;chip_addr < 0x7F; ++chip_addr) {
+			mdelay(50);
+			uint8_t reg = 0;
+			int32_t ret_val = i2c_read(chip_addr << 1, 0x00, &reg, sizeof(reg));
+			if (ret_val < 0) {
+//				printk(DEBUG, "0x%02X error: %d\r\n",chip_addr << 1, ret_val);
+				;
+			}
+			else {
+				printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr << 1, reg);
+			}
+		}
+
+		mdelay(1000);
 	}
 }
