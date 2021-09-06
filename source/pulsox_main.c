@@ -8,6 +8,8 @@
 #include "maxm86161.h"
 #include "pulsometr.h"
 
+#include "spo2_algorithm.h"
+
 //void i2c2_master_init_1(void)
 //{
 //  /* (1) Enables GPIO clock and configures the I2C2 pins **********************/
@@ -626,7 +628,7 @@ int main(void)
 	printk(DEBUG, "I2C2 controller initialized \r\n");
 
 //	maxm86161_test();
-
+	maxim_heart_rate_and_oxygen_saturation();
 	uint32_t i = 0;
 	while(1) {
 		printk(DEBUG, "pulsox_stm32l4r9aii6u %d\r\n", i++);
