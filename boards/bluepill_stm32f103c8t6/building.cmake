@@ -40,7 +40,6 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${BOARD_SRC_PATH}/source/scheduler.c"
 						"${BOARD_SRC_PATH}/source/spi.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
-
 				)
 
 set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
@@ -59,6 +58,7 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_tim.c"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_utils.c"
 						"${DRV_SOURCES_PATH}/stm32f1xx_ll_adc.c"
+						"${DRV_SOURCES_PATH}/stm32f1xx_ll_rcc.c"
 				)
 
 #######################################################################

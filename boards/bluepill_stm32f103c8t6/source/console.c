@@ -55,7 +55,7 @@ static void console_usart1_init(void)
 
 	LL_USART_ConfigCharacter(USART1, LL_USART_DATAWIDTH_8B, LL_USART_PARITY_NONE, LL_USART_STOPBITS_1);
 
-	LL_USART_SetBaudRate(USART1, HCLK_FREQ >> 1, 1500000);
+	LL_USART_SetBaudRate(USART1, HCLK_FREQ, 1500000);
 
 //	NVIC_SetPriority(USART1_IRQn, 0);
 //	NVIC_EnableIRQ(USART1_IRQn);

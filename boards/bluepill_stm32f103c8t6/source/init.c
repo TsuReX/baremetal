@@ -34,142 +34,37 @@ void systick_handler(void)
 	(void)SysTick->CTRL;
 }
 
-/**
- * @brief	Настраивает внутреннюю флеш память для корректного взаимодействия с ядром,
- * 			работающем на частоте 48 МГц.
- */
-static void flash_init(void)
-{
-	/* Настройка времени задержки доступа к флешке.
-	 * Это необходимо для корректной работы флешки при различных частотах HCLK.
-	 */
-	LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
-}
-
-/**
- * @brief TODO
- */
-static void sysclk_init_48mhz_hse()
-{
-	/* Включение внутреннего источника тактирования HSE.
-	 * HSI активен по умолчанию. */
-	LL_RCC_HSE_Enable();
-	/* Ожидание активации источника HSE. */
-	while (LL_RCC_HSE_IsReady() != 1);
-
-	/* Установка источника сигнала для PLL - PLLSRC.
-	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLL_MUL_6);
-
-	/* Включение PLL. */
-	LL_RCC_PLL_Enable();
-	/* Ожидание активации PLL. */
-	while (LL_RCC_PLL_IsReady() != 1);
-
-	/* Настройка источника тактирования для SYSCLK. */
-	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-	/* Ожидание активации переключателя. */
-	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
-}
-
-/**
- * @brief TODO
- */
-#if 0
-static void hsi_sysclk_24mhz_init()
-{
-	/* Включение внутреннего источника тактирования HSI.
-	 * HSI активен по умолчанию. */
-	LL_RCC_HSI_Enable();
-	/* Ожидание активации источника HSI. */
-	while (LL_RCC_HSI_IsReady() != 1);
-
-	/* Установка источника сигнала для PLL - PLLSRC.
-	 * Установка множителя PLL - PLLMUL.*/
-	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_9);
-
-	/* Включение PLL. */
-	LL_RCC_PLL_Enable();
-	/* Ожидание активации PLL. */
-	while (LL_RCC_PLL_IsReady() != 1);
-
-	/* Настройка источника тактирования для SYSCLK. */
-	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-	/* Ожидание активации переключателя. */
-	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
-}
-#endif
-/**
- * @brief TODO
- */
-static void ahbclk_48mhz_init()
-{
-	/* Настройка делителя для шины AHB - HCLK. */
-	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-}
-
-/**
- * @brief TODO
- */
-static void apb1clk_24mhz_init()
-{
-	/* Настройка делителя для шины APB1 - PCLK1. */
-	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
-}
-
-/**
- * @brief TODO
- */
-static void apb2clk_24mhz_init()
-{
-	/* Настройка делителя для шины APB2 - PCLK2. */
-	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
-
-	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_2);
-}
-
-/**
- * @brief TODO
- */
-static void rtcclk_init()
-{
-	LL_RCC_SetRTCClockSource(LL_RCC_RTC_CLKSOURCE_LSI);
-}
-
-/**
- * @brief TODO
- */
-static void mco_init_sysclk()
-{
-	LL_RCC_ConfigMCO(LL_RCC_MCO1SOURCE_SYSCLK);
-}
-
-/**
- * @brief	Производит настройку источников тактирования:
- * 				SYSCLK, AHBCLK, APB1CLK, APB2CLK, RTCCLK, MCO;
- *
- *			The system Clock is configured as follow :
- *				System Clock source		= PLL (HSE)
- *				SYSCLK (MHz)			= 48
- *				AHBCLK/HCLK (MHz)		= 48
- *				APB1CLK	(MHz)			= 24
- *				APB2CLK	(MHz)			= 24
- *				RTCCLK (KHz)			= 40
- */
 static void rcc_init(void)
 {
-//	sysclk_init_24mhz_hsi();
-	sysclk_init_48mhz_hse();
+	LL_FLASH_SetLatency(LL_FLASH_LATENCY_1);
+	while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_1) {
+	}
+	LL_RCC_HSI_SetCalibTrimming(16);
+	LL_RCC_HSI_Enable();
 
-	ahbclk_48mhz_init();
+	/* Wait till HSI is ready */
+	while(LL_RCC_HSI_IsReady() != 1) {
 
-	apb1clk_24mhz_init();
+	}
+	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_12);
+	LL_RCC_PLL_Enable();
 
-	apb2clk_24mhz_init();
+	/* Wait till PLL is ready */
+	while(LL_RCC_PLL_IsReady() != 1) {
 
-	rtcclk_init();
+	}
+	LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+	LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+	LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
 
-	mco_init_sysclk();
+	/* Wait till System clock is ready */
+	while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) {
+
+	}
+	LL_Init1msTick(48000000);
+	LL_SetSystemCoreClock(48000000);
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSRC_PCLK2_DIV_4);
 }
 
 /**
@@ -235,8 +130,6 @@ void board_init(void)
  */
 void soc_init(void)
 {
-	/* Настройка внутренней флеш памяти. */
-	flash_init();
 	/* Настройка подсистемы тактирования. */
 	rcc_init();
 	/* Настройка вспомогательных параметров. */

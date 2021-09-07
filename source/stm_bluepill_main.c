@@ -13,6 +13,11 @@
 #define SCANLIM		0x000B
 #define SHUTDOWN	0x000C
 
+#define GUARD_COUNTER_INIT	1000
+#define I2C_REQUEST_WRITE	0x00
+#define I2C_REQUEST_READ	0x01
+
+
 uint16_t adc_buf[2] = {0, 0};
 
 void tim2_init(void)
@@ -272,7 +277,205 @@ void sfdp_check(void)
 		__WFI();
 	}
 }
-#define FUNC 2
+
+static void i2c2_init(void)
+{
+	/* USER CODE BEGIN I2C1_Init 0 */
+
+	/* USER CODE END I2C1_Init 0 */
+
+	LL_I2C_InitTypeDef I2C_InitStruct = {0};
+
+	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOB);
+	/**I2C1 GPIO Configuration
+	PB6   ------> I2C1_SCL
+	PB7   ------> I2C1_SDA
+	*/
+	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/* Peripheral clock enable */
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+
+	/* USER CODE BEGIN I2C1_Init 1 */
+
+	/* USER CODE END I2C1_Init 1 */
+	/** I2C Initialization
+	*/
+	LL_I2C_DisableOwnAddress2(I2C1);
+	LL_I2C_DisableGeneralCall(I2C1);
+	LL_I2C_EnableClockStretching(I2C1);
+	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+	I2C_InitStruct.ClockSpeed = 100000;
+	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_16_9;
+	I2C_InitStruct.OwnAddress1 = 0;
+	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+	LL_I2C_Init(I2C1, &I2C_InitStruct);
+	LL_I2C_SetOwnAddress2(I2C1, 0);
+
+	LL_I2C_Enable(I2C1);
+}
+
+int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
+{
+	uint32_t guard_counter = GUARD_COUNTER_INIT;
+
+	/* (1) Prepare acknowledge for Master data reception ************************/
+	LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_ACK);
+//	printk(DEBUG, "i2c_write 1\r\n");
+	/* (2) Initiate a Start condition to the Slave device ***********************/
+	/* Master Generate Start condition */
+	LL_I2C_GenerateStartCondition(I2C1);
+//	printk(DEBUG, "i2c_write 2\r\n");
+	/* (3) Loop until Start Bit transmitted (SB flag raised) ********************/
+//	printk(DEBUG, "I2C1->SR1: 0x%02lX\r\n", READ_BIT(I2C1->SR1, 0xFF));
+//	printk(DEBUG, "I2C1->SR2: 0x%02lX\r\n", READ_BIT(I2C1->SR2, 0xFF));
+	/* Loop until SB flag is raised  */
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+		if (guard_counter-- == 0)
+			return -1;
+	}
+//	printk(DEBUG, "i2c_write 3\r\n");
+	/* (4) Send Slave address with a 7-Bit SLAVE_OWN_ADDRESS for a write request */
+	LL_I2C_TransmitData8(I2C1, chip_addr | I2C_REQUEST_WRITE);
+//	printk(DEBUG, "i2c_write 4\r\n");
+	/* (5) Loop until Address Acknowledgement received (ADDR flag raised) *******/
+
+	guard_counter = GUARD_COUNTER_INIT;
+	/* Loop until ADDR flag is raised  */
+	while(!LL_I2C_IsActiveFlag_ADDR(I2C1)) {
+		if (guard_counter-- == 0)
+			return -2;
+	}
+//	printk(DEBUG, "i2c_write 5\r\n");
+	/* (6) Clear ADDR flag and loop until end of transfer (ubNbDataToTransmit == 0) */
+
+	/* Clear ADDR flag value in ISR register */
+	LL_I2C_ClearFlag_ADDR(I2C1);
+//	printk(DEBUG, "i2c_write 6\r\n");
+	/*********************************************/
+	LL_I2C_GenerateStartCondition(I2C1);
+//	printk(DEBUG, "i2c_write 7\r\n");
+	/* (3) Loop until Start Bit transmitted (SB flag raised) ********************/
+//	printk(DEBUG, "I2C1->SR1: 0x%02lX\r\n", READ_BIT(I2C1->SR1, 0xFF));
+//	printk(DEBUG, "I2C1->SR2: 0x%02lX\r\n", READ_BIT(I2C1->SR2, 0xFF));
+	/* Loop until SB flag is raised  */
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+		if (guard_counter-- == 0)
+			return -1;
+	}
+//	printk(DEBUG, "i2c_write 8\r\n");
+	/* (4) Send Slave address with a 7-Bit SLAVE_OWN_ADDRESS for a write request */
+	LL_I2C_TransmitData8(I2C1, chip_addr | I2C_REQUEST_READ);
+//	printk(DEBUG, "i2c_write 8\r\n");
+	/* (5) Loop until Address Acknowledgement received (ADDR flag raised) *******/
+
+	guard_counter = GUARD_COUNTER_INIT;
+	/* Loop until ADDR flag is raised  */
+	while(!LL_I2C_IsActiveFlag_ADDR(I2C1)) {
+		if (guard_counter-- == 0)
+			return -2;
+	}
+//	printk(DEBUG, "i2c_write 10\r\n");
+	/* (6) Clear ADDR flag and loop until end of transfer (ubNbDataToTransmit == 0) */
+
+	/* Clear ADDR flag value in ISR register */
+	LL_I2C_ClearFlag_ADDR(I2C1);
+//	printk(DEBUG, "i2c_write 11\r\n");
+
+	/*********************************************/
+	guard_counter = GUARD_COUNTER_INIT;
+	/* Loop until TXE flag is raised  */
+	while(buffer_size > 0) {
+		/* (6.1) Transmit data (TXE flag raised) **********************************/
+
+		/* Check TXE flag value in ISR register */
+		if(LL_I2C_IsActiveFlag_RXNE(I2C1)) {
+			/* Write data in Transmit Data register.
+			TXE flag is cleared by writing data in TXDR register */
+			(*buffer++) = LL_I2C_ReceiveData8(I2C1);
+			buffer_size--;
+		}
+		if (guard_counter-- == 0)
+			return -2;
+	}
+//	printk(DEBUG, "i2c_write 12\r\n");
+	/* (7) End of tranfer, Data consistency are checking into Slave process *****/
+	/* Generate Stop condition */
+	LL_I2C_GenerateStopCondition(I2C1);
+//	printk(DEBUG, "i2c_write 13\r\n");
+
+	return 0;
+}
+
+int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
+{
+	uint32_t guard_counter = GUARD_COUNTER_INIT;
+
+	/* (1) Prepare acknowledge for Master data reception ************************/
+	LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_ACK);
+	printk(DEBUG, "i2c_write 1\r\n");
+	/* (2) Initiate a Start condition to the Slave device ***********************/
+	/* Master Generate Start condition */
+	LL_I2C_GenerateStartCondition(I2C1);
+	printk(DEBUG, "i2c_write 2\r\n");
+	/* (3) Loop until Start Bit transmitted (SB flag raised) ********************/
+	printk(DEBUG, "I2C1->SR1: 0x%02lX\r\n", READ_BIT(I2C1->SR1, 0xFF));
+	printk(DEBUG, "I2C1->SR2: 0x%02lX\r\n", READ_BIT(I2C1->SR2, 0xFF));
+	/* Loop until SB flag is raised  */
+	while(!LL_I2C_IsActiveFlag_SB(I2C1)) {
+		if (guard_counter-- == 0)
+			return -1;
+	}
+	printk(DEBUG, "i2c_write 3\r\n");
+	/* (4) Send Slave address with a 7-Bit SLAVE_OWN_ADDRESS for a write request */
+	LL_I2C_TransmitData8(I2C1, chip_addr | I2C_REQUEST_WRITE);
+	printk(DEBUG, "i2c_write 4\r\n");
+	/* (5) Loop until Address Acknowledgement received (ADDR flag raised) *******/
+
+	guard_counter = GUARD_COUNTER_INIT;
+	/* Loop until ADDR flag is raised  */
+	while(!LL_I2C_IsActiveFlag_ADDR(I2C1)) {
+		if (guard_counter-- == 0)
+			return -2;
+	}
+	printk(DEBUG, "i2c_write 5\r\n");
+	/* (6) Clear ADDR flag and loop until end of transfer (ubNbDataToTransmit == 0) */
+
+	/* Clear ADDR flag value in ISR register */
+	LL_I2C_ClearFlag_ADDR(I2C1);
+	printk(DEBUG, "i2c_write 6\r\n");
+	guard_counter = GUARD_COUNTER_INIT;
+	/* Loop until TXE flag is raised  */
+	while(buffer_size > 0) {
+		/* (6.1) Transmit data (TXE flag raised) **********************************/
+
+		/* Check TXE flag value in ISR register */
+		if(LL_I2C_IsActiveFlag_TXE(I2C1)) {
+			/* Write data in Transmit Data register.
+			TXE flag is cleared by writing data in TXDR register */
+			LL_I2C_TransmitData8(I2C1, (*buffer++));
+
+			buffer_size--;
+		}
+		if (guard_counter-- == 0)
+			return -3;
+	}
+	printk(DEBUG, "i2c_write 7\r\n");
+	/* (7) End of tranfer, Data consistency are checking into Slave process *****/
+	/* Generate Stop condition */
+	LL_I2C_GenerateStopCondition(I2C1);
+	printk(DEBUG, "i2c_write 8\r\n");
+	return 0;
+}
+
+#define FUNC 3
 
 int main(void)
 {
@@ -283,6 +486,8 @@ int main(void)
 	console_init();
 
 	log_level_set(DEBUG);
+
+	i2c2_init();
 
 #if (FUNC == 0)
 
@@ -330,6 +535,29 @@ int main(void)
 
 		mdelay(100);
 	}
+
+#elif (FUNC == 3)
+	uint32_t i = 0;
+
+	while(1) {
+			printk(DEBUG, "Blue pill %ld\r\n", i++);
+
+			uint8_t chip_addr = 0x6B;
+			for (;chip_addr < 0x6C; ++chip_addr) {
+				uint8_t reg = 0;
+				int32_t ret_val = i2c_read(chip_addr << 1, 0x01, &reg, sizeof(reg));
+				if (ret_val < 0) {
+					printk(DEBUG, "0x%02X error: %ld\r\n",chip_addr, ret_val);
+					;
+				}
+				else {
+					printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
+				}
+				mdelay(100);
+			}
+			while(1)
+			mdelay(1000);
+		}
 
 #endif
 
