@@ -1,3 +1,14 @@
+Необходимые компиляторы:
+GNU Arm Embedded Toolchain https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
+Для сборки bare-metal кода для процессоров с архитектурой ARMvXM необходимо компиялтор gcc-arm-none-eabi
+- Содержимое архива распаковать в директорию ~/soft/armvxm-gcc
+
+GNU Toolchain for the A-profile Architecture https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
+Для сборки bare-metal кода для процессоров с архитектурой ARMv7A необходимо компиялтор AArch32 bare-metal target (arm-none-eabi)
+- Содержимое арххива распаковать в директорию ~/soft/armv7a-gcc
+Для сборки bare-metal кода для процессоров с архитектурой ARMv8A необходимо компиялтор AArch64 ELF bare-metal target (aarch64-none-elf)
+- Содержимое арххива распаковать в директорию ~/soft/armv8a-gcc
+
 Система сборки:
 
 Система сборки основана на cmake и состоит из CMakeLists.txt верхнего уровня, который расположен в корневой директории проекта и опциональных .cmake скриптов, которые располагаются в поддиректории boards/board_name и служат для упрощения процесса конфигурирования, они определяют дополнительные цели (flash - для выполнения прошивки), определяют переменные, которые влияют на сам процесс конфигуриования и сборки.
@@ -10,16 +21,18 @@
 	mkdir build_board_type
 
 2. Добавление в переменную окружения PATH пути к кросс-компилятору:
-	примерный вариант 1
-	export PATH=$PATH:"/opt/gcc-arm-none-eabi/bin"
-	примерный вариант 2
-	export PATH=$PATH:"/home/yurchenko/soft/gcc-arm-none-eabi/bin"
+	для Cortex-M
+	export PATH=$PATH:"~/soft/armvxm-gcc/bin"
+	для Cortex-A ARMv7A
+	export PATH=$PATH:"~/soft/armv7a-gcc/bin"
+	для Cortex-A ARMv8A
+	export PATH=$PATH:"~/soft/armv8a-gcc/bin"
 
 3. Переход в сборочную директорию и создание в ней окружения сборки:
 	cd build
 	clear ;\
 	rm -rf ../build/* ;\
-	cmake .. -DCMAKE_C_COMPILER_PREFIX=arm-none-eabi- -DBOARD_TYPE=nucleo_stm32f303k8t6
+	cmake .. -DBOARD_TYPE=nucleo_stm32f303k8t6
 	
 4. Выполнение сборки
 	cmake --build . --clean-first -- -j8
