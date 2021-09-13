@@ -7,19 +7,18 @@ project(${SUBPROJ_NAME} C)
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
 
-set(SOURCES			"${BRD_PATH}/source/flash_programmer.c")
+set(FPROG_SOURCES	"${FPROG_SOURCES}"
+					"${BOARD_SRC_PATH}/source/flash_programmer.c")
 
-set(INCLUDE			"${BRD_PATH}/include")
-
-set(CORE_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
-
-set(MDR_DEV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include")
-
-set(MDR_DRV_INCLUDE	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
+set(FPROG_INCLUDE	"${FPROG_INCLUDE}"
+					"${BOARD_SRC_PATH}/include"
+					"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include"
+					"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include"
+					"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
 
 set(MDR_DRV_SOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
 
-set(MDR_DRV_SOURCES	"${MDR_DRV_SOURCES}"
+set(FPROG_SOURCES	"${FPROG_SOURCES}"
 					"${MDR_DRV_SOURCES_PATH}/MDR32F9Qx_eeprom.c"
 					"${MDR_DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
 	)
@@ -28,42 +27,45 @@ set(MDR_DRV_SOURCES	"${MDR_DRV_SOURCES}"
 
 set(C_FLAGS			"-mcpu=cortex-m3;;-Werror")
 
-set(FPROG_LINKER_FLAGS	"-T ${BRD_PATH}/fprog_mdr32f9.ld"
-						"-mcpu=cortex-m3"
-						"-Wl,--gc-sections"
-						"-nostdlib"
-	)
-					
-set(FPROG_LINKER_LIBS 	"-lc"
-						"-lm"
-						"-lnosys"
-	)
+set(FPROG_LINKER_FLAGS		"${FPROG_LINKER_FLAGS}"
 
-add_executable(${SUBPROJ_NAME} ${SOURCES} ${MDR_DRV_SOURCES})
+							"-T ${BOARD_SRC_PATH}/fprog_mdr32f9.ld"
+							"-mcpu=cortex-m3"
+							"-Wl,--gc-sections"
+							"-nostdlib"
+						)
 
-target_include_directories(${SUBPROJ_NAME} PRIVATE
-											${INCLUDE} 
-											${MDR_DRV_INCLUDE}
-											${MDR_DEV_INCLUDE}
-											${CORE_INCLUDE}
-							)
+set(FPROG_LINKER_LIBS		"${FPROG_LINKER_LIBS}"
+
+							"-lc"
+							"-lm"
+							"-lnosys"
+						)
+
+add_executable(${SUBPROJ_NAME} ${FPROG_SOURCES})
+
+target_include_directories(${SUBPROJ_NAME} PRIVATE ${FPROG_INCLUDE})
 
 target_compile_options(${SUBPROJ_NAME} PRIVATE ${C_FLAGS})
 
-target_link_libraries(${SUBPROJ_NAME} PRIVATE ${FPROG_LINKER_LIBS} ${FPROG_LINKER_FLAGS})
+target_link_libraries(${SUBPROJ_NAME} PRIVATE	
+												${FPROG_LINKER_LIBS}
+												${FPROG_LINKER_FLAGS}
+											)
 
-target_compile_definitions(${SUBPROJ_NAME} PRIVATE	"USE_MDR1986VE9x"
+target_compile_definitions(${SUBPROJ_NAME} PRIVATE	
+													"USE_MDR1986VE9x"
 													"USE_FULL_LL_DRIVER"
-							)
+											)
 
 add_custom_command(
         TARGET ${SUBPROJ_NAME} POST_BUILD
-        COMMAND arm-none-eabi-objcopy -O binary
+        COMMAND "${CMAKE_C_COMPILER_PREFIX}objcopy" -O binary
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.bin)
                 
 add_custom_command(
         TARGET ${SUBPROJ_NAME} POST_BUILD
-        COMMAND arm-none-eabi-objdump -SD
+        COMMAND "${CMAKE_C_COMPILER_PREFIX}objdump" -SD
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf >
                 ${CMAKE_CURRENT_BINARY_DIR}/${SUBPROJ_NAME}.elf.objdump)
