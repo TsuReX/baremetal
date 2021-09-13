@@ -18,38 +18,45 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BRD_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/")
 
-set(MAIN_INCLUDE		"${MAIN_INCLUDE}"
-						"${BRD_PATH}/include"
+set(INCLUDE				"${MAIN_INCLUDE}"
+
+						"${BOARD_SRC_PATH}/include"
+						
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
+
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/hostusb_main.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/max3421e.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/kbmsusb.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/systimer.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/cobs.c"
-						"${BRD_PATH}/source/startup_mdr32f9qx.c"
-						"${BRD_PATH}/source/console.c"
-						"${BRD_PATH}/source/spi.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
-						"${BRD_PATH}/source/init.c"
-						"${BRD_PATH}/source/platform.c"
-						"${BRD_PATH}/source/communication.c"
+	
+						"${BOARD_SRC_PATH}/source/startup_mdr32f9qx.c"
+						"${BOARD_SRC_PATH}/source/console.c"
+						"${BOARD_SRC_PATH}/source/spi.c"
+						"${BOARD_SRC_PATH}/source/init.c"
+						"${BOARD_SRC_PATH}/source/platform.c"
+						"${BOARD_SRC_PATH}/source/communication.c"
 				)
 
-set(CORE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include")
-		
-set(DEVICE_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include")
+set(INCLUDE				"${INCLUDE}"
 
-set(DRIVER_INCLUDE		"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include")
+						"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include"
+						
+						"${CMAKE_CURRENT_SOURCE_DIR}/base/device/milandr/mdr32f9qx/include"
+						
+						"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/include"
+				)
 
-set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
+SET(DRV_SOURCES_PATH	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/milandr/mdr32f9qx/source")
 
-set(DRIVER_SOURCES 		"${DRV_SOURCES}"
+set(MAIN_SOURCES 		"${MAIN_SOURCES}"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_rst_clk.c"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_port.c"
 						"${DRV_SOURCES_PATH}/MDR32F9Qx_uart.c"
@@ -61,47 +68,26 @@ set(DRIVER_SOURCES 		"${DRV_SOURCES}"
 ## Настройка параметров сбоки и компоновки
 
 set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m3 -Wall")
-	
+
 set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m3")
-	
+
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
-						"-T ${CMAKE_CURRENT_SOURCE_DIR}/boards/hostusb_mdr32f9/flash_mdr32f9.ld"
+
+						"-T ${BOARD_SRC_PATH}/flash_mdr32f9.ld"
 						"-mcpu=cortex-m3"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
 						"-nostdlib"
 				)
 
-set(LINKER_LIBS			"-lc"
+set(LINKER_LIBS			"${LINKER_LIBS}"
+
+						"-lc"
 						"-lm"
 						"-lnosys"
 				)
-		
+
 add_definitions("-DUSE_MDR1986VE9x")
 #add_definitions("-DDBG_OUT")
-#######################################################################
-# Определение дополнительной цели для выполнения операции прошивки
-add_custom_target("flash" DEPENDS ${PROJ_NAME} fprog)
 
-# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
-# Смотреть FLASHER_TYPE в README.md
-
-# Определение команд для цели flash
-add_custom_command(	TARGET "flash"
-					POST_BUILD
-					COMMAND sudo openocd
-					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do flash\")
-
-#######################################################################
-# Определение дополнительной цели для выполнения операции отладки
-add_custom_target("debug" DEPENDS ${PROJ_NAME})
-
-# Переменная описывает имя и положение фала с конфигурацией OOCD для работы с конкретной платформой-процессором
-
-# Определение команд для цели flash
-add_custom_command(	TARGET "debug"
-					POST_BUILD
-					COMMAND sudo openocd
-					ARGS	-f ${BRD_PATH}/oocd_jlink.cfg -c \"do debug\")
-				
-include(${BRD_PATH}/fprog_building.cmake)
+include(${BOARD_SRC_PATH}/fprog_building.cmake)
