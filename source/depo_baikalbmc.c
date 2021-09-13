@@ -19,6 +19,8 @@ int main(void)
 
 	printk(DEBUG, "depo_baikalbmc\r\n");
 
+	MX_USB_DEVICE_Init();
+
 	while(1) {
 		printk(DEBUG, "cycle\r\n");
 		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_6);
