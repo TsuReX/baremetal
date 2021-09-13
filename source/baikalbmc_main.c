@@ -10,14 +10,6 @@
 
 int32_t power_on(void)
 {
-//	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
-//	mdelay(10);
-//	printk(DEBUG, "DRVRST_PIN HIGH\r\n");
-//
-//	LL_GPIO_ResetOutputPin(CORE_CLOCK_PORT, CORE_CLOCK_PIN);
-//	mdelay(10);
-//	printk(DEBUG, "CORE_CLOCK_PIN LOW\r\n");
-
 
 	LL_GPIO_SetOutputPin(EN_VDD_PORT, EN_VDD_PIN);
 	mdelay(100);
@@ -127,9 +119,13 @@ int main(void)
 	int32_t ret_val = power_on();
 
 	if (ret_val != 0) {
-		printk(DEBUG, "Error step %ld\r\n", ret_val);
 		power_off();
+		printk(DEBUG, "Power up failure, step %ld\r\n", -1 * ret_val);
+		printk(DEBUG, "Power down\r\n");
+	} else {
+		printk(DEBUG, "Power up is successful\r\n");
 	}
+
 
 	while(1) {
 //		printk(DEBUG, "BAIKAL BMC LOOP\r\n");
