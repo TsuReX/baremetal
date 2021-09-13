@@ -2,9 +2,6 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-## Предотвращение проверки работоспособности компилятора
-## (необходимо для избежания проблемы при кросс-сборке)
-
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
 
 ## Переменная служит индикатором полной настройки
@@ -37,23 +34,36 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "imx8m")
 	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 
+#######################################################################
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "hostusb_mdr32f9")
+	
+	set(PROJ_NAME hostusb_mdr32f9)
+	
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+	
+	set(CMAKE_C_COMPILER_PREFIX "arm-none-eabi-")
+	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+
 endif()
 
 if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})
 	message(FATAL_ERROR " Auxilary cmake script ${BOARD_SCRIPT_CMAKE} couldn't be found.\n")
 endif()
 
+## Предотвращение проверки работоспособности компилятора
+## (необходимо для избежания проблемы при кросс-сборке)
+set(CMAKE_C_COMPILER_WORKS 1)
 
 ## Указание используемых в проекте языков
-
-include(${BOARD_SCRIPT_CMAKE})
-set(CMAKE_C_COMPILER_WORKS 1)
 project(${PROJ_NAME} C ASM)
 
-include_directories(${INCLUDE})
 message("-- MAIN_SOURCES ${MAIN_SOURCES}")
-
 set(CMAKE_EXECUTABLE_SUFFIX .elf )
+
+include(${BOARD_SCRIPT_CMAKE})
+
+include_directories(${INCLUDE})
 
 #######################################################################
 # Определение дополнительной цели для выполнения операции прошивки
