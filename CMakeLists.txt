@@ -5,9 +5,6 @@ cmake_minimum_required(VERSION 3.5)
 ## Предотвращение проверки работоспособности компилятора
 ## (необходимо для избежания проблемы при кросс-сборке)
 
-
-
-
 string(TOLOWER ${BOARD_TYPE} BOARD_TYPE_LOWER_CASE)
 
 ## Переменная служит индикатором полной настройки
@@ -25,8 +22,9 @@ if(${BOARD_TYPE_LOWER_CASE} STREQUAL "bluepill_stm32f103c8t6")
 	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 	
-##	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf")
-##	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf")
+	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
+	set(LIBS "ringbuf")
 	
 #######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "imx8m")
@@ -113,7 +111,7 @@ message(STATUS "CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 add_executable(${PROJ_NAME} ${MAIN_SOURCES})
 
-target_link_libraries(${PROJ_NAME} ${LINKER_LIBS} ${LINKER_FLAGS})
+target_link_libraries(${PROJ_NAME} ${LINKER_LIBS} ${LINKER_FLAGS} ${LIBS})
 
 add_custom_command(
         TARGET ${PROJ_NAME} POST_BUILD
