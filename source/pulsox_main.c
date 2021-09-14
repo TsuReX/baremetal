@@ -439,7 +439,12 @@ static void i2c2_init(void)
 	LL_I2C_InitTypeDef I2C_InitStruct = {0};
 
 	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStruct.Timing = 0x30807DAA;
+
+//	I2C_InitStruct.Timing = 0xB020F2FF; // 20KHz
+//	I2C_InitStruct.Timing = 0x505092FA; // 50KHz
+//	I2C_InitStruct.Timing = 0x30807DAA; // 100KHz
+//	I2C_InitStruct.Timing = 0x107029FB; // 200KHz
+	I2C_InitStruct.Timing = 0x00F046D9; // 400KHz
 	I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
 	I2C_InitStruct.DigitalFilter = 0;
 	I2C_InitStruct.OwnAddress1 = 0;
@@ -627,15 +632,15 @@ int main(void)
 	i2c2_init();
 	printk(DEBUG, "I2C2 controller initialized \r\n");
 
-//	maxm86161_test();
-	maxim_heart_rate_and_oxygen_saturation();
+	maxm86161_test();
+//	maxim_heart_rate_and_oxygen_saturation();
 	uint32_t i = 0;
 	while(1) {
 		printk(DEBUG, "pulsox_stm32l4r9aii6u %d\r\n", i++);
 
 		uint8_t chip_addr = 0x40;
 		for (;chip_addr < 0x7F; ++chip_addr) {
-			mdelay(50);
+			mdelay(100);
 			uint8_t reg = 0;
 			int32_t ret_val = i2c_read(chip_addr << 1, 0x00, &reg, sizeof(reg));
 			if (ret_val < 0) {
@@ -643,7 +648,7 @@ int main(void)
 				;
 			}
 			else {
-				printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr << 1, reg);
+				printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 			}
 		}
 

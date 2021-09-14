@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-//#define MAXM86161_SLAVE_ADDRESS         (0xC4)
+#define MAXM86161_SLAVE_ADDRESS         (0xC4)
 //#define MAXM86161_SLAVE_ADDRESS         (0x48)
-#define MAXM86161_SLAVE_ADDRESS         (0x58)
+//#define MAXM86161_SLAVE_ADDRESS         (0x58)
 //#define MAXM86161_SLAVE_ADDRESS         (0x49)
 
 /*******************************************************************************
