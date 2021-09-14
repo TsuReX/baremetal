@@ -107,7 +107,7 @@ uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
   * @{
   */
 
-extern USBD_HandleTypeDef hUsbDeviceFS;
+extern USBD_HandleTypeDef usb_device;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 
@@ -136,13 +136,13 @@ static int8_t CDC_TransmitCplt_FS(uint8_t *pbuf, uint32_t *Len, uint8_t epnum);
   * @}
   */
 
-USBD_CDC_ItfTypeDef USBD_Interface_fops_FS =
+USBD_CDC_ItfTypeDef cdc_operations =
 {
-  CDC_Init_FS,
-  CDC_DeInit_FS,
-  CDC_Control_FS,
-  CDC_Receive_FS,
-  CDC_TransmitCplt_FS
+	CDC_Init_FS,
+	CDC_DeInit_FS,
+	CDC_Control_FS,
+	CDC_Receive_FS,
+	CDC_TransmitCplt_FS
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -154,8 +154,8 @@ static int8_t CDC_Init_FS(void)
 {
   /* USER CODE BEGIN 3 */
   /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+  USBD_CDC_SetTxBuffer(&usb_device, UserTxBufferFS, 0);
+  USBD_CDC_SetRxBuffer(&usb_device, UserRxBufferFS);
   return (USBD_OK);
   /* USER CODE END 3 */
 }
@@ -262,8 +262,8 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  USBD_CDC_SetRxBuffer(&usb_device, &Buf[0]);
+  USBD_CDC_ReceivePacket(&usb_device);
   return (USBD_OK);
   /* USER CODE END 6 */
 }
@@ -283,12 +283,12 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   /* USER CODE BEGIN 7 */
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)usb_device.pClassData;
   if (hcdc->TxState != 0){
     return USBD_BUSY;
   }
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+  USBD_CDC_SetTxBuffer(&usb_device, Buf, Len);
+  result = USBD_CDC_TransmitPacket(&usb_device);
   /* USER CODE END 7 */
   return result;
 }

@@ -137,22 +137,22 @@ __ALIGN_BEGIN static uint8_t USBD_CDC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_
 
 
 /* CDC interface class callbacks structure */
-USBD_ClassTypeDef  USBD_CDC =
+USBD_ClassTypeDef  usb_communication_device_class =
 {
-  USBD_CDC_Init,
-  USBD_CDC_DeInit,
-  USBD_CDC_Setup,
-  NULL,                 /* EP0_TxSent, */
-  USBD_CDC_EP0_RxReady,
-  USBD_CDC_DataIn,
-  USBD_CDC_DataOut,
-  NULL,
-  NULL,
-  NULL,
-  USBD_CDC_GetHSCfgDesc,
-  USBD_CDC_GetFSCfgDesc,
-  USBD_CDC_GetOtherSpeedCfgDesc,
-  USBD_CDC_GetDeviceQualifierDescriptor,
+	USBD_CDC_Init,
+	USBD_CDC_DeInit,
+	USBD_CDC_Setup,
+	NULL,                 /* EP0_TxSent, */
+	USBD_CDC_EP0_RxReady,
+	USBD_CDC_DataIn,
+	USBD_CDC_DataOut,
+	NULL,
+	NULL,
+	NULL,
+	USBD_CDC_GetHSCfgDesc,
+	USBD_CDC_GetFSCfgDesc,
+	USBD_CDC_GetOtherSpeedCfgDesc,
+	USBD_CDC_GetDeviceQualifierDescriptor,
 };
 
 /* USB CDC device Configuration Descriptor */
@@ -835,17 +835,16 @@ uint8_t *USBD_CDC_GetDeviceQualifierDescriptor(uint16_t *length)
   * @param  fops: CD  Interface callback
   * @retval status
   */
-uint8_t USBD_CDC_RegisterInterface(USBD_HandleTypeDef *pdev,
+uint8_t usb_device_register_cdc_operations(USBD_HandleTypeDef *usb_dev,
                                    USBD_CDC_ItfTypeDef *fops)
 {
-  if (fops == NULL)
-  {
-    return (uint8_t)USBD_FAIL;
-  }
+	if (fops == NULL) {
+		return (uint8_t)USBD_FAIL;
+	}
 
-  pdev->pUserData = fops;
+	usb_dev->pUserData = fops;
 
-  return (uint8_t)USBD_OK;
+	return (uint8_t)USBD_OK;
 }
 
 /**

@@ -1,25 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : Target/usbd_conf.c
-  * @version        : v1.0_Cube
-  * @brief          : This file implements the board support package for the USB device library
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "usbd_def.h"
@@ -27,77 +5,36 @@
 
 #include "usbd_cdc.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE END PV */
-
-PCD_HandleTypeDef hpcd_USB_OTG_FS;
+PCD_HandleTypeDef peripheral_controller_driver;
 void Error_Handler(void);
 
-/* External functions --------------------------------------------------------*/
 void SystemClock_Config(void);
-
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
 USBD_StatusTypeDef USBD_Get_USB_Status(HAL_StatusTypeDef hal_status);
-
-/* USER CODE END PFP */
-
-/* Private functions ---------------------------------------------------------*/
-
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
-
-/*******************************************************************************
-                       LL Driver Callbacks (PCD -> USB Device Library)
-*******************************************************************************/
-/* MSP Init */
 
 void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(pcdHandle->Instance==USB_OTG_FS)
-  {
-  /* USER CODE BEGIN USB_OTG_FS_MspInit 0 */
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	if(pcdHandle->Instance == USB_OTG_FS) {
 
-  /* USER CODE END USB_OTG_FS_MspInit 0 */
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		/**USB_OTG_FS GPIO Configuration
+		PA11     ------> USB_OTG_FS_DM
+		PA12     ------> USB_OTG_FS_DP
+		*/
+		GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USB_OTG_FS GPIO Configuration
-    PA11     ------> USB_OTG_FS_DM
-    PA12     ------> USB_OTG_FS_DP
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		/* Peripheral clock enable */
+		__HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
-    /* Peripheral clock enable */
-    __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
-
-    /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(OTG_FS_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
-  /* USER CODE BEGIN USB_OTG_FS_MspInit 1 */
-
-  /* USER CODE END USB_OTG_FS_MspInit 1 */
-  }
+		/* Peripheral interrupt init */
+		HAL_NVIC_SetPriority(OTG_FS_IRQn, 0, 0);
+		HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
+	}
 }
 
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
@@ -327,47 +264,48 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
   */
 USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 {
-  /* Init USB Ip. */
-  if (pdev->id == DEVICE_FS) {
-  /* Link the driver to the stack. */
-  hpcd_USB_OTG_FS.pData = pdev;
-  pdev->pData = &hpcd_USB_OTG_FS;
+	/* Init USB Ip. */
+	if (pdev->id == DEVICE_FS) {
+		/* Link the driver to the stack. */
+		peripheral_controller_driver.pData = pdev;
+		pdev->pData = &peripheral_controller_driver;
 
-  hpcd_USB_OTG_FS.Instance = USB_OTG_FS;
-  hpcd_USB_OTG_FS.Init.dev_endpoints = 4;
-  hpcd_USB_OTG_FS.Init.speed = PCD_SPEED_FULL;
-  hpcd_USB_OTG_FS.Init.dma_enable = DISABLE;
-  hpcd_USB_OTG_FS.Init.phy_itface = PCD_PHY_EMBEDDED;
-  hpcd_USB_OTG_FS.Init.Sof_enable = DISABLE;
-  hpcd_USB_OTG_FS.Init.low_power_enable = DISABLE;
-  hpcd_USB_OTG_FS.Init.lpm_enable = DISABLE;
-  hpcd_USB_OTG_FS.Init.vbus_sensing_enable = DISABLE;
-  hpcd_USB_OTG_FS.Init.use_dedicated_ep1 = DISABLE;
-  if (HAL_PCD_Init(&hpcd_USB_OTG_FS) != HAL_OK)
-  {
-    Error_Handler( );
-  }
+		peripheral_controller_driver.Instance = USB_OTG_FS;
+		peripheral_controller_driver.Init.dev_endpoints = 4;
+		peripheral_controller_driver.Init.speed = PCD_SPEED_FULL;
+		peripheral_controller_driver.Init.dma_enable = DISABLE;
+		peripheral_controller_driver.Init.phy_itface = PCD_PHY_EMBEDDED;
+		peripheral_controller_driver.Init.Sof_enable = DISABLE;
+		peripheral_controller_driver.Init.low_power_enable = DISABLE;
+		peripheral_controller_driver.Init.lpm_enable = DISABLE;
+		peripheral_controller_driver.Init.vbus_sensing_enable = DISABLE;
+		peripheral_controller_driver.Init.use_dedicated_ep1 = DISABLE;
+
+		if (HAL_PCD_Init(&peripheral_controller_driver) != HAL_OK) {
+			Error_Handler( );
+		}
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
-  /* Register USB PCD CallBacks */
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_SOF_CB_ID, PCD_SOFCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_SETUPSTAGE_CB_ID, PCD_SetupStageCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_RESET_CB_ID, PCD_ResetCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_SUSPEND_CB_ID, PCD_SuspendCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_RESUME_CB_ID, PCD_ResumeCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_CONNECT_CB_ID, PCD_ConnectCallback);
-  HAL_PCD_RegisterCallback(&hpcd_USB_OTG_FS, HAL_PCD_DISCONNECT_CB_ID, PCD_DisconnectCallback);
+		/* Register USB PCD CallBacks */
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_SOF_CB_ID, PCD_SOFCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_SETUPSTAGE_CB_ID, PCD_SetupStageCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_RESET_CB_ID, PCD_ResetCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_SUSPEND_CB_ID, PCD_SuspendCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_RESUME_CB_ID, PCD_ResumeCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_CONNECT_CB_ID, PCD_ConnectCallback);
+		HAL_PCD_RegisterCallback(&peripheral_controller_driver, HAL_PCD_DISCONNECT_CB_ID, PCD_DisconnectCallback);
 
-  HAL_PCD_RegisterDataOutStageCallback(&hpcd_USB_OTG_FS, PCD_DataOutStageCallback);
-  HAL_PCD_RegisterDataInStageCallback(&hpcd_USB_OTG_FS, PCD_DataInStageCallback);
-  HAL_PCD_RegisterIsoOutIncpltCallback(&hpcd_USB_OTG_FS, PCD_ISOOUTIncompleteCallback);
-  HAL_PCD_RegisterIsoInIncpltCallback(&hpcd_USB_OTG_FS, PCD_ISOINIncompleteCallback);
+		HAL_PCD_RegisterDataOutStageCallback(&peripheral_controller_driver, PCD_DataOutStageCallback);
+		HAL_PCD_RegisterDataInStageCallback(&peripheral_controller_driver, PCD_DataInStageCallback);
+		HAL_PCD_RegisterIsoOutIncpltCallback(&peripheral_controller_driver, PCD_ISOOUTIncompleteCallback);
+		HAL_PCD_RegisterIsoInIncpltCallback(&peripheral_controller_driver, PCD_ISOINIncompleteCallback);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
-  HAL_PCDEx_SetRxFiFo(&hpcd_USB_OTG_FS, 0x80);
-  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 0, 0x40);
-  HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 1, 0x80);
-  }
-  return USBD_OK;
+
+		HAL_PCDEx_SetRxFiFo(&peripheral_controller_driver, 0x80);
+		HAL_PCDEx_SetTxFiFo(&peripheral_controller_driver, 0, 0x40);
+		HAL_PCDEx_SetTxFiFo(&peripheral_controller_driver, 1, 0x80);
+	}
+	return USBD_OK;
 }
 
 /**
@@ -392,16 +330,16 @@ USBD_StatusTypeDef USBD_LL_DeInit(USBD_HandleTypeDef *pdev)
   * @param  pdev: Device handle
   * @retval USBD status
   */
-USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef *usb_dev)
 {
-  HAL_StatusTypeDef hal_status = HAL_OK;
-  USBD_StatusTypeDef usb_status = USBD_OK;
+	HAL_StatusTypeDef hal_status = HAL_OK;
+	USBD_StatusTypeDef usb_status = USBD_OK;
 
-  hal_status = HAL_PCD_Start(pdev->pData);
+	hal_status = HAL_PCD_Start(usb_dev->pData);
 
-  usb_status =  USBD_Get_USB_Status(hal_status);
+	usb_status =  USBD_Get_USB_Status(hal_status);
 
-  return usb_status;
+	return usb_status;
 }
 
 /**
@@ -411,14 +349,14 @@ USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef *pdev)
   */
 USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef *pdev)
 {
-  HAL_StatusTypeDef hal_status = HAL_OK;
-  USBD_StatusTypeDef usb_status = USBD_OK;
+	HAL_StatusTypeDef hal_status = HAL_OK;
+	USBD_StatusTypeDef usb_status = USBD_OK;
 
-  hal_status = HAL_PCD_Stop(pdev->pData);
+	hal_status = HAL_PCD_Stop(pdev->pData);
 
-  usb_status =  USBD_Get_USB_Status(hal_status);
+	usb_status =  USBD_Get_USB_Status(hal_status);
 
-  return usb_status;
+	return usb_status;
 }
 
 /**

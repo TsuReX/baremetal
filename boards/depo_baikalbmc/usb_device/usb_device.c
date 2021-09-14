@@ -6,33 +6,32 @@
 
 #include "debug.h"
 
-
-USBD_HandleTypeDef hUsbDeviceFS;
+USBD_HandleTypeDef usb_device;
 
 /**
   * Init USB device Library, add supported class and start the library
   * @retval None
   */
-void MX_USB_DEVICE_Init(void)
+void usb_init(void)
 {
 	/* Init Device Library, add supported class and start the library. */
 
-	if (USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS) != USBD_OK) {
+	if (usb_device_init(&usb_device, &device_descriptors, DEVICE_FS) != USBD_OK) {
 		printk(DEBUG, "USBD_Init error\r\n");
 		return;
 	}
 
-	if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC) != USBD_OK) {
+	if (usb_device_register_class(&usb_device, &usb_communication_device_class) != USBD_OK) {
 		printk(DEBUG, "USBD_RegisterClass error\r\n");
 		return;
 	}
 
-	if (USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS) != USBD_OK) {
+	if (usb_device_register_cdc_operations(&usb_device, &cdc_operations) != USBD_OK) {
 		printk(DEBUG, "USBD_CDC_RegisterInterface error\r\n");
 		return;
 	}
 
-	if (USBD_Start(&hUsbDeviceFS) != USBD_OK) {
+	if (usb_device_start(&usb_device) != USBD_OK) {
 		printk(DEBUG, "USBD_Start error\r\n");
 		return;
 	}

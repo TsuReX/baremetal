@@ -137,7 +137,7 @@ typedef struct
   * @{
   */
 
-extern USBD_ClassTypeDef USBD_CDC;
+extern USBD_ClassTypeDef usb_communication_device_class;
 #define USBD_CDC_CLASS &USBD_CDC
 /**
   * @}
@@ -146,7 +146,7 @@ extern USBD_ClassTypeDef USBD_CDC;
 /** @defgroup USB_CORE_Exported_Functions
   * @{
   */
-uint8_t USBD_CDC_RegisterInterface(USBD_HandleTypeDef *pdev,
+uint8_t usb_device_register_cdc_operations(USBD_HandleTypeDef *pdev,
                                    USBD_CDC_ItfTypeDef *fops);
 
 uint8_t USBD_CDC_SetTxBuffer(USBD_HandleTypeDef *pdev, uint8_t *pbuff,

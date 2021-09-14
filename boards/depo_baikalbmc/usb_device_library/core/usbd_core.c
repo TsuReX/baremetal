@@ -1,82 +1,4 @@
-/**
-  ******************************************************************************
-  * @file    usbd_core.c
-  * @author  MCD Application Team
-  * @brief   This file provides all the USBD core functions.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2015 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                      www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
-
-/* Includes ------------------------------------------------------------------*/
 #include "usbd_core.h"
-
-/** @addtogroup STM32_USBD_DEVICE_LIBRARY
-  * @{
-  */
-
-
-/** @defgroup USBD_CORE
-  * @brief usbd core module
-  * @{
-  */
-
-/** @defgroup USBD_CORE_Private_TypesDefinitions
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_CORE_Private_Defines
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_CORE_Private_Macros
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_CORE_Private_FunctionPrototypes
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @defgroup USBD_CORE_Private_Variables
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-
-/** @defgroup USBD_CORE_Private_Functions
-  * @{
-  */
 
 /**
   * @brief  USBD_Init
@@ -86,43 +8,41 @@
   * @param  id: Low level core index
   * @retval None
   */
-USBD_StatusTypeDef USBD_Init(USBD_HandleTypeDef *pdev,
+USBD_StatusTypeDef usb_device_init(USBD_HandleTypeDef *usb_dev,
                              USBD_DescriptorsTypeDef *pdesc, uint8_t id)
 {
-  USBD_StatusTypeDef ret;
+	USBD_StatusTypeDef ret;
 
-  /* Check whether the USB Host handle is valid */
-  if (pdev == NULL)
-  {
+	/* Check whether the USB Host handle is valid */
+	if (usb_dev == NULL) {
 #if (USBD_DEBUG_LEVEL > 1U)
-    USBD_ErrLog("Invalid Device handle");
+		USBD_ErrLog("Invalid Device handle");
 #endif
-    return USBD_FAIL;
-  }
+		return USBD_FAIL;
+	}
 
-  /* Unlink previous class resources */
-  pdev->pClass = NULL;
-  pdev->pUserData = NULL;
-  pdev->pConfDesc = NULL;
+	/* Unlink previous class resources */
+	usb_dev->pClass = NULL;
+	usb_dev->pUserData = NULL;
+	usb_dev->pConfDesc = NULL;
 
-  /* Assign USBD Descriptors */
-  if (pdesc != NULL)
-  {
-    pdev->pDesc = pdesc;
-  }
+	/* Assign USBD Descriptors */
+	if (pdesc != NULL) {
+		usb_dev->pDesc = pdesc;
+	}
 
-  /* Set Device initial State */
-  pdev->dev_state = USBD_STATE_DEFAULT;
-  pdev->id = id;
+	/* Set Device initial State */
+	usb_dev->dev_state = USBD_STATE_DEFAULT;
+	usb_dev->id = id;
 
-  /* Initialize low level driver */
-  ret = USBD_LL_Init(pdev);
+	/* Initialize low level driver */
+	ret = USBD_LL_Init(usb_dev);
 
-  return ret;
+	return ret;
 }
 
 /**
-  * @brief  USBD_DeInit
+  * @bripdeveInit
   *         Re-Initialize the device library
   * @param  pdev: device instance
   * @retval status: status
@@ -162,35 +82,32 @@ USBD_StatusTypeDef USBD_DeInit(USBD_HandleTypeDef *pdev)
   * @param  pclass: Class handle
   * @retval USBD Status
   */
-USBD_StatusTypeDef USBD_RegisterClass(USBD_HandleTypeDef *pdev, USBD_ClassTypeDef *pclass)
+USBD_StatusTypeDef usb_device_register_class(USBD_HandleTypeDef *usb_dev, USBD_ClassTypeDef *pclass)
 {
-  uint16_t len = 0U;
+	uint16_t len = 0U;
 
-  if (pclass == NULL)
-  {
+	if (pclass == NULL) {
 #if (USBD_DEBUG_LEVEL > 1U)
-    USBD_ErrLog("Invalid Class handle");
+		USBD_ErrLog("Invalid Class handle");
 #endif
-    return USBD_FAIL;
-  }
+		return USBD_FAIL;
+	}
 
-  /* link the class to the USB Device handle */
-  pdev->pClass = pclass;
+	/* link the class to the USB Device handle */
+	usb_dev->pClass = pclass;
 
-  /* Get Device Configuration Descriptor */
+	/* Get Device Configuration Descriptor */
 #ifdef USE_USB_HS
-  if (pdev->pClass->GetHSConfigDescriptor != NULL)
-  {
-    pdev->pConfDesc = (void *)pdev->pClass->GetHSConfigDescriptor(&len);
-  }
+	if (pdev->pClass->GetHSConfigDescriptor != NULL) {
+		pdev->pConfDesc = (void *)pdev->pClass->GetHSConfigDescriptor(&len);
+	}
 #else /* Default USE_USB_FS */
-  if (pdev->pClass->GetFSConfigDescriptor != NULL)
-  {
-    pdev->pConfDesc = (void *)pdev->pClass->GetFSConfigDescriptor(&len);
-  }
+	if (usb_dev->pClass->GetFSConfigDescriptor != NULL) {
+		usb_dev->pConfDesc = (void *)usb_dev->pClass->GetFSConfigDescriptor(&len);
+	}
 #endif /* USE_USB_FS */
 
-  return USBD_OK;
+	return USBD_OK;
 }
 
 /**
@@ -199,10 +116,10 @@ USBD_StatusTypeDef USBD_RegisterClass(USBD_HandleTypeDef *pdev, USBD_ClassTypeDe
   * @param  pdev: Device Handle
   * @retval USBD Status
   */
-USBD_StatusTypeDef USBD_Start(USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef usb_device_start(USBD_HandleTypeDef *usb_dev)
 {
-  /* Start the low level driver  */
-  return USBD_LL_Start(pdev);
+	/* Start the low level driver  */
+	return USBD_LL_Start(usb_dev);
 }
 
 /**
@@ -211,18 +128,17 @@ USBD_StatusTypeDef USBD_Start(USBD_HandleTypeDef *pdev)
   * @param  pdev: Device Handle
   * @retval USBD Status
   */
-USBD_StatusTypeDef USBD_Stop(USBD_HandleTypeDef *pdev)
+USBD_StatusTypeDef USBD_Stop(USBD_HandleTypeDef *usb_dev)
 {
-  /* Disconnect USB Device */
-  (void)USBD_LL_Stop(pdev);
+	/* Disconnect USB Device */
+	(void)USBD_LL_Stop(usb_dev);
 
-  /* Free Class Resources */
-  if (pdev->pClass != NULL)
-  {
-    (void)pdev->pClass->DeInit(pdev, (uint8_t)pdev->dev_config);
-  }
+	/* Free Class Resources */
+	if (usb_dev->pClass != NULL) {
+		(void)usb_dev->pClass->DeInit(usb_dev, (uint8_t)usb_dev->dev_config);
+	}
 
-  return USBD_OK;
+	return USBD_OK;
 }
 
 /**
