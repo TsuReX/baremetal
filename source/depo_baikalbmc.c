@@ -4,6 +4,22 @@
 #include "init.h"
 #include "config.h"
 #include "debug.h"
+#include "usb_device.h"
+
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+void HAL_Delay(uint32_t Delay) {
+	mdelay(Delay);
+}
 
 int main(void)
 {
@@ -19,7 +35,7 @@ int main(void)
 
 	printk(DEBUG, "depo_baikalbmc\r\n");
 
-	MX_USB_DEVICE_Init();
+//	MX_USB_DEVICE_Init();
 
 	while(1) {
 		printk(DEBUG, "cycle\r\n");

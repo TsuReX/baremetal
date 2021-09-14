@@ -26,19 +26,24 @@ set(INCLUDE				"${INCLUDE}"
 						
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 						
-						"${BOARD_SRC_PATH}/usblib/include"
+						"${BOARD_SRC_PATH}/usb_device"
+						
+						"${BOARD_SRC_PATH}/usb_device_library/class"
+						
+						"${BOARD_SRC_PATH}/usb_device_library/core"
 				)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_baikalbmc.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
+
 						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
 						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/platform.c"
 						"${BOARD_SRC_PATH}/source/console.c"
 						"${BOARD_SRC_PATH}/source/system_stm32f4xx.c"
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 
 				)
 
@@ -59,6 +64,25 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_usart.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_rcc.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_utils.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_ll_usb.c"
+						
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal_gpio.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal_pcd.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal_pcd_ex.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal_rcc.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_hal_cortex.c"
+						
+						"${BOARD_SRC_PATH}/usb_device/usb_device.c"
+						"${BOARD_SRC_PATH}/usb_device/usbd_desc.c"
+						"${BOARD_SRC_PATH}/usb_device/usbd_cdc_if.c"
+						"${BOARD_SRC_PATH}/usb_device/usbd_conf.c"
+						
+						"${BOARD_SRC_PATH}/usb_device_library/core/usbd_core.c"
+						"${BOARD_SRC_PATH}/usb_device_library/core/usbd_ioreq.c"
+						"${BOARD_SRC_PATH}/usb_device_library/core/usbd_ctlreq.c"
+						
+						"${BOARD_SRC_PATH}/usb_device_library/class/usbd_cdc.c"
 				)
 
 #######################################################################
