@@ -81,6 +81,23 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "baikalbmc_stm32f103ret6")
 	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
 	set(LIBS "ringbuf")
 
+#######################################################################
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "pulsox_stm32l4r9aii6u")
+
+	set(PROJ_NAME pulsox_stm32l4r9aii6u)
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	set(CMAKE_C_COMPILER_PREFIX "arm-none-eabi-")
+	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+
+	SET(SUB_PROJECTS	"${SUB_PROJECTS}"
+						"${CMAKE_CURRENT_SOURCE_DIR}/ringbuf")
+
+	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
+	set(LIBS "ringbuf")
+
 ######################################################################
 endif()
 

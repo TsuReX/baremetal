@@ -73,3 +73,4 @@ bluepill_stm32f103c8t6
 baikalbmc_stm32f103ret6
 depo_baikalbmc
 imx8m
+pulsox_stm32l4r9aii6u
