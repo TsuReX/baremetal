@@ -272,14 +272,17 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t b
 	printk(DEBUG, "i2c_write 8\r\n");
 	return 0;
 }
-
+#if 0
 int main(void)
 {
 	soc_init();
 
 	board_init();
 
-	mdelay(100);
+	HAL_Init();
+	usb_init();
+
+	mdelay(50);
 
 	console_init();
 
@@ -303,9 +306,6 @@ int main(void)
 		mdelay(50);
 	}
 
-	HAL_Init();
-	usb_init();
-
 	uint32_t i = 0;
 	while(1) {
 		printk(DEBUG, "cycle 0x%lX\r\n", i++);
@@ -319,3 +319,26 @@ int main(void)
 
 	return 0;
 }
+#else
+int main(void)
+{
+	soc_init();
+
+	board_init();
+
+	HAL_Init();
+	usb_init();
+
+	mdelay(5000);
+
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
+	LL_GPIO_SetPinMode(GPIOD, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(GPIOD, LL_GPIO_PIN_13);
+
+	while(1) {
+		mdelay(500);
+	}
+
+	return 0;
+}
+#endif
