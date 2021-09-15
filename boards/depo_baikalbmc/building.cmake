@@ -65,6 +65,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_rcc.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_utils.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_ll_usb.c"
+						"${DRV_SOURCES_PATH}/stm32f4xx_ll_i2c.c"
 						
 						"${DRV_SOURCES_PATH}/stm32f4xx_hal_gpio.c"
 						"${DRV_SOURCES_PATH}/stm32f4xx_hal_pcd.c"

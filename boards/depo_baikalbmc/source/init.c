@@ -78,8 +78,8 @@ static void hse_sysclk_120mhz_init()
 
 	/* Wait till System clock is ready */
 	while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) {
-
 	}
+	LL_SetSystemCoreClock(120000000);
 }
 #endif
 
