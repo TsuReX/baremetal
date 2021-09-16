@@ -5,15 +5,26 @@
 #include "config.h"
 #include "debug.h"
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
 
 #define GUARD_COUNTER_INIT	1000
 #define I2C_REQUEST_WRITE	0x00
 #define I2C_REQUEST_READ	0x01
 
+#define F407VET6 1
+
+/*
+ * AltIMU-10
+ * https://www.pololu.com/product/1269
+ */
+#define GYRO_ADDR 0x6B /* Gyro (L3GD20) */
+#define ACCL_ADDR 0x19 /* Accelerometer (LSM303DLHC) */
+#define MGNT_ADDR 0x1E /* Magnetometer (LSM303DLHC) */
+#define BMTR_ADDR 0x5D /* Barometer (LPS331AP) */
 
 extern PCD_HandleTypeDef peripheral_controller_driver;
 
-void Error_Handler(void)
+void _Error_Handler(void)
 {
 	printk(DEBUG, "Error_Handler\r\n");
 }
@@ -272,21 +283,21 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t b
 	printk(DEBUG, "i2c_write 8\r\n");
 	return 0;
 }
-#if 0
+#if defined(F407VET6)
 int main(void)
 {
 	soc_init();
 
 	board_init();
 
-	HAL_Init();
-	usb_init();
-
 	mdelay(50);
 
 	console_init();
 
 	log_level_set(DEBUG);
+
+	HAL_Init();
+	usb_init();
 
 	i2c1_init();
 
@@ -303,12 +314,13 @@ int main(void)
 		else {
 			printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 		}
-		mdelay(50);
 	}
 
 	uint32_t i = 0;
+	uint8_t str[] = "CDC Transmit\r\n";
 	while(1) {
 		printk(DEBUG, "cycle 0x%lX\r\n", i++);
+		CDC_Transmit_FS(str, strlen((char*)str));
 		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_6);
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
 		mdelay(500);
@@ -319,7 +331,7 @@ int main(void)
 
 	return 0;
 }
-#else
+#elif defined(F407ZGT6)
 int main(void)
 {
 	soc_init();

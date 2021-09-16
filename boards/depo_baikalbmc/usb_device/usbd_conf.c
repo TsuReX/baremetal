@@ -2,8 +2,9 @@
 #include "stm32f4xx_hal.h"
 #include "usbd_def.h"
 #include "usbd_core.h"
-
 #include "usbd_cdc.h"
+
+#include "debug.h"
 
 PCD_HandleTypeDef peripheral_controller_driver;
 void Error_Handler(void);
@@ -143,7 +144,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd)
   }
   else
   {
-    Error_Handler();
+	  printk(DEBUG, "Error in %s\r\n", __func__);
   }
     /* Set Speed. */
   USBD_LL_SetSpeed((USBD_HandleTypeDef*)hpcd->pData, speed);
@@ -282,7 +283,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 		peripheral_controller_driver.Init.use_dedicated_ep1 = DISABLE;
 
 		if (HAL_PCD_Init(&peripheral_controller_driver) != HAL_OK) {
-			Error_Handler( );
+			printk(DEBUG, "Error in %s\r\n", __func__);
 		}
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)

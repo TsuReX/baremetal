@@ -52,7 +52,7 @@ static void flash_init(void)
  */
 static void hse_sysclk_120mhz_init()
 {
-#if 0 /* F407VET6 */
+#if defined(F407VET6)
 
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_3);
 	while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_3) {
@@ -82,7 +82,7 @@ static void hse_sysclk_120mhz_init()
 	}
 	LL_SetSystemCoreClock(120000000);
 
-#else /* F407ZGT6 */
+#elif defined(F407ZGT6)
 
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_3);
 	while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_3)
@@ -160,7 +160,7 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
-#if 0
+#if defined(F407VET6)
 	/** Configuring GPIO. */
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
@@ -169,7 +169,8 @@ void board_init(void)
 
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
-#else
+
+#elif defined(F407ZGT6)
 
 #endif
 

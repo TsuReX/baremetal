@@ -110,3 +110,5 @@ set(LINKER_LIBS			"${LINKER_LIBS}"
 add_definitions("-DSTM32F407xx")
 add_definitions("-DUSE_FULL_LL_DRIVER")
 add_definitions("-DDBG_OUT")
+add_definitions("-DF407VET6")
+#add_definitions("-DF407ZGT6")
