@@ -37,6 +37,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
+						"${CMAKE_CURRENT_SOURCE_DIR}/source/stm32f4/i2c_trans.c"
 
 						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
 						"${BOARD_SRC_PATH}/source/main.c"
