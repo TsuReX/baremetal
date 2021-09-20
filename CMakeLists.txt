@@ -48,9 +48,9 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "hostusb_mdr32f9")
 	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 
 #######################################################################
-elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "depo_baikalbmc")
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "dbs")
 
-	set(PROJ_NAME depo_baikalbmc)
+	set(PROJ_NAME "${BOARD_TYPE_LOWER_CASE}")
 
 	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
 
@@ -146,7 +146,7 @@ add_custom_target("flash" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "flash"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do flash\")
+					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do flash ${PROJ_NAME}\")
 
 # Определение дополнительной цели для выполнения операции отладки
 add_custom_target("debug" DEPENDS ${PROJ_NAME})
@@ -154,7 +154,7 @@ add_custom_target("debug" DEPENDS ${PROJ_NAME})
 add_custom_command(	TARGET "debug"
 					POST_BUILD
 					COMMAND openocd
-					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do debug\")
+					ARGS	-f ${BOARD_SRC_PATH}/${PROG_SCRIPT} -c \"do debug ${PROJ_NAME}\")
 		
 					
 #######################################################################

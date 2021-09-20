@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(CURRENT_BOARD_TYPE "depo_baikalbmc")
+set(CURRENT_BOARD_TYPE "dbs")
 
 # Если тип платформы не установлен, то завершаем выполнение скрипта
 if (NOT DEFINED BOARD_TYPE)
@@ -18,11 +18,11 @@ set(BOARD_TYPE_STATUS "SET")
 
 #######################################################################
 ## Подключение файло исходных кодов и заголовков
-set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_baikalbmc/")
+set(BOARD_SRC_PATH		"${CMAKE_CURRENT_SOURCE_DIR}/boards/dbs")
 
 set(INCLUDE				"${INCLUDE}"
 						
-						"${CMAKE_CURRENT_SOURCE_DIR}/boards/depo_baikalbmc/include"
+						"${BOARD_SRC_PATH}/include"
 						
 						"${CMAKE_CURRENT_SOURCE_DIR}/include"
 						
@@ -35,11 +35,11 @@ set(INCLUDE				"${INCLUDE}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/depo_baikalbmc.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 
 						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
+						"${BOARD_SRC_PATH}/source/main.c"
 						"${BOARD_SRC_PATH}/source/init.c"
 						"${BOARD_SRC_PATH}/source/platform.c"
 						"${BOARD_SRC_PATH}/source/console.c"
