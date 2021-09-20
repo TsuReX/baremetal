@@ -171,6 +171,95 @@ void i2c2_init(void)
 	LL_I2C_Enable(I2C2);
 }
 
+void read_gyro()
+{
+	uint8_t chip_addr = GYRO_ADDR;
+	uint8_t reg = 0xFF;
+
+	printk(DEBUG, "Gyroscope\r\n");
+
+	i2c_read(I2C1, chip_addr << 1, 0x27, &reg, 1);
+	printk(DEBUG, "0x%04X STATUS_REG value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x28, &reg, 1);
+	printk(DEBUG, "0x%04X 1 value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x29, &reg, 1);
+	printk(DEBUG, "0x%04X 2 value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2A, &reg, 1);
+	printk(DEBUG, "0x%04X 3 value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2B, &reg, 1);
+	printk(DEBUG, "0x%04X 4 value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2C, &reg, 1);
+	printk(DEBUG, "0x%04X 5 value: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2D, &reg, 1);
+	printk(DEBUG, "0x%04X 6 value: 0x%X\r\n", chip_addr, reg);
+}
+
+void read_accel()
+{
+	uint8_t chip_addr = ACCL_ADDR;
+	uint8_t reg = 0xFF;
+
+	printk(DEBUG, "Accelerometer\r\n");
+
+	reg = 0xFF;
+	i2c_read(I2C1, chip_addr << 1, 0x20, &reg, 1);
+	printk(DEBUG, "0x%04X CTRL_REG_A: 0x%X\r\n", chip_addr, reg);
+
+	reg = 0x27;
+	i2c_write(I2C1, chip_addr << 1, 0x20, &reg, 1);
+
+	reg = 0xFF;
+	i2c_read(I2C1, chip_addr << 1, 0x20, &reg, 1);
+	printk(DEBUG, "0x%04X CTRL_REG_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x27, &reg, 1);
+	printk(DEBUG, "0x%04X STATUS_REG_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x28, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_X_L_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x29, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_X_H_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2A, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Y_L_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2B, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Y_H_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2C, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Z_L_A: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x2D, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Z_H_A: 0x%X\r\n", chip_addr, reg);
+
+
+	chip_addr = MGNT_ADDR;
+	i2c_read(I2C1, chip_addr << 1, 0x3, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_X_L_M: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x4, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_X_H_M: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x5, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Y_L_M: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x6, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Y_H_M: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x7, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Z_L_M: 0x%X\r\n", chip_addr, reg);
+
+	i2c_read(I2C1, chip_addr << 1, 0x8, &reg, 1);
+	printk(DEBUG, "0x%04X OUT_Z_H_M: 0x%X\r\n", chip_addr, reg);
+}
+
 #if defined(F407VET6)
 int main(void)
 {
@@ -218,6 +307,10 @@ int main(void)
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_6);
 		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
 		mdelay(500);
+
+		read_gyro();
+		read_accel();
+
 	}
 
 	return 0;
