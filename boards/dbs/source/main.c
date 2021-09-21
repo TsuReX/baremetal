@@ -10,21 +10,7 @@
 
 #define F407VET6 1
 
-/*
- * AltIMU-10
- * https://www.pololu.com/product/1269
- */
-#define GYRO_ADDR 0x6B /* Gyro (L3GD20) */
-#define ACCL_ADDR 0x19 /* Accelerometer (LSM303DLHC) */
-#define MGNT_ADDR 0x1E /* Magnetometer (LSM303DLHC) */
-#define BMTR_ADDR 0x5D /* Barometer (LPS331AP) */
-
 extern PCD_HandleTypeDef peripheral_controller_driver;
-
-void _Error_Handler(void)
-{
-	printk(DEBUG, "Error_Handler\r\n");
-}
 
 /********************************************************/
 void HAL_Delay(uint32_t Delay) {
@@ -50,99 +36,25 @@ void OTG_FS_IRQHandler(void)
 	HAL_PCD_IRQHandler(&peripheral_controller_driver);
 }
 
-void i2c1_init(void)
-{
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-//	PB6   ------> I2C1_SCL
-//	PB7   ------> I2C1_SDA
-
-#if 0
-	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-
-	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#else
-	/* Configure SCL Pin as : Alternate function, High Speed, Open drain, Pull up */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_6, LL_GPIO_AF_4);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_OPENDRAIN);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
-
-	/* Configure SDA Pin as : Alternate function, High Speed, Open drain, Pull up */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_7, LL_GPIO_AF_4);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_7, LL_GPIO_OUTPUT_OPENDRAIN);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
-#endif
-
-#if 1
-
-	LL_I2C_EnableReset(I2C1);
-	mdelay(10);
-	LL_I2C_DisableReset(I2C1);
-
-	LL_I2C_InitTypeDef I2C_InitStruct = {0};
-	LL_I2C_DisableOwnAddress2(I2C1);
-	LL_I2C_DisableGeneralCall(I2C1);
-	LL_I2C_EnableClockStretching(I2C1);
-	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStruct.ClockSpeed = 400000;
-//	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_16_9;
-	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
-	I2C_InitStruct.OwnAddress1 = 0;
-	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
-	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
-	LL_I2C_Init(I2C1, &I2C_InitStruct);
-	LL_I2C_SetOwnAddress2(I2C1, 0);
-#else
-	LL_I2C_Disable(I2C1);
-	LL_RCC_ClocksTypeDef rcc_clocks;
-	LL_RCC_GetSystemClocksFreq(&rcc_clocks);
-	LL_I2C_ConfigSpeed(I2C1, rcc_clocks.PCLK1_Frequency, 400000, LL_I2C_DUTYCYCLE_2);
-#endif
-
-	LL_I2C_Enable(I2C1);
-}
-
 void i2c2_init(void)
 {
-
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C2);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-//	PB6   ------> I2C2_SCL
-//	PB7   ------> I2C2_SDA
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
 
-#if 0
-	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+//	PF1   ------> I2C2_SCL
+	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_1, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOF, LL_GPIO_PIN_1, LL_GPIO_AF_4);
+	LL_GPIO_SetPinSpeed(GPIOF, LL_GPIO_PIN_1, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOF, LL_GPIO_PIN_1, LL_GPIO_OUTPUT_OPENDRAIN);
+	LL_GPIO_SetPinPull(GPIOF, LL_GPIO_PIN_1, LL_GPIO_PULL_UP);
 
-	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#else
-	/* Configure SCL Pin as : Alternate function, High Speed, Open drain, Pull up */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_6, LL_GPIO_AF_4);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_OPENDRAIN);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
+//	PF0   ------> I2C2_SDA
+	LL_GPIO_SetPinMode(GPIOF, LL_GPIO_PIN_0, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOF, LL_GPIO_PIN_0, LL_GPIO_AF_4);
+	LL_GPIO_SetPinSpeed(GPIOF, LL_GPIO_PIN_0, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOF, LL_GPIO_PIN_0, LL_GPIO_OUTPUT_OPENDRAIN);
+	LL_GPIO_SetPinPull(GPIOF, LL_GPIO_PIN_0, LL_GPIO_PULL_UP);
 
-	/* Configure SDA Pin as : Alternate function, High Speed, Open drain, Pull up */
-	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_7, LL_GPIO_AF_4);
-	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
-	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_7, LL_GPIO_OUTPUT_OPENDRAIN);
-	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
-#endif
-
-#if 1
 
 	LL_I2C_EnableReset(I2C2);
 	mdelay(10);
@@ -154,21 +66,110 @@ void i2c2_init(void)
 	LL_I2C_EnableClockStretching(I2C2);
 	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
 	I2C_InitStruct.ClockSpeed = 400000;
-//	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_16_9;
 	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
 	I2C_InitStruct.OwnAddress1 = 0;
 	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
 	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
 	LL_I2C_Init(I2C2, &I2C_InitStruct);
 	LL_I2C_SetOwnAddress2(I2C2, 0);
-#else
-	LL_I2C_Disable(I2C2);
-	LL_RCC_ClocksTypeDef rcc_clocks;
-	LL_RCC_GetSystemClocksFreq(&rcc_clocks);
-	LL_I2C_ConfigSpeed(I2C2, rcc_clocks.PCLK1_Frequency, 400000, LL_I2C_DUTYCYCLE_2);
-#endif
 
 	LL_I2C_Enable(I2C2);
+}
+
+void i2c1_init(void)
+{
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+
+//	PB6   ------> I2C1_SCL
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_6, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_6, LL_GPIO_AF_4);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_OPENDRAIN);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_6, LL_GPIO_PULL_UP);
+
+//	PB7   ------> I2C1_SDA
+	LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_7, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetAFPin_0_7(GPIOB, LL_GPIO_PIN_7, LL_GPIO_AF_4);
+	LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_7, LL_GPIO_SPEED_FREQ_HIGH);
+	LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_7, LL_GPIO_OUTPUT_OPENDRAIN);
+	LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_7, LL_GPIO_PULL_UP);
+
+	LL_I2C_EnableReset(I2C1);
+	mdelay(10);
+	LL_I2C_DisableReset(I2C1);
+
+	LL_I2C_InitTypeDef I2C_InitStruct = {0};
+	LL_I2C_DisableOwnAddress2(I2C1);
+	LL_I2C_DisableGeneralCall(I2C1);
+	LL_I2C_EnableClockStretching(I2C1);
+	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+	I2C_InitStruct.ClockSpeed = 400000;
+	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
+	I2C_InitStruct.OwnAddress1 = 0;
+	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+	LL_I2C_Init(I2C1, &I2C_InitStruct);
+	LL_I2C_SetOwnAddress2(I2C1, 0);
+	LL_I2C_Enable(I2C1);
+}
+
+void d85_enable()
+{
+	uint8_t chip_addr = D85_ADDR;
+	uint8_t reg = 0;
+	i2c_write(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+	reg = 0xFF;
+	i2c_write(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+	reg = 0x00;
+	i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+	printk(DEBUG, "D85 value: 0x%X\r\n", reg);
+}
+
+void d86_enable()
+{
+	uint8_t chip_addr = D86_ADDR;
+	uint8_t reg = 0;
+	i2c_write(I2C1, chip_addr << 1, 0x06, &reg, sizeof(reg));
+	i2c_write(I2C1, chip_addr << 1, 0x07, &reg, sizeof(reg));
+	mdelay(1000);
+	reg = 0x00;
+	i2c_write(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
+	i2c_write(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+
+	i2c_read(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
+	printk(DEBUG, "D86 value: 0x%X\r\n", reg);
+	i2c_read(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+	printk(DEBUG, "D86 value: 0x%X\r\n", reg);
+}
+
+void d87_enable()
+{
+	uint8_t chip_addr = D87_ADDR;
+	uint8_t reg = 0;
+	i2c_write(I2C1, chip_addr << 1, 0x06, &reg, sizeof(reg));
+	i2c_write(I2C1, chip_addr << 1, 0x07, &reg, sizeof(reg));
+	mdelay(1000);
+	reg = 0x00;
+	i2c_write(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
+	i2c_write(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+
+	i2c_read(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
+	printk(DEBUG, "D87 value: 0x%X\r\n", reg);
+	i2c_read(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+	printk(DEBUG, "D87 value: 0x%X\r\n", reg);
+}
+
+void d88_enable()
+{
+	uint8_t chip_addr = D88_ADDR;
+	uint8_t reg = 0;
+	i2c_write(I2C2, chip_addr << 1, 0x03, &reg, sizeof(reg));
+	reg = 0xFF;
+	i2c_write(I2C2, chip_addr << 1, 0x01, &reg, sizeof(reg));
+	reg = 0x00;
+	i2c_read(I2C2, chip_addr << 1, 0x01, &reg, sizeof(reg));
+	printk(DEBUG, "D88 value: 0x%X\r\n", reg);
 }
 
 #if defined(F407VET6)
@@ -188,24 +189,17 @@ int main(void)
 
 	log_level_set(DEBUG);
 
-
 	i2c1_init();
 
-	i2c2_init();
+//	i2c2_init();
 
 	printk(DEBUG, "DBS\r\n");
 
 	uint8_t chip_addr = 0x00;
 	for (;chip_addr < 0x7F; ++chip_addr) {
 		uint8_t reg = 0;
-		int32_t ret_val = i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
-		if (ret_val < 0) {
-//			printk(DEBUG, "0x%02X error: %ld\r\n",chip_addr, ret_val);
-			;
-		}
-		else {
-			printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
-		}
+		i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+		printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 	}
 
 	uint32_t i = 0;
@@ -219,7 +213,6 @@ int main(void)
 		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_6);
 		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
 		mdelay(500);
-
 	}
 
 	return 0;
