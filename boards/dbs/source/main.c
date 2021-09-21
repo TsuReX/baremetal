@@ -287,22 +287,22 @@ void accel_read()
 	i2c_read(I2C1, chip_addr << 1, 0x27, &reg, 1);
 	printk(DEBUG, "0x%04X STATUS_REG_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xA8, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x28, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_X_L_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xA9, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x29, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_X_H_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xAA, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x2A, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_Y_L_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xAB, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x2B, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_Y_H_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xAC, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x2C, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_Z_L_A: 0x%X\r\n", chip_addr, reg);
 
-	i2c_read(I2C1, chip_addr << 1, 0xAD, &reg, 1);
+	i2c_read(I2C1, chip_addr << 1, 0x2D, &reg, 1);
 	printk(DEBUG, "0x%04X OUT_Z_H_A: 0x%X\r\n", chip_addr, reg);
 
 }
@@ -357,22 +357,22 @@ int main(void)
 
 	printk(DEBUG, "DBS\r\n");
 
-	uint8_t chip_addr = 0x00;
-	for (;chip_addr < 0x7F; ++chip_addr) {
-		uint8_t reg = 0;
-		int32_t ret_val = i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
-		if (ret_val < 0) {
-//			printk(DEBUG, "0x%02X error: %ld\r\n",chip_addr, ret_val);
-			;
-		}
-		else {
-			printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
-		}
-	}
+//	uint8_t chip_addr = 0x00;
+//	for (;chip_addr < 0x7F; ++chip_addr) {
+//		uint8_t reg = 0;
+//		int32_t ret_val = i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+//		if (ret_val < 0) {
+////			printk(DEBUG, "0x%02X error: %ld\r\n",chip_addr, ret_val);
+//			;
+//		}
+//		else {
+//			printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
+//		}
+//	}
 
-//	accel_init();
-//	gyro_init();
-//	magnet_init();
+	accel_init();
+	gyro_init();
+	magnet_init();
 
 	uint32_t i = 0;
 //	uint8_t str[] = "CDC Transmit\r\n";
@@ -387,8 +387,8 @@ int main(void)
 		mdelay(500);
 
 		accel_read();
-//		gyro_read();
-//		magnet_read();
+		gyro_read();
+		magnet_read();
 	}
 
 	return 0;
