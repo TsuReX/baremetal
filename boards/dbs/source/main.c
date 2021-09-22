@@ -250,7 +250,6 @@ int main(void)
 
 	i2c2_init();
 
-
 	uint8_t chip_addr = 0x00;
 	for (;chip_addr < 0x7F; ++chip_addr) {
 		uint8_t reg = 0;
@@ -258,15 +257,15 @@ int main(void)
 		printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 	}
 
-//	d85_enable();
-//	d86_enable();
-//	d87_enable();
-//	d88_enable();
+	d85_enable();
+	d86_enable();
+	d87_enable();
+	d88_enable();
 
-	//uint8_t str[] = "CDC Transmit\r\n";
+	uint8_t str[] = "CDC Transmit\r\n";
 	while(1) {
 		mdelay(500);
-	//	CDC_Transmit_FS(str, strlen((char*)str));
+		CDC_Transmit_FS(str, strlen((char*)str));
 	}
 
 	return 0;
