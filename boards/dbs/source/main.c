@@ -8,7 +8,8 @@
 #include "usbd_cdc_if.h"
 #include "i2c_trans.h"
 
-#define F407VET6 1
+//#define F407VET6 1
+#define F407ZGT6 1
 
 extern PCD_HandleTypeDef peripheral_controller_driver;
 
@@ -65,7 +66,7 @@ void i2c2_init(void)
 	LL_I2C_DisableGeneralCall(I2C2);
 	LL_I2C_EnableClockStretching(I2C2);
 	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStruct.ClockSpeed = 400000;
+	I2C_InitStruct.ClockSpeed = 100000;
 	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
 	I2C_InitStruct.OwnAddress1 = 0;
 	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
@@ -104,7 +105,7 @@ void i2c1_init(void)
 	LL_I2C_DisableGeneralCall(I2C1);
 	LL_I2C_EnableClockStretching(I2C1);
 	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStruct.ClockSpeed = 400000;
+	I2C_InitStruct.ClockSpeed = 100000;
 	I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
 	I2C_InitStruct.OwnAddress1 = 0;
 	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
@@ -134,6 +135,10 @@ void d86_enable()
 	i2c_write(I2C1, chip_addr << 1, 0x07, &reg, sizeof(reg));
 	mdelay(1000);
 	reg = 0x00;
+	i2c_write(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
+	i2c_write(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
+	mdelay(1000);
+	reg = 0xFF;
 	i2c_write(I2C1, chip_addr << 1, 0x02, &reg, sizeof(reg));
 	i2c_write(I2C1, chip_addr << 1, 0x03, &reg, sizeof(reg));
 
@@ -222,19 +227,46 @@ int main(void)
 {
 	soc_init();
 
-	board_init();
-
 	HAL_Init();
+
 	usb_init();
 
-	mdelay(5000);
+	board_init();
 
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
-	LL_GPIO_SetPinMode(GPIOD, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetOutputPin(GPIOD, LL_GPIO_PIN_13);
+//	console_init();
 
+//	log_level_set(DEBUG);
+
+//	printk(DEBUG, "DBS\r\n");
+
+	mdelay(1000);
+
+	LL_GPIO_SetPinMode(PS_ON_BMC_PORT, PS_ON_BMC_PIN, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetOutputPin(PS_ON_BMC_PORT, PS_ON_BMC_PIN);
+
+	mdelay(1000);
+
+	i2c1_init();
+
+	i2c2_init();
+
+
+	uint8_t chip_addr = 0x00;
+	for (;chip_addr < 0x7F; ++chip_addr) {
+		uint8_t reg = 0;
+		i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+		printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
+	}
+
+//	d85_enable();
+//	d86_enable();
+//	d87_enable();
+//	d88_enable();
+
+	//uint8_t str[] = "CDC Transmit\r\n";
 	while(1) {
 		mdelay(500);
+	//	CDC_Transmit_FS(str, strlen((char*)str));
 	}
 
 	return 0;

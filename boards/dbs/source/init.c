@@ -160,7 +160,6 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
-#define F407ZGT6 1
 #if defined(F407VET6)
 	/** Configuring GPIO. */
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
