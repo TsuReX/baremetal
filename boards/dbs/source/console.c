@@ -10,25 +10,19 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "ringbuf.h"
+//#include "ringbuf.h"
 #include "console.h"
 
 #include "config.h"
 #include "drivers.h"
 #include "debug.h"
 
-/** Количество байтов передаваемых через USART1. */
-#define SIZE_TO_TRANSMIT	32
-/** Количество миллисекунд,
- * за которое должна завершиться передача байта даных через USART1. */
-#define TRANSMIT_TIMEOUT	20
+#include "usbd_cdc_if.h"
 
-
-/** Кольцевой буфер передачи данных через USART 1. */
-static struct ring_buf tx_rb;
-
+uint32_t trans_status = 1;
+extern uint32_t usb_inited;
 /*
- * @brief	Настройка портов GPIO 9/10 для реализации каналов приема и передачи USART1.
+ * @brief	Настройка портов GPIOA 2/3 для реализации каналов приема и передачи USART2.
  */
 static void console_gpio_init(void)
 {
@@ -47,7 +41,7 @@ static void console_gpio_init(void)
 }
 
 /*
- * @brief Настройка USART2 для работы на скорости 1500000, включение прерываний.
+ * @brief Настройка USART2 для работы на скорости 115200, включение прерываний.
  */
 static void console_usart2_init(void)
 {
@@ -75,15 +69,12 @@ static void console_usart2_close(void)
 }
 
 /*
- *	Настройка USART 1.
- *	Для работы USART 1 настраиваются AHB1, GPIO9/10, USART1, DMA4/5, NVIC.
+ *
  */
 void console_init(void)
 {
-	/* Настройка GPIO9/10. */
 	console_gpio_init();
 
-	/* Настройка USART1. */
 	console_usart2_init();
 
 	printk(INFO, "Console initialized\n\r");
@@ -96,62 +87,6 @@ void console_close(void)
 {
 	console_usart2_close();
 }
-
-int32_t console_process(void)
-{
-	/* Возвращаемое значение может отражать факт переполнения кольцевого буфера приема. */
-	return 0;
-}
-
-void print(const char *format, ...)
-{
-	va_list argptr;
-	char	str[512];
-	int		sz;
-
-	va_start(argptr, format);
-	sz = vsnprintf(str, 512, format, argptr);
-	if (sz > 0) {
-		rb_store_data(&tx_rb, str, sz);
-	}
-	va_end(argptr);
-}
-#if 0
-void d_print(const char *format, ...)
-{
-	va_list 	argptr;
-	char		str[512];
-	int			sz;
-	uint32_t	ms_timeout = TRANSMIT_TIMEOUT * 1000;
-
-	va_start(argptr, format);
-	sz = vsnprintf(str, 512, format, argptr);
-	va_end(argptr);
-
-	if (sz <= 0) {
-		return;
-	}
-
-	/*
-	 * TODO: необходимо на момент работы данной функции дождаться завершения текущей передачи,
-	 * сохранить состояние контроллера USART1, запретить все прерывания, произвести передачу,
-	 * а после этого восстановить состояние контроллера USART1.
-	 */
-	size_t i;
-	for (i = 0; i < sz; ++i) {
-		LL_USART_TransmitData8(USART1, str[i]);
-
-		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
-		do {
-//			LL_mDelay(1);
-			--ms_timeout;
-			if (ms_timeout == 0)
-				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
-				break;
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
-	}
-}
-#endif
 
 size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t usec_timeout)
 {
@@ -175,6 +110,12 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 				break;
 #endif
 		} while (LL_USART_IsActiveFlag_TXE(USART2) != 1);
+	}
+
+	if (usb_inited == 1) {
+		while(trans_status == 0);
+
+		CDC_Transmit_FS((uint8_t *)src_buffer, src_buffer_size);
 	}
 	return i;
 }

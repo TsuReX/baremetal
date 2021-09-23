@@ -9,7 +9,7 @@
 #include "i2c_trans.h"
 
 //#define F407VET6 1
-#define F407ZGT6 1
+//#define F407ZGT6 1
 
 extern PCD_HandleTypeDef peripheral_controller_driver;
 
@@ -182,13 +182,13 @@ int main(void)
 {
 	soc_init();
 
+	board_init();
+
 	HAL_Init();
 
 	usb_init();
 
-	board_init();
-
-	mdelay(50);
+	mdelay(500);
 
 	console_init();
 
@@ -196,27 +196,25 @@ int main(void)
 
 	i2c1_init();
 
-//	i2c2_init();
-
-	printk(DEBUG, "DBS\r\n");
+	printk(DEBUG, "EVB\r\n");
 
 	uint8_t chip_addr = 0x00;
 	for (;chip_addr < 0x7F; ++chip_addr) {
 		uint8_t reg = 0;
-		i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg));
+		if (i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg)) == 0)
 		printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 	}
 
 	uint32_t i = 0;
-//	uint8_t str[] = "CDC Transmit\r\n";
 	while(1) {
-		printk(DEBUG, "cycle 0x%lX\r\n", i++);
+//		uint8_t str[] = "CDC Transmit\r\n";
 //		CDC_Transmit_FS(str, strlen((char*)str));
-		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_6);
-		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
-		mdelay(500);
-		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_6);
-		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
+
+		printk(DEBUG, "\rcycle 0x%lX\t\t", i++);
+
+		LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_6);
+		LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_7);
+
 		mdelay(500);
 	}
 
@@ -233,11 +231,11 @@ int main(void)
 
 	board_init();
 
-//	console_init();
+	console_init();
 
-//	log_level_set(DEBUG);
+	log_level_set(DEBUG);
 
-//	printk(DEBUG, "DBS\r\n");
+	printk(DEBUG, "DBS\r\n");
 
 	mdelay(1000);
 
