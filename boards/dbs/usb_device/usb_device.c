@@ -7,6 +7,7 @@
 #include "debug.h"
 
 USBD_HandleTypeDef usb_device;
+uint32_t usb_inited = 0;
 
 /**
   * Init USB device Library, add supported class and start the library
@@ -35,4 +36,5 @@ void usb_init(void)
 		printk(DEBUG, "USBD_Start error\r\n");
 		return;
 	}
+	usb_inited = 1;
 }

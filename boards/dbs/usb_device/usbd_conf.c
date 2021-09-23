@@ -284,6 +284,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 
 		if (HAL_PCD_Init(&peripheral_controller_driver) != HAL_OK) {
 			printk(DEBUG, "Error in %s\r\n", __func__);
+			return USBD_FAIL;
 		}
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)

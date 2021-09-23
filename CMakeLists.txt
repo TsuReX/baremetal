@@ -58,11 +58,12 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "dbs")
 	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 
-	SET(SUB_PROJECTS	"${SUB_PROJECTS}"
-						"${CMAKE_CURRENT_SOURCE_DIR}/ringbuf")
+#	SET(SUB_PROJECTS	"${SUB_PROJECTS}"
+#						"${CMAKE_CURRENT_SOURCE_DIR}/ringbuf"
+#					)
 
-	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
-	set(LIBS "ringbuf")
+#	include_directories("${CMAKE_CURRENT_SOURCE_DIR}/ringbuf/include")
+#	set(LIBS "ringbuf")
 
 ######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "baikalbmc_stm32f103ret6")

@@ -169,7 +169,7 @@ void board_init(void)
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_6);
 
 	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_7, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7);
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
 
 #elif defined(F407ZGT6)
 
