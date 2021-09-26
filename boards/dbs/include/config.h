@@ -15,11 +15,12 @@
 
 #define CURRENT_MESSAGE_LEVEL 2
 
-#define D85_ADDR					0x21 /*I2C0*/
-#define D86_ADDR					0x22 /*I2C0*/
-#define D87_ADDR					0x23 /*I2C0*/
-#define D88_ADDR					0x21 /*I2C1*/
+#define D85_ADDR					0x39 /*I2C0*/
+#define D86_ADDR					0x26 /*I2C0*/
+#define D87_ADDR					0x27 /*I2C0*/
+#define D128_ADDR					0x70 /*I2C0*/
 
+#define D88_ADDR					0x21 /*I2C1*/
 
 #define ON_BTN_PIN					LL_GPIO_PIN_15
 #define ON_BTN_PORT					GPIOC

@@ -5,6 +5,7 @@
 #include "usbd_cdc.h"
 
 #include "debug.h"
+#include "drivers.h"
 
 PCD_HandleTypeDef peripheral_controller_driver;
 void Error_Handler(void);
@@ -18,6 +19,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 	if(pcdHandle->Instance == USB_OTG_FS) {
 
 		__HAL_RCC_GPIOA_CLK_ENABLE();
+//		LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 		/**USB_OTG_FS GPIO Configuration
 		PA11     ------> USB_OTG_FS_DM
 		PA12     ------> USB_OTG_FS_DP
@@ -31,6 +33,9 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 
 		/* Peripheral clock enable */
 		__HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+//		LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_OTGFS);
+//		LL_APB1_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+//		SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN)
 
 		/* Peripheral interrupt init */
 		HAL_NVIC_SetPriority(OTG_FS_IRQn, 0, 0);
