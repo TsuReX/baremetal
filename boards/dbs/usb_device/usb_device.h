@@ -10,7 +10,7 @@
 #include "usbd_def.h"
 
 /** USB Device initialization function. */
-void usb_init(void);
+int32_t usb_init(void);
 
 #ifdef __cplusplus
 }

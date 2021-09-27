@@ -181,36 +181,44 @@ void d88_enable()
 	printk(DEBUG, "D88 value: 0x%X\r\n", reg);
 }
 
-#if defined(F407VET6)
 int main(void)
 {
 	soc_init();
 
 	board_init();
 
-	HAL_Init();
-
-	usb_init();
-
-	mdelay(2500);
-
 	console_init();
 
 	log_level_set(DEBUG);
 
-	i2c1_init();
+	mdelay(1000);
+
+	HAL_Init();
+
+	if (usb_init() != 0) {
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_6);
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7);
+		while (1);
+	}
+
+	mdelay(2500);
+
+
+#if defined(F407VET6)
 
 	printk(DEBUG, "EVB\r\n");
+
+	i2c1_init();
 
 	uint8_t chip_addr = 0x00;
 	for (;chip_addr < 0x7F; ++chip_addr) {
 		uint8_t reg = 0;
 		if (i2c_read(I2C1, chip_addr << 1, 0x01, &reg, sizeof(reg)) == 0)
-		printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
+			printk(DEBUG, "0x%02X value: 0x%X\r\n", chip_addr, reg);
 	}
 
 	uint32_t i = 0;
-	while(1) {
+	while (1) {
 //		uint8_t str[] = "CDC Transmit\r\n";
 //		CDC_Transmit_FS(str, strlen((char*)str));
 
@@ -222,42 +230,7 @@ int main(void)
 		mdelay(500);
 	}
 
-	return 0;
-}
 #elif defined(F407ZGT6)
-int main(void)
-{
-	soc_init();
-
-	board_init();
-
-//	GPIO_InitTypeDef GPIO_InitStruct = {0};
-//	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
-//	/**USB_OTG_FS GPIO Configuration
-//	PA11     ------> USB_OTG_FS_DM
-//	PA12     ------> USB_OTG_FS_DP
-//	*/
-//	GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
-//	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-//	GPIO_InitStruct.Pull = GPIO_NOPULL;
-//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-//	GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-//	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-//
-//	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_OTGFS);
-//	LL_APB1_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-//
-//	USB_DevConnect(USB_OTG_FS);
-
-	HAL_Init();
-
-	usb_init();
-
-	mdelay(1000);
-//	while(1);
-	console_init();
-
-	log_level_set(DEBUG);
 
 	printk(DEBUG, "DBS\r\n");
 
@@ -304,11 +277,13 @@ int main(void)
 
 	uint8_t str[] = "CDC Transmit\r\n";
 
-	while(1) {
+	while (1) {
 		mdelay(500);
 		CDC_Transmit_FS(str, strlen((char*)str));
 	}
 
+#endif
+
+	while (1);
 	return 0;
 }
-#endif
