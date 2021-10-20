@@ -29,7 +29,7 @@ set(INCLUDE				"${INCLUDE}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
-						"${CMAKE_CURRENT_SOURCE_DIR}/source/baikalbmc_main.c"
+						"${BOARD_SRC_PATH}/source/main.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 
