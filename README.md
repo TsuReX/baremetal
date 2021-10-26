@@ -9,6 +9,9 @@ GNU Toolchain for the A-profile Architecture https://developer.arm.com/tools-and
 Для сборки bare-metal кода для процессоров с архитектурой ARMv8A необходимо компиялтор AArch64 ELF bare-metal target (aarch64-none-elf)
 - Содержимое арххива распаковать в директорию ~/soft/armv8a-gcc
 
+GNU Toolchain for the AVR https://www.microchip.com/en-us/development-tools-tools-and-software/gcc-compilers-avr-and-arm
+Для сборки bare-metal кода для процессоров с архитектурой avr необходим компилятор avr-gcc
+- Содержимое арххива распаковать в директорию ~/soft/avr-gcc
 Система сборки:
 
 Система сборки основана на cmake и состоит из CMakeLists.txt верхнего уровня, который расположен в корневой директории проекта и опциональных .cmake скриптов, которые располагаются в поддиректории boards/board_name и служат для упрощения процесса конфигурирования, они определяют дополнительные цели (flash - для выполнения прошивки), определяют переменные, которые влияют на сам процесс конфигуриования и сборки.
@@ -39,6 +42,8 @@ GNU Toolchain for the A-profile Architecture https://developer.arm.com/tools-and
 
 5. Выполнение прошивки
 	cmake --build .  -- -j8 --target flash
+	для AVR
+	pyupdi -d tiny826 -c /dev/ttyUSB0 -f ./attiny826.hex
 
 6. Выполнение отладки
 	cd build_board_type
@@ -76,4 +81,5 @@ dbs
 imx8m
 pulsox_stm32l4r9aii6u
 atbrk3568jsmcbmc_stm32l071kbu6
+som-carrier
 
