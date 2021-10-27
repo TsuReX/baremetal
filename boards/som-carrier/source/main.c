@@ -5,7 +5,8 @@
  * Author : ATBAdm
  */
 
-#include <avr/io.h>
+#include <io.h>
+
 #define DELAY_CNT 2000
 
 int main(void)
