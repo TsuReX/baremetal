@@ -132,6 +132,17 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "pulsox_stm32l4r9aii6u")
 	set(LIBS "ringbuf")
 
 ######################################################################
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "som-carrier")
+
+	set(PROJ_NAME som-carrier)
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+	set(CMAKE_C_COMPILER_PREFIX "avr-")
+	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+
+######################################################################
 endif()
 
 if (NOT EXISTS ${BOARD_SCRIPT_CMAKE})

@@ -33,9 +33,9 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 #						"${CMAKE_CURRENT_SOURCE_DIR}/source/debug.c"
 #						"${CMAKE_CURRENT_SOURCE_DIR}/source/time.c"
 
-						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
 						"${BOARD_SRC_PATH}/source/main.c"
-						"${BOARD_SRC_PATH}/source/init.c"
+#						"${BOARD_SRC_PATH}/source/startup_stm32f407zgt6.c"
+#						"${BOARD_SRC_PATH}/source/init.c"
 
 				)
 
@@ -43,12 +43,12 @@ set(INCLUDE				"${INCLUDE}"
 						
 						"${CMAKE_CURRENT_SOURCE_DIR}/base/core/include"
 						
-#						"${CMAKE_CURRENT_SOURCE_DIR}/base/device/st/stm32f4xx/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/base/device/avr/include"
+						"${CMAKE_CURRENT_SOURCE_DIR}/base/device/avr/include/avr"
 						
-#						"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f4xx/include"
 				)
 
-set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f4xx/source")
+#set(DRV_SOURCES_PATH 	"${CMAKE_CURRENT_SOURCE_DIR}/base/driver/st/stm32f4xx/source")
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
@@ -58,26 +58,21 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4 -Wall -Werror")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mmcu=attiny826 -Wall")
 	
-set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
+set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mmcu=attiny826")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
 
-						"-T ${BOARD_SRC_PATH}/flash.ld"
-						"-mcpu=cortex-m4"
-						"-specs=nano.specs"
+						"-T ${BOARD_SRC_PATH}/avrxmega3.x"
+						"-mmcu=attiny826"
+						"-nostdlib"
 				)
 
 set(LINKER_LIBS			"${LINKER_LIBS}"
-
-						"-lc"
-						"-lm"
-						"-lnosys"
+#						"-lc"
+#						"-lm"
 				)
 		
-add_definitions("-DSTM32F407xx")
-add_definitions("-DUSE_FULL_LL_DRIVER")
+add_definitions("-D__AVR_ATtiny826__")
 add_definitions("-DDBG_OUT")
-add_definitions("-DF407VET6")
-#add_definitions("-DF407ZGT6")
