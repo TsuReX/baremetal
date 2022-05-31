@@ -43,6 +43,10 @@ int32_t power_on(void)
 	if (!pg)
 		return -3;
 
+	LL_GPIO_SetOutputPin(JTAG_RST_PORT, JTAG_RST_PIN);
+	printk(DEBUG, "JTAG_RST_PIN HIGH\r\n");
+	mdelay(1);
+
 	LL_GPIO_SetOutputPin(EN_VL_PORT, EN_VL_PIN);
 	mdelay(100);
 	pg = LL_GPIO_IsInputPinSet(PG_VL_PORT, PG_VL_PIN);
@@ -75,9 +79,6 @@ int32_t power_on(void)
 	if (!pg)
 		return -7;
 
-	LL_GPIO_SetOutputPin(JTAG_RST_PORT, JTAG_RST_PIN);
-	printk(DEBUG, "JTAG_RST_PIN HIGH\r\n");
-	mdelay(1);
 
 	LL_GPIO_ResetOutputPin(DRVRST_PORT, DRVRST_PIN);
 	printk(DEBUG, "DRVRST_PIN LOW\r\n");
