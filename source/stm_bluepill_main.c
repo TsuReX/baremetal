@@ -167,10 +167,10 @@ void adc1_init(void)
 	LL_ADC_REG_Init(ADC1, &ADC_REG_InitStruct);
 
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_4);
-	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_4, LL_ADC_SAMPLINGTIME_1CYCLE_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_4, LL_ADC_SAMPLINGTIME_239CYCLES_5);
 
 	LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_2, LL_ADC_CHANNEL_5);
-	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_5, LL_ADC_SAMPLINGTIME_1CYCLE_5);
+	LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_5, LL_ADC_SAMPLINGTIME_239CYCLES_5);
 
 	LL_ADC_Enable(ADC1);
 	LL_ADC_StartCalibration(ADC1);
@@ -202,10 +202,12 @@ void adc1_value_print()
 
 	while (!LL_DMA_IsActiveFlag_TC1(DMA1));
 	LL_DMA_ClearFlag_TC1(DMA1);
+//	int32_t full_range = adc_buf[0];
+//	int32_t half_range = adc_buf[0] >> 1;
+	printk(DEBUG, "ADC 1 ch4: %dmV\r\n", adc_buf[0] * uvolts_per_bit / 1000);
 
-	printk(DEBUG, "ADC 1 0: %d\r\n", adc_buf[0] * uvolts_per_bit / 1000);
-
-	printk(DEBUG, "ADC 1 1: %d\r\n", adc_buf[1] * uvolts_per_bit / 1000);
+	printk(DEBUG, "ADC 1 ch5: %dmV\r\n", adc_buf[1] * uvolts_per_bit / 1000);
+	printk(DEBUG, "Current: %dmA\r\n", ((adc_buf[1] * uvolts_per_bit / 1000) - 1645) );
 }
 
 void max7219_digit_value_set(size_t dig_num, uint32_t value)
@@ -492,7 +494,7 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t b
 	return 0;
 }
 
-#define FUNC 3
+#define FUNC 2
 
 int main(void)
 {
