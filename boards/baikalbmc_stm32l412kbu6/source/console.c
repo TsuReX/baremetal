@@ -60,7 +60,7 @@ static void console_usart1_init(void)
 {
 	LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
 	LPUART_InitStruct.BaudRate = 115200;
-	LPUART_InitStruct.DataWidth = LL_LPUART_DATAWIDTH_7B;
+	LPUART_InitStruct.DataWidth = LL_LPUART_DATAWIDTH_8B;
 	LPUART_InitStruct.StopBits = LL_LPUART_STOPBITS_1;
 	LPUART_InitStruct.Parity = LL_LPUART_PARITY_NONE;
 	LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
@@ -74,10 +74,10 @@ static void console_usart1_init(void)
  */
 static void console_usart1_close(void)
 {
-	LL_LPUART_DisableDirectionTx(USART1);
-	LL_LPUART_DisableDirectionRx(USART1);
+	LL_LPUART_DisableDirectionTx(LPUART1);
+	LL_LPUART_DisableDirectionRx(LPUART1);
 
-	LL_LPUART_Disable(USART1);
+	LL_LPUART_Disable(LPUART1);
 }
 
 /*
@@ -145,7 +145,7 @@ void d_print(const char *format, ...)
 	 */
 	size_t i;
 	for (i = 0; i < sz; ++i) {
-		LL_USART_TransmitData8(USART1, str[i]);
+		LL_LPUART_TransmitData8(LPUART1, str[i]);
 
 		/** Ожидать окончания передачи ms_timeout миллисекунд.*/
 		do {
@@ -154,7 +154,7 @@ void d_print(const char *format, ...)
 			if (ms_timeout == 0)
 				/* TODO: Рассмотреть возможные варианты действий в случае превышения таймаута. */
 				break;
-		} while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+		} while (LL_LPUART_IsActiveFlag_TXE(LPUART1) != 1);
 	}
 }
 #endif
@@ -163,7 +163,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 {
 	size_t i;
 	for (i = 0; i < src_buffer_size; ++i) {
-		LL_LPUART_TransmitData8(USART1, src_buffer[i]);
+		LL_LPUART_TransmitData8(LPUART1, src_buffer[i]);
 
 #if defined(PERIOD_TIMEOUT)
 		struct period timeout;
@@ -180,7 +180,7 @@ size_t console_write(const uint8_t *src_buffer, size_t src_buffer_size, uint32_t
 			if (is_period_expired(&timeout, NOT_RESTART_PERIOD))
 				break;
 #endif
-		} while (LL_LPUART_IsActiveFlag_TXE(USART1) != 1);
+		} while (LL_LPUART_IsActiveFlag_TXE(LPUART1) != 1);
 	}
 	return i;
 }

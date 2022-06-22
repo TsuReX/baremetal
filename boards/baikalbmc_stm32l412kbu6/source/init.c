@@ -55,7 +55,7 @@ static void rcc_init(void)
 	LL_RCC_LSE_Enable();
 
 	/* Wait till LSE is ready */
-	while(LL_RCC_LSE_IsReady() != 1);
+//	while(LL_RCC_LSE_IsReady() != 1);
 
 	LL_RCC_MSI_EnablePLLMode();
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_MSI, LL_RCC_PLLM_DIV_3, 8, LL_RCC_PLLR_DIV_2);
