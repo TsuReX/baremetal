@@ -366,7 +366,7 @@ uint32_t pwr_0v95_status()
 	return (reg0 >> 4) & 0x1;
 }
 
-void pwr_cpu_clk_off()
+void cpu_clk_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -374,7 +374,7 @@ void pwr_cpu_clk_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_cpu_clk_on()
+void cpu_clk_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -382,7 +382,7 @@ void pwr_cpu_clk_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_scp_trstn_low()
+void scp_trstn_low()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -390,7 +390,7 @@ void pwr_scp_trstn_low()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_scp_trstn_high()
+void scp_trstn_high()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -398,7 +398,7 @@ void pwr_scp_trstn_high()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_cpu_trstn_low()
+void cpu_trstn_low()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -406,7 +406,7 @@ void pwr_cpu_trstn_low()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_cpu_trstn_high()
+void cpu_trstn_high()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -510,7 +510,8 @@ void cpu_speed_high()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_boot_mode_0()
+/* This mode is correct and cpu can be booted */
+void cpu_boot_mode_rom()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -518,7 +519,8 @@ void cpu_boot_mode_0()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_boot_mode_1()
+/* This mode has incrystal problem and doesn't work correctly! */
+void cpu_boot_mode_spi()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -526,21 +528,130 @@ void cpu_boot_mode_1()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
+void cpu_reset_low()
+{
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
+}
+
+void cpu_reset_high()
+{
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+}
+
 int32_t power_on(void)
 {
+	cpu_reset_low();
+
+	sysfl_connect_to_cpu();
+	btfl_connect_to_cpu();
+
+//	cpu_boot_mode_rom();
+//	cpu_speed_low();
+
+	pwr_5v_on();
+	mdelay(100);
+	if (pwr_5v_status() != 1) {
+		printk(DEBUG, "5v startup failure\r\n");
+		return -2;
+	}
+	printk(DEBUG, "5v startup ok\r\n");
+
+	pwr_sw_1v_on();
+
+	pwr_usb_5v_on();
+
 	pwr_3v3_on();
-	mdelay(10);
+	mdelay(100);
 	if (pwr_3v3_status() != 1) {
 		printk(DEBUG, "3v3 startup failure\r\n");
 		return -1;
 	}
 	printk(DEBUG, "3v3 startup ok\r\n");
+
+	pwr_1v5_on();
+	mdelay(100);
+	if (pwr_1v5_status() != 1) {
+		printk(DEBUG, "1v5 startup failure\r\n");
+		return -3;
+	}
+	printk(DEBUG, "1v5 startup ok\r\n");
+
+	pwr_1v8_on();
+	mdelay(100);
+	if (pwr_1v8_status() != 1) {
+		printk(DEBUG, "1v8 startup failure\r\n");
+		return -5;
+	}
+	printk(DEBUG, "1v8 startup ok\r\n");
+
+	hdmi_27mhz_on();
+	usb_clk_on();
+	mdelay(10);
+	printk(DEBUG, "HDMI clock startup\r\n");
+
+	pwr_pll_0v9_on();
+	mdelay(10);
+	printk(DEBUG, "PLL 0v9 startup\r\n");
+
+	pwr_vdram_on();
+	mdelay(100);
+	if (pwr_vdram_status() != 1) {
+		printk(DEBUG, "vdram startup failure\r\n");
+		return -4;
+	}
+	printk(DEBUG, "vdram startup ok\r\n");
+
+	cpu_trstn_high();
+	mdelay(1);
+	printk(DEBUG, "cpu trstn high\r\n");
+
+	scp_trstn_high();
+	mdelay(1);
+	printk(DEBUG, "scp trstn high\r\n");
+
+	pwr_0v95_on();
+	mdelay(100);
+	if (pwr_0v95_status() != 1) {
+		printk(DEBUG, "0v95 startup failure\r\n");
+		return -6;
+	}
+	printk(DEBUG, "0v95 startup ok\r\n");
+
+	cpu_clk_on();
+	mdelay(100);
+	printk(DEBUG, "CPU clock startup\r\n");
+
+	cpu_reset_high();
+	printk(DEBUG, "cpu reset high\r\n");
+
 	return 0;
 }
 
 void power_off(void)
 {
+	cpu_reset_low();
+
 	pwr_3v3_off();
+
+	pwr_5v_off();
+
+	cpu_clk_off();
+
+	hdmi_27mhz_off();
+
+	pwr_1v8_off();
+
+	pwr_pll_0v9_off();
+
+	pwr_vdram_off();
+
+	cpu_trstn_low();
+
+	scp_trstn_low();
+
+	pwr_1v5_off();
+
+	pwr_0v95_off();
 }
 
 void pwr_switches_init()
@@ -566,8 +677,8 @@ void pwr_switches_init()
 	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 	i2c_write(D49_ADDR, 0x3, &reg3, sizeof(reg3));
 
-	/* XX000000 */
-	reg3 = 0x00;
+	/* XX110000 */
+	reg3 = 0x30;
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 	i2c_write(D50_ADDR, 0x3, &reg3, sizeof(reg3));
 }
@@ -582,9 +693,10 @@ int main(void)
 
 	pwr_switches_init();
 
-//	power_off();
-
 	console_init();
+
+	mdelay(2000);
+	power_off();
 
 	log_level_set(DEBUG);
 	mdelay(100);
@@ -600,9 +712,9 @@ int main(void)
 		printk(DEBUG, "Power up is successful\r\n");
 	}
 
-
+	uint32_t counter = 0;
 	while(1) {
-		printk(DEBUG, "BAIKAL BMC LOOP\r\n");
+		printk(DEBUG, "BAIKAL BMC LOOP: %ld\r", counter++);
 		mdelay(500);
 	}
 
