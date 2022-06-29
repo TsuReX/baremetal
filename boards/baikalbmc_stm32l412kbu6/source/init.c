@@ -113,6 +113,7 @@ static void systick_init(uint32_t hclk_freq, uint32_t period)
  */
 void board_init(void)
 {
+	/** Configuring GPIO. */
 	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	/* GPIO Ports Clock Enable */
@@ -120,16 +121,14 @@ void board_init(void)
 	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
 	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
 
-	/**/
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-
-	/**/
+	/* BAT_BMC_VCC */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* BMC_SPI_CS_N */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -137,23 +136,38 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* +12V_BMC_ADC +0v95_BMC_ADC*/
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_0|LL_GPIO_PIN_1;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* GPIO_EXP_BMC_IRQ_N, WDT_WDO_N, RSTBTN_N, 3v3_BMC_CPU_IRQ_N */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_8|LL_GPIO_PIN_9|LL_GPIO_PIN_10|LL_GPIO_PIN_15;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* BMC_CPU_RESET_N */
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_3;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+//	LL_GPIO_SetPinMode(EN_AUX_PORT, EN_AUX_PIN, LL_GPIO_MODE_OUTPUT);
+//	LL_GPIO_ResetOutputPin(EN_AUX_PORT, EN_AUX_PIN);
+//	LL_GPIO_SetPinMode(PG_AUX_PORT, PG_AUX_PIN, LL_GPIO_MODE_INPUT);
+//	LL_GPIO_SetPinPull(PG_AUX_PORT, PG_AUX_PIN, LL_GPIO_PULL_UP);
+//
+//	LL_GPIO_SetPinMode(EN_VCC_PORT, EN_VCC_PIN, LL_GPIO_MODE_OUTPUT);
+//	LL_GPIO_ResetOutputPin(EN_VCC_PORT, EN_VCC_PIN);
+//	LL_GPIO_SetPinMode(PG_VCC_PORT, PG_VCC_PIN, LL_GPIO_MODE_INPUT);
+//
+//	LL_GPIO_SetPinMode(DRVRST_PORT, DRVRST_PIN, LL_GPIO_MODE_OUTPUT);
+//	LL_GPIO_SetOutputPin(DRVRST_PORT, DRVRST_PIN);
 
 }
 
