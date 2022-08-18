@@ -13,55 +13,246 @@
 #define D48_ADDR 0x42
 #define D49_ADDR 0x44
 #define D50_ADDR 0x46
+#define BMC_ADDR 0x10
+
+static void i2c1_init(void)
+{
+
+	/* USER CODE BEGIN I2C1_Init 0 */
+
+	/* USER CODE END I2C1_Init 0 */
+
+	LL_I2C_InitTypeDef I2C_InitStruct = {0};
+
+	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	LL_RCC_SetI2CClockSource(LL_RCC_I2C1_CLKSOURCE_PCLK1);
+
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+	/**I2C1 GPIO Configuration
+	PB6   ------> I2C1_SCL
+	PB7   ------> I2C1_SDA
+	*/
+	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/* Peripheral clock enable */
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+
+	/* I2C1 interrupt Init */
+	NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+	NVIC_EnableIRQ(I2C1_EV_IRQn);
+
+	/* USER CODE BEGIN I2C1_Init 1 */
+
+	/* USER CODE END I2C1_Init 1 */
+
+	/** I2C Initialization
+	*/
+	LL_I2C_EnableAutoEndMode(I2C1);
+	LL_I2C_DisableOwnAddress2(I2C1);
+	LL_I2C_DisableGeneralCall(I2C1);
+//	LL_I2C_EnableClockStretching(I2C1);
+	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+	I2C_InitStruct.Timing = 0x10707DBC;
+	I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
+	I2C_InitStruct.DigitalFilter = 0;
+	I2C_InitStruct.OwnAddress1 = 0x10;
+	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+	LL_I2C_Init(I2C1, &I2C_InitStruct);
+	LL_I2C_SetOwnAddress2(I2C1, 0, LL_I2C_OWNADDRESS2_NOMASK);
+	/* USER CODE BEGIN I2C1_Init 2 */
+
+	/* USER CODE END I2C1_Init 2 */
+
+
+	LL_I2C_Enable(I2C1);
+	LL_I2C_EnableIT_ADDR(I2C1);
+	LL_I2C_EnableIT_RX(I2C1);
+	LL_I2C_EnableIT_STOP(I2C1);
+}
+
+void error_calback() {
+
+}
+
+#define MBM_BMC_REG_PWROFF_RQ		0x05
+#define MBM_BMC_REG_PWROFF_RQ_OFF	0x01
+#define MBM_BMC_REG_PWROFF_RQ_RESET	0x02
+
+const uint8_t rstreq[] = {
+	MBM_BMC_REG_PWROFF_RQ,
+	MBM_BMC_REG_PWROFF_RQ_RESET
+};
+
+uint16_t request = 0x0;
+uint32_t reset = 0x0;
+
+void power_off();
+
+void i2c1_ev_handler(void)
+{
+//	power_off();
+	/* Check ADDR flag value in ISR register */
+	if(LL_I2C_IsActiveFlag_ADDR(I2C1)) {
+//		reset = 1;
+//		LL_I2C_ClearFlag_ADDR(I2C1);
+//		return;
+		/* Verify the Address Match with the OWN Slave address */
+		if(LL_I2C_GetAddressMatchCode(I2C1) == (BMC_ADDR)) {
+//			reset = 1;
+			/* Verify the transfer direction, a read direction, Slave enters transmitter mode */
+			if(LL_I2C_GetTransferDirection(I2C1) == LL_I2C_DIRECTION_READ) {
+
+				/* Slave -> Master request */
+
+				/* Clear ADDR flag value in ISR register */
+				LL_I2C_ClearFlag_ADDR(I2C1);
+
+				/* Enable Transmit Interrupt */
+//				LL_I2C_EnableIT_TX(I2C1);
+
+			} else {
+
+				/* Master -> Slave request */
+
+				/* Clear ADDR flag value in ISR register */
+				LL_I2C_ClearFlag_ADDR(I2C1);
+
+				/* Enable Receive Interrupt */
+				LL_I2C_EnableIT_RX(I2C1);
+			}
+		} else {
+
+			/* Illegal address requested */
+
+			/* Clear ADDR flag value in ISR register */
+			LL_I2C_ClearFlag_ADDR(I2C1);
+
+			/* Call Error function */
+			error_calback();
+		}
+
+	/* Check NACK flag value in ISR register */
+//	}  else if(LL_I2C_IsActiveFlag_NACK(I2C1)) {
+//
+//		/* End of Transfer */
+//		LL_I2C_ClearFlag_NACK(I2C1);
+
+	/* Check RXNE flag value in ISR register */
+	} else if(LL_I2C_IsActiveFlag_RXNE(I2C1)) {
+
+		/* Call function Slave Ready to Receive Callback */
+		uint8_t data = LL_I2C_ReceiveData8(I2C1);
+
+		request = (request << 8) & data;
+//		if (request == (MBM_BMC_REG_PWROFF_RQ & MBM_BMC_REG_PWROFF_RQ_RESET)) {
+//			request = 0;
+//			reset = 1;
+//		}
+
+	/* Check TXIS flag value in ISR register */
+//	} else if(LL_I2C_IsActiveFlag_TXIS(I2C1)) {
+//
+//		/* Call function Slave Ready to Transmit Callback */
+//		Slave_Ready_To_Transmit_Callback();
+
+	/* Check STOP flag value in ISR register */
+	}  else if(LL_I2C_IsActiveFlag_STOP(I2C1)) {
+
+		/* Clear STOP flag value in ISR register */
+		LL_I2C_ClearFlag_STOP(I2C1);
+
+		/* Check TXE flag value in ISR register */
+		if(!LL_I2C_IsActiveFlag_TXE(I2C1)) {
+			/* Flush the TXDR register */
+			LL_I2C_ClearFlag_TXE(I2C1);
+		}
+
+		/* Call function Slave Complete Callback */
+//		Slave_Complete_Callback();
+
+		if (request == (MBM_BMC_REG_PWROFF_RQ & MBM_BMC_REG_PWROFF_RQ_RESET)) {
+			request = 0;
+			reset = 1;
+
+			/* Disable Receive Interrupt */
+			LL_I2C_DisableIT_RX(I2C1);
+		}
+
+	/* Check TXE flag value in ISR register */
+//	} else if(!LL_I2C_IsActiveFlag_TXE(I2C1)) {
+//
+//		/* Do nothing */
+//		/* This Flag will be set by hardware when the TXDR register is empty */
+//		/* If needed, use LL_I2C_ClearFlag_TXE() interface to flush the TXDR register  */
+
+	} else {
+
+		/* Call Error function */
+		error_calback();
+	}
+}
+
+void i2c1_er_handler(void)
+{
+	error_calback();
+}
 
 static void i2c3_init(void)
 {
-	  LL_I2C_InitTypeDef I2C_InitStruct = {0};
+	LL_I2C_InitTypeDef I2C_InitStruct = {0};
 
-	  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	  LL_RCC_SetI2CClockSource(LL_RCC_I2C3_CLKSOURCE_PCLK1);
+	LL_RCC_SetI2CClockSource(LL_RCC_I2C3_CLKSOURCE_PCLK1);
 
-	  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
-	  LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
-	  /**I2C3 GPIO Configuration
-	  PA7   ------> I2C3_SCL
-	  PB4 (NJTRST)   ------> I2C3_SDA
-	  */
-	  GPIO_InitStruct.Pin = LL_GPIO_PIN_7;
-	  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-	  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
-	  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+	/**I2C3 GPIO Configuration
+	PA7   ------> I2C3_SCL
+	PB4 (NJTRST)   ------> I2C3_SDA
+	*/
+	GPIO_InitStruct.Pin = LL_GPIO_PIN_7;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	  GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
-	  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-	  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-	  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
-	  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	  /* Peripheral clock enable */
-	  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C3);
+	/* Peripheral clock enable */
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C3);
 
-	  /** I2C Initialization
-	  */
-	  LL_I2C_EnableAutoEndMode(I2C3);
-	  LL_I2C_DisableOwnAddress2(I2C3);
-	  LL_I2C_DisableGeneralCall(I2C3);
-	  LL_I2C_EnableClockStretching(I2C3);
-	  I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-	  I2C_InitStruct.Timing = 0x10707DBC;
-	  I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
-	  I2C_InitStruct.DigitalFilter = 0;
-	  I2C_InitStruct.OwnAddress1 = 0;
-	  I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
-	  I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
-	  LL_I2C_Init(I2C3, &I2C_InitStruct);
-	  LL_I2C_SetOwnAddress2(I2C3, 0, LL_I2C_OWNADDRESS2_NOMASK);
+	/** I2C Initialization
+	*/
+	LL_I2C_EnableAutoEndMode(I2C3);
+	LL_I2C_DisableOwnAddress2(I2C3);
+	LL_I2C_DisableGeneralCall(I2C3);
+	LL_I2C_EnableClockStretching(I2C3);
+	I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+	I2C_InitStruct.Timing = 0x10707DBC;
+	I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
+	I2C_InitStruct.DigitalFilter = 0;
+	I2C_InitStruct.OwnAddress1 = 0;
+	I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+	LL_I2C_Init(I2C3, &I2C_InitStruct);
+	LL_I2C_SetOwnAddress2(I2C3, 0, LL_I2C_OWNADDRESS2_NOMASK);
 }
 
 int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
@@ -733,12 +924,16 @@ int main(void)
 	}
 
 	while(1) {
-		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0)
+		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0) {
 			cpu_reset_low();
-		else
-//		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0)
+		} else {
 			cpu_reset_high();
+		}
 
+		if (reset == 1) {
+			cpu_reset_low();
+			reset = 0;
+		}
 
 		mdelay(10);
 
