@@ -14,7 +14,6 @@
 #define D49_ADDR 0x44
 #define D50_ADDR 0x46
 
-
 static void i2c3_init(void)
 {
 	  LL_I2C_InitTypeDef I2C_InitStruct = {0};
@@ -530,18 +529,32 @@ void cpu_boot_mode_spi()
 
 void cpu_reset_low()
 {
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+
+	// PCIE assert reset
+	// D49.12 <= 0;
+	uint8_t reg1 = 0x0;
+	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
+	reg1 &= (~0x80);
+	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
+
 }
 
 void cpu_reset_high()
 {
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
+
+	// PCIE deassert reset
+	// D49.12 <= 1;
+	uint8_t reg1 = 0x0;
+	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
+	reg1 |= 0x80;
+	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
 int32_t power_on(void)
 {
 	cpu_reset_low();
-
 	sysfl_connect_to_cpu();
 	btfl_connect_to_cpu();
 
@@ -590,7 +603,7 @@ int32_t power_on(void)
 	printk(DEBUG, "HDMI clock startup\r\n");
 
 	pwr_pll_0v9_on();
-	mdelay(10);
+	mdelay(1);
 	printk(DEBUG, "PLL 0v9 startup\r\n");
 
 	pwr_vdram_on();
@@ -602,11 +615,11 @@ int32_t power_on(void)
 	printk(DEBUG, "vdram startup ok\r\n");
 
 	cpu_trstn_high();
-	mdelay(1);
+	mdelay(100);
 	printk(DEBUG, "cpu trstn high\r\n");
 
 	scp_trstn_high();
-	mdelay(1);
+	mdelay(100);
 	printk(DEBUG, "scp trstn high\r\n");
 
 	pwr_0v95_on();
@@ -624,12 +637,17 @@ int32_t power_on(void)
 	cpu_reset_high();
 	printk(DEBUG, "cpu reset high\r\n");
 
+	pwr_hdd_on();
+	printk(DEBUG, "pwr hdd on\r\n");
+
 	return 0;
 }
 
 void power_off(void)
 {
 	cpu_reset_low();
+
+	pwr_hdd_off();
 
 	pwr_3v3_off();
 
@@ -672,7 +690,7 @@ void pwr_switches_init()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 	i2c_write(D48_ADDR, 0x3, &reg3, sizeof(reg3));
 
-	/* XX011111 */
+	/* 0X011111 */
 	reg3 = 0x1F;
 	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 	i2c_write(D49_ADDR, 0x3, &reg3, sizeof(reg3));
@@ -689,6 +707,7 @@ int main(void)
 
 	board_init();
 
+	i2c1_init();
 	i2c3_init();
 
 	pwr_switches_init();
@@ -700,6 +719,7 @@ int main(void)
 
 	log_level_set(DEBUG);
 	mdelay(100);
+
 	printk(DEBUG, "BAIKAL BMC\r\n");
 	printk(DEBUG, "Start power up\r\n");
 	int32_t ret_val = power_on();
@@ -712,10 +732,16 @@ int main(void)
 		printk(DEBUG, "Power up is successful\r\n");
 	}
 
-	uint32_t counter = 0;
 	while(1) {
-		printk(DEBUG, "BAIKAL BMC LOOP: %ld\r", counter++);
-		mdelay(500);
+		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0)
+			cpu_reset_low();
+		else
+//		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0)
+			cpu_reset_high();
+
+
+		mdelay(10);
+
 	}
 
 	return 0;
