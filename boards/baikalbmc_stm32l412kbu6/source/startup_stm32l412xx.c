@@ -47,8 +47,8 @@ WEAK void TIM1_CC_IRQHandler(void);
 WEAK void TIM2_IRQHandler(void);
 WEAK void TIM3_IRQHandler(void);
 WEAK void TIM4_IRQHandler(void);
-WEAK void I2C1_EV_IRQHandler(void);
-WEAK void I2C1_ER_IRQHandler(void);
+WEAK void i2c1_ev_handler(void);
+WEAK void i2c1_er_handler(void);
 WEAK void I2C2_EV_IRQHandler(void);
 WEAK void I2C2_ER_IRQHandler(void);
 WEAK void I2C3_EV_IRQHandler(void);
@@ -152,8 +152,8 @@ void (* const isr_vector_table[])(void) = {
 	TIM2_IRQHandler,
 	0,
 	0,
-	I2C1_EV_IRQHandler,
-	I2C1_ER_IRQHandler,
+	i2c1_ev_handler,
+	i2c1_er_handler,
 	I2C2_EV_IRQHandler,
 	I2C2_ER_IRQHandler,
 	spi1_irq_handler,
@@ -433,11 +433,11 @@ WEAK void TIM4_IRQHandler(void)
 {	while(1) {}
 }
 
-WEAK void I2C1_EV_IRQHandler(void)
+WEAK void i2c1_ev_handler(void)
 {	while(1) {}
 }
 
-WEAK void I2C1_ER_IRQHandler(void)
+WEAK void i2c1_er_handler(void)
 {	while(1) {}
 }
 
