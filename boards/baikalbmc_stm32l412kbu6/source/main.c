@@ -1,4 +1,3 @@
-#include <string.h>
 #include "time.h"
 #include "drivers.h"
 #include "console.h"
@@ -15,15 +14,31 @@
 #define D50_ADDR 0x46
 #define BMC_ADDR 0x10
 
+#define MBM_BMC_REG_PWROFF_RQ		0x05
+#define MBM_BMC_REG_PWROFF_RQ_OFF	0x01
+#define MBM_BMC_REG_PWROFF_RQ_RESET	0x02
+
+const uint8_t rstreq[] = {
+	MBM_BMC_REG_PWROFF_RQ,
+	MBM_BMC_REG_PWROFF_RQ_RESET
+};
+
+enum states_t {
+	PWRDWN = 0,
+	TOPWRDWN,
+	TOPWRUP,
+	TORST,
+	FROMRST,
+	PWRUP
+};
+
+uint16_t request = 0x0;
+uint32_t reset = 0x0;
+
 static void i2c1_init(void)
 {
 
-	/* USER CODE BEGIN I2C1_Init 0 */
-
-	/* USER CODE END I2C1_Init 0 */
-
 	LL_I2C_InitTypeDef I2C_InitStruct = {0};
-
 	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	LL_RCC_SetI2CClockSource(LL_RCC_I2C1_CLKSOURCE_PCLK1);
@@ -45,15 +60,9 @@ static void i2c1_init(void)
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
 
 	/* I2C1 interrupt Init */
-	NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+	NVIC_SetPriority(I2C1_EV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
 	NVIC_EnableIRQ(I2C1_EV_IRQn);
 
-	/* USER CODE BEGIN I2C1_Init 1 */
-
-	/* USER CODE END I2C1_Init 1 */
-
-	/** I2C Initialization
-	*/
 	LL_I2C_EnableAutoEndMode(I2C1);
 	LL_I2C_DisableOwnAddress2(I2C1);
 	LL_I2C_DisableGeneralCall(I2C1);
@@ -67,10 +76,6 @@ static void i2c1_init(void)
 	I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
 	LL_I2C_Init(I2C1, &I2C_InitStruct);
 	LL_I2C_SetOwnAddress2(I2C1, 0, LL_I2C_OWNADDRESS2_NOMASK);
-	/* USER CODE BEGIN I2C1_Init 2 */
-
-	/* USER CODE END I2C1_Init 2 */
-
 
 	LL_I2C_Enable(I2C1);
 	LL_I2C_EnableIT_ADDR(I2C1);
@@ -78,35 +83,14 @@ static void i2c1_init(void)
 	LL_I2C_EnableIT_STOP(I2C1);
 }
 
-void error_calback() {
-
-}
-
-#define MBM_BMC_REG_PWROFF_RQ		0x05
-#define MBM_BMC_REG_PWROFF_RQ_OFF	0x01
-#define MBM_BMC_REG_PWROFF_RQ_RESET	0x02
-
-const uint8_t rstreq[] = {
-	MBM_BMC_REG_PWROFF_RQ,
-	MBM_BMC_REG_PWROFF_RQ_RESET
-};
-
-uint16_t request = 0x0;
-uint32_t reset = 0x0;
-
-void power_off();
-
 void i2c1_ev_handler(void)
 {
-//	power_off();
 	/* Check ADDR flag value in ISR register */
 	if(LL_I2C_IsActiveFlag_ADDR(I2C1)) {
-//		reset = 1;
-//		LL_I2C_ClearFlag_ADDR(I2C1);
-//		return;
+
 		/* Verify the Address Match with the OWN Slave address */
 		if(LL_I2C_GetAddressMatchCode(I2C1) == (BMC_ADDR)) {
-//			reset = 1;
+
 			/* Verify the transfer direction, a read direction, Slave enters transmitter mode */
 			if(LL_I2C_GetTransferDirection(I2C1) == LL_I2C_DIRECTION_READ) {
 
@@ -114,9 +98,6 @@ void i2c1_ev_handler(void)
 
 				/* Clear ADDR flag value in ISR register */
 				LL_I2C_ClearFlag_ADDR(I2C1);
-
-				/* Enable Transmit Interrupt */
-//				LL_I2C_EnableIT_TX(I2C1);
 
 			} else {
 
@@ -136,7 +117,6 @@ void i2c1_ev_handler(void)
 			LL_I2C_ClearFlag_ADDR(I2C1);
 
 			/* Call Error function */
-			error_calback();
 		}
 
 	/* Check NACK flag value in ISR register */
@@ -152,10 +132,6 @@ void i2c1_ev_handler(void)
 		uint8_t data = LL_I2C_ReceiveData8(I2C1);
 
 		request = (request << 8) & data;
-//		if (request == (MBM_BMC_REG_PWROFF_RQ & MBM_BMC_REG_PWROFF_RQ_RESET)) {
-//			request = 0;
-//			reset = 1;
-//		}
 
 	/* Check TXIS flag value in ISR register */
 //	} else if(LL_I2C_IsActiveFlag_TXIS(I2C1)) {
@@ -175,9 +151,6 @@ void i2c1_ev_handler(void)
 			LL_I2C_ClearFlag_TXE(I2C1);
 		}
 
-		/* Call function Slave Complete Callback */
-//		Slave_Complete_Callback();
-
 		if (request == (MBM_BMC_REG_PWROFF_RQ & MBM_BMC_REG_PWROFF_RQ_RESET)) {
 			request = 0;
 			reset = 1;
@@ -196,13 +169,7 @@ void i2c1_ev_handler(void)
 	} else {
 
 		/* Call Error function */
-		error_calback();
 	}
-}
-
-void i2c1_er_handler(void)
-{
-	error_calback();
 }
 
 static void i2c3_init(void)
@@ -255,7 +222,7 @@ static void i2c3_init(void)
 	LL_I2C_SetOwnAddress2(I2C3, 0, LL_I2C_OWNADDRESS2_NOMASK);
 }
 
-int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
+static int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t buffer_size)
 {
 	uint32_t guard_counter = GUARD_COUNTER_INIT;
 
@@ -306,7 +273,7 @@ int32_t i2c_read(uint8_t chip_addr, uint8_t reg_addr, uint8_t *buffer, size_t bu
 	return pos;
 }
 
-int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t data_size)
+static int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t data_size)
 {
 	uint32_t guard_counter = GUARD_COUNTER_INIT;
 
@@ -356,7 +323,7 @@ int32_t i2c_write(uint8_t chip_addr, uint8_t reg_addr, uint8_t *data, size_t dat
 	return pos;
 }
 
-void pwr_3v3_off()
+static void pwr_3v3_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -364,7 +331,7 @@ void pwr_3v3_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_3v3_on()
+static void pwr_3v3_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -372,14 +339,14 @@ void pwr_3v3_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_3v3_status()
+static uint32_t pwr_3v3_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D49_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 0) & 0x1;
 }
 
-void pwr_5v_off()
+static void pwr_5v_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -387,7 +354,7 @@ void pwr_5v_off()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_5v_on()
+static void pwr_5v_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -395,14 +362,14 @@ void pwr_5v_on()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_5v_status()
+static uint32_t pwr_5v_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D47_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 4) & 0x1;
 }
 
-void pwr_usb_5v_off()
+static void pwr_usb_5v_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -410,7 +377,7 @@ void pwr_usb_5v_off()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_usb_5v_on()
+static void pwr_usb_5v_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -418,14 +385,14 @@ void pwr_usb_5v_on()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_usb_5v_status()
-{
-	uint8_t reg0 = 0xFF;
-	i2c_read(D47_ADDR, 0x0, &reg0, sizeof(reg0));
-	return (reg0 >> 5) & 0x1;
-}
+//static uint32_t pwr_usb_5v_status()
+//{
+//	uint8_t reg0 = 0xFF;
+//	i2c_read(D47_ADDR, 0x0, &reg0, sizeof(reg0));
+//	return (reg0 >> 5) & 0x1;
+//}
 
-void pwr_sw_1v_off()
+static void pwr_sw_1v_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -433,7 +400,7 @@ void pwr_sw_1v_off()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_sw_1v_on()
+static void pwr_sw_1v_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -441,14 +408,14 @@ void pwr_sw_1v_on()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_sw_1v_status()
-{
-	uint8_t reg0 = 0xFF;
-	i2c_read(D47_ADDR, 0x0, &reg0, sizeof(reg0));
-	return (reg0 >> 6) & 0x1;
-}
+//static uint32_t pwr_sw_1v_status()
+//{
+//	uint8_t reg0 = 0xFF;
+//	i2c_read(D47_ADDR, 0x0, &reg0, sizeof(reg0));
+//	return (reg0 >> 6) & 0x1;
+//}
 
-void pwr_hdd_off()
+static void pwr_hdd_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -456,7 +423,7 @@ void pwr_hdd_off()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_hdd_on()
+static void pwr_hdd_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -464,7 +431,7 @@ void pwr_hdd_on()
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_1v5_off()
+static void pwr_1v5_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -472,7 +439,7 @@ void pwr_1v5_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_1v5_on()
+static void pwr_1v5_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -480,14 +447,14 @@ void pwr_1v5_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_1v5_status()
+static uint32_t pwr_1v5_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D49_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 1) & 0x1;
 }
 
-void pwr_vdram_off()
+static void pwr_vdram_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -495,7 +462,7 @@ void pwr_vdram_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_vdram_on()
+static void pwr_vdram_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -503,14 +470,14 @@ void pwr_vdram_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_vdram_status()
+static uint32_t pwr_vdram_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D49_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 2) & 0x1;
 }
 
-void pwr_1v8_off()
+static void pwr_1v8_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -518,7 +485,7 @@ void pwr_1v8_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_1v8_on()
+static void pwr_1v8_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -526,14 +493,14 @@ void pwr_1v8_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_1v8_status()
+static uint32_t pwr_1v8_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D49_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 3) & 0x1;
 }
 
-void pwr_0v95_off()
+static void pwr_0v95_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -541,7 +508,7 @@ void pwr_0v95_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_0v95_on()
+static void pwr_0v95_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -549,14 +516,14 @@ void pwr_0v95_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-uint32_t pwr_0v95_status()
+static uint32_t pwr_0v95_status()
 {
 	uint8_t reg0 = 0xFF;
 	i2c_read(D49_ADDR, 0x0, &reg0, sizeof(reg0));
 	return (reg0 >> 4) & 0x1;
 }
 
-void cpu_clk_off()
+static void cpu_clk_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -564,7 +531,7 @@ void cpu_clk_off()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_clk_on()
+static void cpu_clk_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -572,7 +539,7 @@ void cpu_clk_on()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void scp_trstn_low()
+static void scp_trstn_low()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -580,7 +547,7 @@ void scp_trstn_low()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void scp_trstn_high()
+static void scp_trstn_high()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -588,7 +555,7 @@ void scp_trstn_high()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_trstn_low()
+static void cpu_trstn_low()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -596,7 +563,7 @@ void cpu_trstn_low()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_trstn_high()
+static void cpu_trstn_high()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D48_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -604,7 +571,7 @@ void cpu_trstn_high()
 	i2c_write(D48_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_pll_0v9_off()
+static void pwr_pll_0v9_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -612,7 +579,7 @@ void pwr_pll_0v9_off()
 	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void pwr_pll_0v9_on()
+static void pwr_pll_0v9_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -620,39 +587,39 @@ void pwr_pll_0v9_on()
 	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void sysfl_connect_to_cpu()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 &= (~0x1);
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
+//static void sysfl_connect_to_cpu()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 &= (~0x1);
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
+//
+//static void sysfl_connect_to_bmc()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 |= 0x1;
+//	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
 
-void sysfl_connect_to_bmc()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D49_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 |= 0x1;
-	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
-}
+//static void btfl_connect_to_cpu()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 &= (~0x2);
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
+//
+//static void btfl_connect_to_bmc()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 |= 0x2;
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
 
-void btfl_connect_to_cpu()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 &= (~0x2);
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
-
-void btfl_connect_to_bmc()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 |= 0x2;
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
-
-void hdmi_27mhz_off()
+static void hdmi_27mhz_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -660,7 +627,7 @@ void hdmi_27mhz_off()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void hdmi_27mhz_on()
+static void hdmi_27mhz_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -668,7 +635,7 @@ void hdmi_27mhz_on()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void usb_clk_off()
+static void usb_clk_off()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -676,7 +643,7 @@ void usb_clk_off()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void usb_clk_on()
+static void usb_clk_on()
 {
 	uint8_t reg1 = 0x0;
 	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -684,41 +651,41 @@ void usb_clk_on()
 	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-void cpu_speed_low()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 &= (~0x10);
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
-
-void cpu_speed_high()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 |= 0x10;
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
+//static void cpu_speed_low()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 &= (~0x10);
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
+//
+//static void cpu_speed_high()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 |= 0x10;
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
 
 /* This mode is correct and cpu can be booted */
-void cpu_boot_mode_rom()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 &= (~0x20);
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
+//static void cpu_boot_mode_rom()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 &= (~0x20);
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
 
 /* This mode has incrystal problem and doesn't work correctly! */
-void cpu_boot_mode_spi()
-{
-	uint8_t reg1 = 0x0;
-	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-	reg1 |= 0x20;
-	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
-}
+//static void cpu_boot_mode_spi()
+//{
+//	uint8_t reg1 = 0x0;
+//	i2c_read(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//	reg1 |= 0x20;
+//	i2c_write(D50_ADDR, 0x1, &reg1, sizeof(reg1));
+//}
 
-void cpu_reset_low()
+static void cpu_reset_low()
 {
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_3);
 
@@ -731,7 +698,7 @@ void cpu_reset_low()
 
 }
 
-void cpu_reset_high()
+static void cpu_reset_high()
 {
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_3);
 
@@ -743,14 +710,9 @@ void cpu_reset_high()
 	i2c_write(D49_ADDR, 0x1, &reg1, sizeof(reg1));
 }
 
-int32_t power_on(void)
+static int32_t power_on(void)
 {
-	cpu_reset_low();
-	sysfl_connect_to_cpu();
-	btfl_connect_to_cpu();
-
-//	cpu_boot_mode_rom();
-//	cpu_speed_low();
+//	cpu_reset_low();
 
 	pwr_5v_on();
 	mdelay(100);
@@ -834,36 +796,42 @@ int32_t power_on(void)
 	return 0;
 }
 
-void power_off(void)
+static void power_off(void)
 {
 	cpu_reset_low();
 
 	pwr_hdd_off();
 
-	pwr_3v3_off();
-
-	pwr_5v_off();
-
 	cpu_clk_off();
+
+	pwr_0v95_off();
+
+	scp_trstn_low();
+
+	cpu_trstn_low();
+
+	pwr_vdram_off();
+
+	pwr_pll_0v9_off();
+
+	usb_clk_off();
 
 	hdmi_27mhz_off();
 
 	pwr_1v8_off();
 
-	pwr_pll_0v9_off();
-
-	pwr_vdram_off();
-
-	cpu_trstn_low();
-
-	scp_trstn_low();
-
 	pwr_1v5_off();
 
-	pwr_0v95_off();
+	pwr_3v3_off();
+
+	pwr_usb_5v_off();
+
+	pwr_sw_1v_off();
+
+	pwr_5v_off();
 }
 
-void pwr_switches_init()
+static void pwr_switches_init()
 {
 	/* Disable all outputs */
 	uint8_t reg1 = 0x0;
@@ -871,6 +839,7 @@ void pwr_switches_init()
 	/* 0 - output direction
 	 * 1 - input direction
 	 */
+
 	/* 0111X000 */
 	uint8_t reg3 = 0x70;
 	i2c_write(D47_ADDR, 0x1, &reg1, sizeof(reg1));
@@ -894,50 +863,126 @@ void pwr_switches_init()
 
 int main(void)
 {
-	soc_init();
+    int32_t  wdo = 0, wdo_pr = 0;
+    int32_t  pwr_c1 = 0, pwr_c2 = 0, pwr_lk=0;
+    int32_t  rval, state = 2;
 
-	board_init();
+    soc_init();
 
-	i2c1_init();
-	i2c3_init();
+    board_init();
 
-	pwr_switches_init();
+    i2c1_init();
+    i2c3_init();
 
-	console_init();
+    pwr_switches_init();
 
-	mdelay(2000);
-	power_off();
+    console_init();
 
-	log_level_set(DEBUG);
-	mdelay(100);
+    mdelay(1000);
+    power_off();
 
-	printk(DEBUG, "BAIKAL BMC\r\n");
-	printk(DEBUG, "Start power up\r\n");
-	int32_t ret_val = power_on();
+    log_level_set(DEBUG);
+    mdelay(100);
 
-	if (ret_val != 0) {
-		power_off();
-		printk(DEBUG, "Power up failure, step %ld\r\n", -1 * ret_val);
-		printk(DEBUG, "Power down\r\n");
-	} else {
-		printk(DEBUG, "Power up is successful\r\n");
-	}
+    printk(DEBUG, "BAIKAL BMC\r\n");
 
-	while(1) {
-		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10) == 0) {
-			cpu_reset_low();
-		} else {
-			cpu_reset_high();
-		}
+    while(1) {
+        wdo_pr = wdo;
 
-		if (reset == 1) {
-			cpu_reset_low();
-			reset = 0;
-		}
+        /* PA9 - WDT_WDO_N */
+        wdo = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_9);
 
-		mdelay(10);
+        /* PA10 - RSTBTN_N */
+        if ((0 == LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_10)) || ((wdo != wdo_pr) && (0 == wdo)) || (1 == reset)) {
+            reset = 0;
+            if ( state > 2 )
+            	/* Asserting System Reset */
+            	state = TORST;
+        }
 
-	}
+        /* Button is pressed, PA1 - PWRBT_N */
+        if (0 == LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_1)) {
+            if ( pwr_c1 < 10 )
+                pwr_c1++;
+            else {
+                if ( pwr_c2 < 1000 ) {
+                    pwr_c2++;
+                    if ( (pwr_c2 > 600) && (state > 1) && (0 == pwr_lk) ) {
+                    	/* Going to Power-Down */
+                    	printk(DEBUG, "!!!\r\n");
+                    	state = TOPWRDWN;
+                        pwr_lk = 1;
+                    }
+                }
+            }
 
-	return 0;
+        /* Button is released */
+        } else {
+            if ( pwr_c1 > 0 )
+                pwr_c1--;
+            else {
+                if ( (pwr_c2 > 5) && (state < 2) && (0 == pwr_lk) ) {
+                	/* Going to Power Up */
+                	state = TOPWRUP;
+                }
+                pwr_c2 = 0;
+                pwr_lk = 0;
+            }
+        }
+
+        switch( state ) {
+            /* Power-Down */
+        	case PWRDWN:
+                break;
+
+            /* Going to Power-Down */
+            case TOPWRDWN:
+                power_off();
+                printk(DEBUG, "Power down\r\n");
+                state = PWRDWN;
+                break;
+
+            /* Going to Power Up */
+            case TOPWRUP:
+                printk(DEBUG, "Start power up\r\n");
+                /* Hint: remove reset from power_on() */
+                rval = power_on();
+
+                if ( 0 != rval ) {
+
+                	power_off();
+                    printk(DEBUG, "Power up failure, step %ld\r\n", -1 * rval );
+                    state = PWRDWN;
+
+                } else {
+
+                	printk(DEBUG, "Power up is successful\r\n");
+                    state = PWRUP;
+                }
+                break;
+
+            /* Asserting System Reset */
+            case TORST:
+            	cpu_reset_low();
+                state = FROMRST;
+                break;
+
+            /* Deasserting System Reset */
+            case FROMRST:
+                cpu_reset_high();
+                state = PWRUP;
+                break;
+
+            /* Power-Up */
+            case PWRUP:
+                break;
+
+            default:
+                break;
+        } /*  switch( state ) */
+
+        mdelay(10);
+    } /* while(1) */
+
+    return 0;
 }
