@@ -62,14 +62,14 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m4 -Wall -Werror")
+set(CMAKE_C_FLAGS		"${CMAKE_C_FLAGS} -mcpu=cortex-m0 -Wall -Werror")
 	
-set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m4")
+set(CMAKE_ASM_FLAGS		"${CMAKE_ASM_FLAGS} -mcpu=cortex-m0")
 	
 set(LINKER_FLAGS		"${LINKER_FLAGS}"
 
 						"-T ${BOARD_SRC_PATH}/flash_stm32l071kbu6.ld"
-						"-mcpu=cortex-m4"
+						"-mcpu=cortex-m0"
 						"-specs=nano.specs"
 						"-Wl,--gc-sections"
 				)

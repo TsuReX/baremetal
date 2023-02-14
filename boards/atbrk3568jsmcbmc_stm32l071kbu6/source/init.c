@@ -120,43 +120,43 @@ void board_init(void)
 	LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
 	LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
 
-	/**/
+	/* eMMC_Disable */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
 
-	/**/
+	/* QSPI_Disable */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_1);
 
-	/**/
+	/* SD_Disable */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
 
-	/**/
+	/* PMIC_RST */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
 
-	/**/
+	/* X1_CARRIER_PWR_ON */
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
 
-	/**/
+	/* X1_RESET_OUT_ */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_8);
 
-	/**/
+	/* X1_CARRIER_STBY_ */
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_4);
 
-	/**/
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
+	/* BTN_PWRON */
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
 
-	/**/
+	/* X1_CHARGING_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_14;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-	/**/
+	/* X1_CHARGER_PRSTN_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_15;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-	/**/
+	/* eMMC_Disable */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -164,7 +164,7 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* QSPI_Disable */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_1;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -172,7 +172,7 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* SD_Disable */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_2;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -180,7 +180,7 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* PMIC_RST */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_3;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -188,37 +188,37 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_BOOT_SEL0_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_BOOT_SEL1_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_5;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_BOOT_SEL2_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_6;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_RESET_IN_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_7;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* VIN_PWR_BAD_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* X1_CARRIER_PWR_ON */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_1;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -226,7 +226,7 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* X1_RESET_OUT_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_8;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -234,19 +234,19 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_SLEEP_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_11;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_WDT_TIME_OUT_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_12;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/**/
+	/* X1_CARRIER_STBY_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -254,13 +254,13 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* X1_POWER_BTN_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_5;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* BTN_PWRON */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_6;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -268,7 +268,7 @@ void board_init(void)
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/**/
+	/* X1_BATLOW_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_7;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
