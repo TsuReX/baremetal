@@ -64,6 +64,43 @@ static void i2c1_init(void)
 	/* USER CODE END I2C1_Init 2 */
 }
 
+
+static void pmic_pwron_set(void)
+{
+	/* BTN_PWRON */
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
+}
+
+static void pmic_pwron_reset(void)
+{
+	/* BTN_PWRON */
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
+}
+
+static void pmic_resetb_set(void)
+{
+	/* PMIC_RST */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+}
+
+static void pmic_resetb_reset(void)
+{
+	/* PMIC_RST */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+}
+
+static void usd_disable(void)
+{
+	/* SD_Disable */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+}
+
+static void usd_enable(void)
+{
+	/* SD_Disable */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
+}
+
 int main(void)
 {
 
@@ -74,16 +111,31 @@ int main(void)
     i2c1_init();
 
 //    console_init();
-
-    mdelay(100);
-
 //    log_level_set(DEBUG);
+//    printk(DEBUG, "ATB RK4568J SMC BMC\r\n");
+
+    /*0*/
+    pmic_resetb_set();
     mdelay(100);
 
-//    printk(DEBUG, "BAIKAL BMC\r\n");
+    /* 1 */
+    pmic_pwron_reset();
+    mdelay(500);
+    /* 0 */
+    pmic_pwron_set();
+    mdelay(500);
+    /* 1 */
+    pmic_pwron_reset();
+    mdelay(100);
+
+    /*0*/
+    pmic_resetb_reset();
 
     while(1) {
-    	mdelay(1000);
+    	usd_disable();
+    	mdelay(500);
+    	usd_enable();
+    	mdelay(500);
     }
     return 0;
 }

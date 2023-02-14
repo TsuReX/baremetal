@@ -3,7 +3,7 @@ MEMORY
 {
 	/* Define each memory region */
 	PROGRAM_FLASH (rx) : ORIGIN = 0x8000000, LENGTH = 128K /* 128K bytes (alias Flash) */  
-	SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K /* 20K bytes (alias RAM) */
+	SRAM (rwx) : ORIGIN = 0x20000000, LENGTH = 6K /* 6K bytes (alias RAM) */
 }
 
 	/* Define a symbol for the top of each memory region */
