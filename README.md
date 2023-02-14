@@ -75,3 +75,5 @@ baikalbmc_stm32l412kbu6
 dbs
 imx8m
 pulsox_stm32l4r9aii6u
+atbrk3568jsmcbmc_stm32l071kbu6
+
