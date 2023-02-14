@@ -712,7 +712,6 @@ static void cpu_reset_high()
 
 static int32_t power_on(void)
 {
-//	cpu_reset_low();
 
 	pwr_5v_on();
 	mdelay(100);
@@ -786,9 +785,6 @@ static int32_t power_on(void)
 	cpu_clk_on();
 	mdelay(100);
 	printk(DEBUG, "CPU clock startup\r\n");
-
-	cpu_reset_high();
-	printk(DEBUG, "cpu reset high\r\n");
 
 	pwr_hdd_on();
 	printk(DEBUG, "pwr hdd on\r\n");
@@ -909,7 +905,6 @@ int main(void)
                     pwr_c2++;
                     if ( (pwr_c2 > 600) && (state > 1) && (0 == pwr_lk) ) {
                     	/* Going to Power-Down */
-                    	printk(DEBUG, "!!!\r\n");
                     	state = TOPWRDWN;
                         pwr_lk = 1;
                     }
@@ -957,14 +952,15 @@ int main(void)
                 } else {
 
                 	printk(DEBUG, "Power up is successful\r\n");
-                    state = PWRUP;
+//                	state = PWRUP;
+                	state = FROMRST;
                 }
                 break;
 
             /* Asserting System Reset */
             case TORST:
             	cpu_reset_low();
-                state = FROMRST;
+            	state = FROMRST;
                 break;
 
             /* Deasserting System Reset */
