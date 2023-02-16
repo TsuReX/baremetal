@@ -64,36 +64,83 @@ static void i2c1_init(void)
 	/* USER CODE END I2C1_Init 2 */
 }
 
+static void carrier_pwr_on_set()
+{
+	/* X1_CARRIER_PWR_ON */
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_1);
+}
+
+static void carrier_pwr_on_reset()
+{
+	/* X1_CARRIER_PWR_ON */
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_1);
+}
 
 static void pmic_pwron_set(void)
 {
-	/* BTN_PWRON */
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
+	/* BTN_PWRON => ! PWRON_ */
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
 }
 
 static void pmic_pwron_reset(void)
 {
-	/* BTN_PWRON */
-	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
+	/* BTN_PWRON => ! PWRON_ */
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
 }
 
 static void pmic_resetb_set(void)
 {
-	/* PMIC_RST */
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+	/* PMIC_RST => ! PMIC_RESETn */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
 }
 
 static void pmic_resetb_reset(void)
 {
-	/* PMIC_RST */
-	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+	/* PMIC_RST => ! PMIC_RESETn */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
 }
 
-static void usd_disable(void)
+static void carrier_stby_n_reset()
 {
-	/* SD_Disable */
-	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+	/* X1_CARRIER_STBY_ */
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_4);
 }
+
+static void carrier_stby_n_set()
+{
+	/* X1_CARRIER_STBY_ */
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_4);
+}
+
+static void reset_out_n_reset()
+{
+	/* X1_RESET_OUT_ */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_8);
+}
+
+static void reset_out_n_set()
+{
+	/* X1_RESET_OUT_ */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_8);
+}
+
+//static void emmc_disable_reset()
+//{
+//	/* X1_RESET_OUT_ */
+//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+//}
+
+static void emmc_disable_set()
+{
+	/* X1_RESET_OUT_ */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_0);
+}
+
+//static void usd_disable(void)
+//{
+//	/* SD_Disable */
+//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+//}
 
 static void usd_enable(void)
 {
@@ -114,27 +161,45 @@ int main(void)
 //    log_level_set(DEBUG);
 //    printk(DEBUG, "ATB RK4568J SMC BMC\r\n");
 
-    /*0*/
-    pmic_resetb_set();
+    // RESET_OUT# = 0
+    reset_out_n_reset();
+    // CARRIER_STBY# = 0
+    carrier_stby_n_reset();
+    // CARRIER_PWR_ON = 0
+    carrier_pwr_on_reset();
+
+    // Check states of power sources
+    // TODO
     mdelay(100);
 
-    /* 1 */
-    pmic_pwron_reset();
-    mdelay(500);
-    /* 0 */
-    pmic_pwron_set();
-    mdelay(500);
-    /* 1 */
-    pmic_pwron_reset();
-    mdelay(100);
+    // RESET_OUT# = 1
+    reset_out_n_set();
+    // CARRIER_PWR_ON = 1
+    carrier_pwr_on_set();
+    // CARRIER_STBY# = 1
+    carrier_stby_n_set();
+
+    emmc_disable_set();
+	usd_enable();
 
     /*0*/
     pmic_resetb_reset();
+    mdelay(100);
+
+    /* 1 */
+    pmic_pwron_set();
+    mdelay(500);
+    /* 0 */
+    pmic_pwron_reset();
+    mdelay(500);
+    /* 1 */
+    pmic_pwron_set();
+    mdelay(100);
+
+    /*0*/
+    pmic_resetb_set();
 
     while(1) {
-    	usd_disable();
-    	mdelay(500);
-    	usd_enable();
     	mdelay(500);
     }
     return 0;
