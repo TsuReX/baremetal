@@ -142,7 +142,7 @@ void board_init(void)
 	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_4);
 
 	/* BTN_PWRON */
-	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
+	LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
 
 	/* X1_CHARGING_ */
 	GPIO_InitStruct.Pin = LL_GPIO_PIN_14;
