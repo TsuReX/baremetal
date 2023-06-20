@@ -6,7 +6,7 @@
 #include "config.h"
 #include "debug.h"
 
-static void i2c1_init(void)
+void i2c1_init(void)
 {
 	/* USER CODE BEGIN I2C1_Init 0 */
 
@@ -88,13 +88,13 @@ static void pmic_pwron_reset(void)
 	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);
 }
 
-static void pmic_resetb_set(void)
+void pmic_resetb_set(void)
 {
 	/* PMIC_RST => ! PMIC_RESETn */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
 }
 
-static void pmic_resetb_reset(void)
+void pmic_resetb_reset(void)
 {
 	/* PMIC_RST => ! PMIC_RESETn */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
@@ -124,27 +124,27 @@ static void reset_out_n_set()
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_8);
 }
 
-//static void emmc_disable_reset()
-//{
-//	/* X1_RESET_OUT_ */
-//	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
-//}
-
-static void emmc_disable_set()
+void emmc_reset_enable()
 {
-	/* X1_RESET_OUT_ */
+	/* eMMC_Disable => !eMMC_RST_ */
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_0);
 }
 
-//static void usd_disable(void)
-//{
-//	/* SD_Disable */
-//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
-//}
-
-static void usd_enable(void)
+void emmc_reset_disable()
 {
-	/* SD_Disable */
+	/* eMMC_Disable => !eMMC_RST_ */
+	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0);
+}
+
+void usd_disable(void)
+{
+	/* SD_Disable => !SDMMC0_CLK */
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+}
+
+void usd_enable(void)
+{
+	/* SD_Disable => !SDMMC0_CLK */
 	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
 }
 
@@ -155,7 +155,7 @@ int main(void)
 
     board_init();
 
-    i2c1_init();
+//    i2c1_init();
 
 //    console_init();
 //    log_level_set(DEBUG);
@@ -179,8 +179,8 @@ int main(void)
     // CARRIER_STBY# = 1
     carrier_stby_n_set();
 
-    emmc_disable_set();
-	usd_enable();
+    emmc_reset_enable();
+	usd_disable();
 
     /*0*/
     pmic_resetb_reset();
@@ -196,8 +196,13 @@ int main(void)
     pmic_pwron_set();
     mdelay(100);
 
-    /*0*/
+    emmc_reset_disable();
+	usd_enable();
+    /*1*/
     pmic_resetb_set();
+    mdelay(10);
+
+
 
     while(1) {
     	mdelay(500);
