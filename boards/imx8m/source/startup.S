@@ -15,6 +15,8 @@ a:
 		mrs x1, SP_EL1
 		mrs x2, SP_EL2
 		mov x3, SP //SP_EL3
+		ldr x4, =a	// This code was added to examine what 
+				//the pseudo instruction ldr is translated into
 		b b
 
 core_0:
