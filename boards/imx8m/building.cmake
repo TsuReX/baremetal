@@ -30,6 +30,7 @@ set(INCLUDE		"${INCLUDE}"
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				
 				"${BOARD_SRC_PATH}/source/startup.S"
+				"${BOARD_SRC_PATH}/source/cache.S"
 			)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
