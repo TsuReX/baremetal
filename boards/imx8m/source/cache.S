@@ -1,7 +1,26 @@
-.globl clear_cache
+.globl clear_cache_old, clear_cache
 .section .text
 
 clear_cache:
+	mrs x0, CLIDR_EL1
+	mov x1, xzr		// Cache level
+	cmp x1, 0x8
+	b.eq clear_cache_end
+	ldr x3, =0x7
+
+clear_cache_next_level:
+	lsr x4, x0, x1		// x4 = x0 >> x1
+	and x2, x3, x0		// x2 = x4 & 0x7, x2 is Ctype[x1]
+	add x1, x1, 0x1
+	
+	cmp x2, xzr		// Ctype should be Data or Unified cache
+	b.eq clear_cache_next_level
+	lsl x1, x1, 0x1
+	msr CSSELR_EL1, x1
+clear_cache_end:
+	ret
+
+clear_cache_old:
 	MRS X0, CLIDR_EL1
 	AND W3, W0, #0x07000000	// Get 2 x Level of Coherence
 	LSR W3, W3, #23
