@@ -3,20 +3,21 @@
 
 clear_cache:
 	mrs x0, CLIDR_EL1
-	mov x1, xzr		// Cache level
-	cmp x1, 0x8
-	b.eq clear_cache_end
-	ldr x3, =0x7
+	mov x1, xzr		// x1 is cache level
+	ldr x3, =0x7		// x3 is a mask for Ctype
 
 clear_cache_next_level:
+	cmp x1, 0x8
+	b.eq clear_cache_end
 	lsr x4, x0, x1		// x4 = x0 >> x1
-	and x2, x3, x0		// x2 = x4 & 0x7, x2 is Ctype[x1]
-	add x1, x1, 0x1
-	
+	and x2, x3, x4		// x2 = x4 & x3, x2 is Ctype[x1]
 	cmp x2, xzr		// Ctype should be Data or Unified cache
-	b.eq clear_cache_next_level
-	lsl x1, x1, 0x1
-	msr CSSELR_EL1, x1
+	b.eq clear_cache_end	// Finish if current memory level doesn't have cache
+	lsl x4, x1, 0x1		// Prepare cache level index
+	msr CSSELR_EL1, x4	// Set cache level index
+	mrs x4, CCSIDR_EL1
+	add x1, x1, 0x1		// Evaluate next cache level index
+	b clear_cache_next_level	// Go to the next level processing
 clear_cache_end:
 	ret
 
