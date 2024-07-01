@@ -37,6 +37,17 @@ elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "imx8m")
 	set(CMAKE_ASM_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
 
 #######################################################################
+elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "x86")
+
+	set(PROJ_NAME x86)
+#	project(${PROJ_NAME} C NASM)
+
+	set(BOARD_SCRIPT_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE_LOWER_CASE}/building.cmake")
+
+#	set(CMAKE_C_COMPILER "${CMAKE_C_COMPILER_PREFIX}gcc")
+	set(CMAKE_ASM_COMPILER "nasm")
+
+#######################################################################
 elseif(${BOARD_TYPE_LOWER_CASE} STREQUAL "hostusb_mdr32f9")
 
 	set(PROJ_NAME hostusb_mdr32f9)
