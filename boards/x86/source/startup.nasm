@@ -37,6 +37,50 @@ _sec_entry:
     jmp $
 
 
+;594768_3rd Gen Intel Xeon Scalable Processors_BWG_Rev1p4
+;5.3.1 Enabling Cache for Stack and Code Use Prior to Memory Initialization
+setup_car:
+
+;Disable Fast_String support prior to NEM
+    mov ecx, 0x1A0	;IA32_MTRR_DEF_TYPE
+    rdmsr
+    and eax, ~0x1	;Reset FAST_STRINGS bit
+    wrmsr
+;8
+;Configure the DataStack region as write-back (WB) cacheable memory type using the variable range MTRRs.
+
+
+;10
+;Configure the CodeRegion region as write-protected (WP) cacheable memory type using the variable range MTRRs.
+
+
+;11
+    mov ecx, 0x2FF	;IA32_MTRR_DEF_TYPE
+    rdmsr
+    or eax, 0x1 << 11	;Set EN bit
+    wrmsr
+
+;12
+    invd
+    mov eax, cr0
+    and eax, ~(0x1 << 30 | 0x1 << 29)	;Reset NW and CD bits
+    mov cr0, eax
+
+;13
+    mov ecx, 0x2E0	;Read MSR NEM
+    rdmsr
+    or eax, 0x1		;Set SETUP bit
+    wrmsr
+
+;14
+;One location in each 64-byte cache line of the DataStack region must be written to
+;set all cached values to the modified state.
+
+;15
+    mov ecx, 0x2E0	;Read MSR NEM
+    rdmsr
+    or eax, 0x2		;Set RUN bit
+    wrmsr
 
 section .data
 gdt_entry_zero:
