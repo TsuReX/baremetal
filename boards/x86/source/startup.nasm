@@ -18,6 +18,9 @@ _sec_entry:
     mov eax, edx	;The CPUID instruction should be used to determine
     and eax, (0x1 << 5)	;whether MSRs are supported (CPUID.01H:EDX[5] = 1) before using this instruction.
 
+    mov eax, edx	;The processor supports the Memory Type Range Registers specifically
+    and eax, (0x1 << 12);the MTRR_CAP register.
+
     mov ax, 0x2		;Intel Processor Identification and the CPUID instruction.
     cpuid		;Paragraph 5.1.3 Cache Descriptors (Function 02h)
 
