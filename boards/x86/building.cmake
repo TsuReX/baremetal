@@ -31,7 +31,8 @@ set(INCLUDE		"${INCLUDE}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				
-				"${BOARD_SRC_PATH}/source/startup.nasm"
+			"${BOARD_SRC_PATH}/source/startup.nasm"
+			"${BOARD_SRC_PATH}/source/car.nasm"
 			)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
