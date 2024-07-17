@@ -2,6 +2,7 @@ bits 16
 
 global _reset_vector
 extern setup_car
+global setup_car_return
 
 section .text.resetvector
 _reset_vector:
@@ -38,6 +39,8 @@ _sec_entry:
     jmp $
 
     jmp setup_car
+setup_car_return:
+    jmp $
 
 section .data
 gdt_entry_zero:

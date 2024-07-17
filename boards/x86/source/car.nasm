@@ -1,6 +1,37 @@
 bits 32
 
+CR0_CD		equ (0x1 << 29)
+CR0_NW		equ (0x1 << 30)
+
+NEM			equ 0x000002E0
+NEM_RUN			equ (0x1 << 1)
+NEM_SETUP		equ (0x1 << 0)
+
+IA32_MTRR_DEF_TYPE	equ 0x000002FF
+IA32_MTRR_DEF_TYPE_EN		equ (0x1 < 11)
+IA32_MTRR_DEF_TYPE_FE		equ (0x1 < 10)
+IA32_MTRR_DEF_TYPE_MEMTYPE_WP	equ (0x5 < 0)
+IA32_MTRR_DEF_TYPE_MEMTYPE_WB	equ (0x6 < 0)
+
+IA32_MTRR_PHYS_BASE_0	equ 0x00000200
+IA32_MTRR_PHYS_BASE_1	equ 0x00000202
+
+IA32_MTRR_PHYS_MASK_0	equ 0x00000201
+IA32_MTRR_PHYS_MASK_1	equ 0x00000203
+IA32_MTRR_PHYS_MASK_VALID	equ (0x1 << 11)
+
+
+DATA_STACK_BASE_ADDRESS		equ 0xFFFE0000
+DATA_STACK_SIZE_MASK		equ 0x0000FFFF
+CODE_REGION_BASE_ADDRESS	equ 0xFFFF0000
+CODE_REGION_SIZE_MASK		equ 0x0000FFFF
+
+
+IA32_MISC_ENABLE		equ 0x000001A0
+IA32_MISC_ENABLE_FAST_STRINGS	equ (0x1 < 0)
+
 global setup_car
+extern setup_car_return
 
 section .text.secphase
 
@@ -9,9 +40,9 @@ section .text.secphase
 setup_car:
 
 ;Disable Fast_String support prior to NEM
-    mov ecx, 0x1A0	;IA32_MTRR_DEF_TYPE
+    mov ecx, IA32_MISC_ENABLE
     rdmsr
-    and eax, ~0x1	;Reset FAST_STRINGS bit
+    and eax, ~IA32_MISC_ENABLE_FAST_STRINGS
     wrmsr
 
 ; Configure MTRR_PHYS_MASK_HIGH for proper addressing above 4GB
@@ -31,64 +62,50 @@ setup_car:
     bts esi, eax	;esi[eax] = 1 -> esi[16] = 1 -> esi == 0b00000001.00000000.00000000 == 0x1.0000 == (1 << 16)
     dec esi		;esi = esi - 1 -> esi = 0x1.0000 - 1 -> esi = 0xFFFF
 
-    DATA_STACK_BASE_ADDRESS	equ 0xFFFE0000
-    DATA_STACK_SIZE_MASK	equ 0x0000FFFF
-    CODE_REGION_BASE_ADDRESS	equ 0xFFFF0000
-    CODE_REGION_SIZE_MASK	equ 0x0000FFFF
-    MTRR_MEMORY_TYPE_WB		equ 0x00000006
-    MTRR_MEMORY_TYPE_WP		equ 0x00000005
-    MTRR_PHYS_MASK_VALID	equ (0x1 << 11)
-
-    MTRR_PHYS_BASE_0	equ 0x000000200
-    MTRR_PHYS_MASK_0	equ 0x000000201
-    MTRR_PHYS_BASE_1	equ 0x000000202
-    MTRR_PHYS_MASK_1	equ 0x000000203
 
 ;8
 ;Configure the DataStack region as write-back (WB) cacheable memory type using the variable range MTRRs.
 
-    mov eax, (DATA_STACK_BASE_ADDRESS | MTRR_MEMORY_TYPE_WB)	; Load the write-back cache value
+    mov eax, (DATA_STACK_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WB)	; Load the write-back cache value
     xor edx, edx						; clear upper dword
-    mov ecx, MTRR_PHYS_BASE_0					; Load the MTRR index
+    mov ecx, IA32_MTRR_PHYS_BASE_0				; Load the MTRR index
     wrmsr							; the value in MTRR_PHYS_BASE_0
 
-    mov eax, (DATA_STACK_SIZE_MASK | MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
+    mov eax, (DATA_STACK_SIZE_MASK | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
     mov edx, esi						; edx <- MTRR_PHYS_MASK_HIGH
-    mov ecx, MTRR_PHYS_MASK_0					; Load the MTRR index
+    mov ecx, IA32_MTRR_PHYS_MASK_0				; Load the MTRR index
     wrmsr 							; the value in MTRR_PHYS_BASE_0
 
 ;10
 ;Configure the CodeRegion region as write-protected (WP) cacheable memory type using the variable range MTRRs.
 
-    mov eax, (CODE_REGION_BASE_ADDRESS | MTRR_MEMORY_TYPE_WP)	; Load the write-protected cache value
+    mov eax, (CODE_REGION_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WP)	; Load the write-protected cache value
     xor edx, edx						; clear upper dword
-    mov ecx, MTRR_PHYS_BASE_1					; Load the MTRR index
+    mov ecx, IA32_MTRR_PHYS_BASE_1				; Load the MTRR index
     wrmsr							; the value in MTRR_PHYS_BASE_1
 
-    mov eax, (CODE_REGION_SIZE_MASK | MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
+    mov eax, (CODE_REGION_SIZE_MASK | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
     mov edx, esi						; edx <- MTRR_PHYS_MASK_HIGH
-    mov ecx, MTRR_PHYS_MASK_1					; Load the MTRR index
+    mov ecx, IA32_MTRR_PHYS_MASK_1				; Load the MTRR index
     wrmsr
 
 
-
-
 ;11
-    mov ecx, 0x2FF	;IA32_MTRR_DEF_TYPE
+    mov ecx, IA32_MTRR_DEF_TYPE
     rdmsr
-    or eax, 0x1 << 11	;Set EN bit
+    or eax, IA32_MTRR_DEF_TYPE_EN
     wrmsr
 
 ;12
     invd
     mov eax, cr0
-    and eax, ~(0x1 << 30 | 0x1 << 29)	;Reset NW and CD bits
+    and eax, ~(CR0_NW | CR0_CD)	;Reset NW and CD bits
     mov cr0, eax
 
 ;13
-    mov ecx, 0x2E0	;Read MSR NEM
+    mov ecx, NEM	;Read MSR NEM
     rdmsr
-    or eax, 0x1		;Set SETUP bit
+    or eax, NEM_SETUP	;Set SETUP bit
     wrmsr
 
 ;14
@@ -96,40 +113,9 @@ setup_car:
 ;set all cached values to the modified state.
 
 ;15
-    mov ecx, 0x2E0	;Read MSR NEM
+    mov ecx, NEM
     rdmsr
-    or eax, 0x2		;Set RUN bit
+    or eax, NEM_RUN	;Set RUN bit
     wrmsr
 
-section .data
-gdt_entry_zero:
-    dd 0x0
-    dd 0x0
-
-gdt_entry_code:
-
-%define cs_limit	0x0000FFFF
-%define cs_base		0x000F0000
-%define cs_access	0x9F
-%define cs_flag		(0x0 & 0xF)
-    dw (cs_limit)
-    dw (cs_base & 0xFFFF)
-    db ((cs_base >> 16) & 0xFF)
-    db (cs_access)
-    db (((cs_limit >> 16) & 0xF) | cs_flag)
-    db ((cs_base >> 24) & 0xFF)
-
-gdt_entry_data:
-
-%define ds_limit	0x0000FFFF
-%define ds_base		0x000F0000
-%define ds_access	0x93
-%define ds_flag		(0x0 & 0xF)
-    dw (ds_limit)
-    dw (ds_base & 0xFFFF)
-    db ((ds_base >> 16) & 0xFF)
-    db (ds_access)
-    db (((ds_limit >> 16) & 0xF) | cs_flag)
-    db ((ds_base >> 24) & 0xFF)
-
-gdt_len equ ($ - gdt_entry_zero)
+    jmp setup_car_return
