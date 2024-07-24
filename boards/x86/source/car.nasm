@@ -7,7 +7,9 @@ NEM			equ 0x000002E0
 NEM_RUN			equ (0x1 << 1)
 NEM_SETUP		equ (0x1 << 0)
 
-IA32_MTRR_DEF_TYPE	equ 0x000002FF
+IA32_MTRR_CAP			equ 0x000000FE
+
+IA32_MTRR_DEF_TYPE		equ 0x000002FF
 IA32_MTRR_DEF_TYPE_EN		equ (0x1 < 11)
 IA32_MTRR_DEF_TYPE_FE		equ (0x1 < 10)
 IA32_MTRR_DEF_TYPE_MEMTYPE_WP	equ (0x5 < 0)
@@ -26,6 +28,19 @@ DATA_STACK_SIZE_MASK		equ 0x0000FFFF
 CODE_REGION_BASE_ADDRESS	equ 0xFFFF0000
 CODE_REGION_SIZE_MASK		equ 0x0000FFFF
 
+IA32_MTRR_FIX_64K_00000		equ 0x250
+IA32_MTRR_FIX_16K_80000		equ 0x258
+IA32_MTRR_FIX_16K_A0000		equ 0x259
+IA32_MTRR_FIX_4K_C0000		equ 0x268
+IA32_MTRR_FIX_4K_C8000		equ 0x269
+IA32_MTRR_FIX_4K_D0000		equ 0x26a
+IA32_MTRR_FIX_4K_D8000		equ 0x26b
+IA32_MTRR_FIX_4K_E0000		equ 0x26c
+IA32_MTRR_FIX_4K_E8000		equ 0x26d
+IA32_MTRR_FIX_4K_F0000		equ 0x26e
+IA32_MTRR_FIX_4K_F8000		equ 0x26f
+
+
 
 IA32_MISC_ENABLE		equ 0x000001A0
 IA32_MISC_ENABLE_FAST_STRINGS	equ (0x1 < 0)
@@ -35,9 +50,77 @@ extern setup_car_return
 
 section .text.secphase
 
+check_mtrr:
+;Use the MTRR default type MSR as a proxy for detecting INIT#.
+;Reset the system if any known bits are set in that MSR. That is
+;an indication of the CPU not being properly reset.
+
+check_for_clean_reset:
+    mov ecx, IA32_MTRR_DEF_TYPE
+    rdmsr
+    and eax, (IA32_MTRR_DEF_TYPE_EN | IA32_MTRR_DEF_TYPE_FE)
+    cmp eax, 0x0
+    jnz warm_reset
+    jmp esp
+
+;Perform warm reset
+warm_reset:
+    mov dx, 0x0CF9
+    mov al, 0x06
+    out dx, al
+
 ;594768_3rd Gen Intel Xeon Scalable Processors_BWG_Rev1p4
 ;5.3.1 Enabling Cache for Stack and Code Use Prior to Memory Initialization
 setup_car:
+    mov esp, cache_as_ram
+    jmp esp
+
+cache_as_ram:
+
+;Send INIT IPI to all excluding ourself.
+    mov eax, 0x000C4500
+    mov esi, 0xFEE00300
+    mov [esi], eax
+
+;All CPUs need to be in Wait for SIPI state
+wait_for_sipi:
+    mov eax,[esi]
+    bt eax, 12
+    jc wait_for_sipi
+
+;Clean-up IA32_MTRR_DEF_TYPE
+    mov ecx, IA32_MTRR_DEF_TYPE
+    xor eax, eax
+    xor edx, edx
+    wrmsr
+
+;Clear/disable fixed MTRRs
+    mov ebx, fixed_mtrr_list
+    xor eax, eax
+    xor edx, edx
+
+clear_fixed_mtrr:
+    movzx ecx, word [ebx]; ??? word ???
+    wrmsr
+    add ebx, 0x2
+    cmp ebx, fixed_mtrr_list_end
+    jl clear_fixed_mtrr
+
+;Zero out all variable range MTRRs.
+    mov ecx, IA32_MTRR_CAP
+    rdmsr
+    and eax, 0xFF
+    shl eax, 0x1
+    mov edi, eax
+    mov ecx, 0x200
+    xor eax, eax
+    xor edx, edx
+
+clear_var_mtrrs:
+    wrmsr
+    add ecx, 0x1
+    dec edi
+    jnz clear_var_mtrrs
 
 ;Disable Fast_String support prior to NEM
     mov ecx, IA32_MISC_ENABLE
@@ -119,3 +202,18 @@ setup_car:
     wrmsr
 
     jmp setup_car_return
+
+section .data
+fixed_mtrr_list:
+    DW IA32_MTRR_FIX_64K_00000
+    DW IA32_MTRR_FIX_16K_80000
+    DW IA32_MTRR_FIX_16K_A0000
+    DW IA32_MTRR_FIX_4K_C0000
+    DW IA32_MTRR_FIX_4K_C8000
+    DW IA32_MTRR_FIX_4K_D0000
+    DW IA32_MTRR_FIX_4K_D8000
+    DW IA32_MTRR_FIX_4K_E0000
+    DW IA32_MTRR_FIX_4K_E8000
+    DW IA32_MTRR_FIX_4K_F0000
+    DW IA32_MTRR_FIX_4K_F8000
+fixed_mtrr_list_end:
