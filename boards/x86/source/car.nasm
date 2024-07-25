@@ -22,11 +22,12 @@ IA32_MTRR_PHYS_MASK_0	equ 0x00000201
 IA32_MTRR_PHYS_MASK_1	equ 0x00000203
 IA32_MTRR_PHYS_MASK_VALID	equ (0x1 << 11)
 
-
 DATA_STACK_BASE_ADDRESS		equ 0xFFFE0000
-DATA_STACK_SIZE_MASK		equ 0x0000FFFF
+DATA_STACK_SIZE			equ 0x0001000
+DATA_STACK_SIZE_MASK		equ (~ (DATA_STACK_SIZE - 1))
 CODE_REGION_BASE_ADDRESS	equ 0xFFFF0000
-CODE_REGION_SIZE_MASK		equ 0x0000FFFF
+CODE_REGION_SIZE		equ 0x0001000
+CODE_REGION_SIZE_MASK		equ (~ (CODE_REGION_SIZE - 1))
 
 IA32_MTRR_FIX_64K_00000		equ 0x250
 IA32_MTRR_FIX_16K_80000		equ 0x258
@@ -40,8 +41,6 @@ IA32_MTRR_FIX_4K_E8000		equ 0x26d
 IA32_MTRR_FIX_4K_F0000		equ 0x26e
 IA32_MTRR_FIX_4K_F8000		equ 0x26f
 
-
-
 IA32_MISC_ENABLE		equ 0x000001A0
 IA32_MISC_ENABLE_FAST_STRINGS	equ (0x1 < 0)
 
@@ -50,7 +49,10 @@ extern setup_car_return
 
 section .text.secphase
 
-check_mtrr:
+;594768_3rd Gen Intel Xeon Scalable Processors_BWG_Rev1p4
+;5.3.1 Enabling Cache for Stack and Code Use Prior to Memory Initialization
+setup_car:
+
 ;Use the MTRR default type MSR as a proxy for detecting INIT#.
 ;Reset the system if any known bits are set in that MSR. That is
 ;an indication of the CPU not being properly reset.
@@ -61,7 +63,7 @@ check_for_clean_reset:
     and eax, (IA32_MTRR_DEF_TYPE_EN | IA32_MTRR_DEF_TYPE_FE)
     cmp eax, 0x0
     jnz warm_reset
-    jmp esp
+    jmp cache_as_ram
 
 ;Perform warm reset
 warm_reset:
@@ -69,36 +71,43 @@ warm_reset:
     mov al, 0x06
     out dx, al
 
-;594768_3rd Gen Intel Xeon Scalable Processors_BWG_Rev1p4
-;5.3.1 Enabling Cache for Stack and Code Use Prior to Memory Initialization
-setup_car:
-    mov esp, cache_as_ram
-    jmp esp
-
 cache_as_ram:
 
+;0
+;Disable Fast_String support prior to NEM
+    mov ecx, IA32_MISC_ENABLE
+    rdmsr
+    and eax, ~IA32_MISC_ENABLE_FAST_STRINGS
+    wrmsr
+
+;1
 ;Send INIT IPI to all excluding ourself.
     mov eax, 0x000C4500
     mov esi, 0xFEE00300
     mov [esi], eax
 
+;1.1
 ;All CPUs need to be in Wait for SIPI state
 wait_for_sipi:
     mov eax,[esi]
     bt eax, 12
     jc wait_for_sipi
 
+;5
 ;Clean-up IA32_MTRR_DEF_TYPE
     mov ecx, IA32_MTRR_DEF_TYPE
     xor eax, eax
     xor edx, edx
     wrmsr
 
-;Clear/disable fixed MTRRs
+;2
+;Load microcode update into each NBSP
+;TODO
+
+;4 Clear/disable fixed MTRRs
     mov ebx, fixed_mtrr_list
     xor eax, eax
     xor edx, edx
-
 clear_fixed_mtrr:
     movzx ecx, word [ebx]; ??? word ???
     wrmsr
@@ -106,6 +115,7 @@ clear_fixed_mtrr:
     cmp ebx, fixed_mtrr_list_end
     jl clear_fixed_mtrr
 
+;3
 ;Zero out all variable range MTRRs.
     mov ecx, IA32_MTRR_CAP
     rdmsr
@@ -115,18 +125,12 @@ clear_fixed_mtrr:
     mov ecx, 0x200
     xor eax, eax
     xor edx, edx
-
 clear_var_mtrrs:
     wrmsr
     add ecx, 0x1
     dec edi
     jnz clear_var_mtrrs
 
-;Disable Fast_String support prior to NEM
-    mov ecx, IA32_MISC_ENABLE
-    rdmsr
-    and eax, ~IA32_MISC_ENABLE_FAST_STRINGS
-    wrmsr
 
 ; Configure MTRR_PHYS_MASK_HIGH for proper addressing above 4GB
 ; based on the physical address size supported for this processor
@@ -145,8 +149,7 @@ clear_var_mtrrs:
     bts esi, eax	;esi[eax] = 1 -> esi[16] = 1 -> esi == 0b00000001.00000000.00000000 == 0x1.0000 == (1 << 16)
     dec esi		;esi = esi - 1 -> esi = 0x1.0000 - 1 -> esi = 0xFFFF
 
-
-;8
+;7,8
 ;Configure the DataStack region as write-back (WB) cacheable memory type using the variable range MTRRs.
 
     mov eax, (DATA_STACK_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WB)	; Load the write-back cache value
@@ -159,7 +162,7 @@ clear_var_mtrrs:
     mov ecx, IA32_MTRR_PHYS_MASK_0				; Load the MTRR index
     wrmsr 							; the value in MTRR_PHYS_BASE_0
 
-;10
+;9,10
 ;Configure the CodeRegion region as write-protected (WP) cacheable memory type using the variable range MTRRs.
 
     mov eax, (CODE_REGION_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WP)	; Load the write-protected cache value
@@ -172,20 +175,22 @@ clear_var_mtrrs:
     mov ecx, IA32_MTRR_PHYS_MASK_1				; Load the MTRR index
     wrmsr
 
-
 ;11
+;Enable the MTRRs by setting the IA32_MTRR_DEF_TYPE
     mov ecx, IA32_MTRR_DEF_TYPE
     rdmsr
     or eax, IA32_MTRR_DEF_TYPE_EN
     wrmsr
 
 ;12
+;Enable the logical processor's (BSP) cache
     invd
     mov eax, cr0
     and eax, ~(CR0_NW | CR0_CD)	;Reset NW and CD bits
     mov cr0, eax
 
 ;13
+;Enable No-Eviction Mode Setup State by setting NO_EVICT_MODE
     mov ecx, NEM	;Read MSR NEM
     rdmsr
     or eax, NEM_SETUP	;Set SETUP bit
@@ -194,13 +199,23 @@ clear_var_mtrrs:
 ;14
 ;One location in each 64-byte cache line of the DataStack region must be written to
 ;set all cached values to the modified state.
+    mov edi, DATA_STACK_BASE_ADDRESS
+    mov ecx, DATA_STACK_SIZE / 64
+    mov eax, 0x12345678
+clear_loop:
+    mov[edi], eax
+    add edi, 64
+    loop clear_loop
 
 ;15
+;Enable No-Eviction Mode Run State by setting NO_EVICT_MODE
     mov ecx, NEM
     rdmsr
     or eax, NEM_RUN	;Set RUN bit
     wrmsr
 
+    mov eax, DATA_STACK_BASE_ADDRESS
+    mov ebx, DATA_STACK_SIZE
     jmp setup_car_return
 
 section .data

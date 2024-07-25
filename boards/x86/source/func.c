@@ -1,5 +1,5 @@
 //#include <stdint.h>
 
-int func(int var) {
+int c_entry(int var) {
     return var+1;
 }

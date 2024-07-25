@@ -8,6 +8,7 @@ global setup_car_return
 extern setup_protected_mode
 global setup_protected_mode_return
 
+extern c_entry
 
 section .text.resetvector
 _reset_vector:
@@ -46,5 +47,11 @@ setup_protected_mode_return:
 
     jmp setup_car
 setup_car_return:
+
+    mov esp, eax; Region base address
+    add esp, ebx; Add region size
+
+    push eax
+    call c_entry
 
     jmp $
