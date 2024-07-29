@@ -45,7 +45,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 set(CMAKE_C_FLAGS	" -march=i386 -g -ggdb")
 	
-#set(CMAKE_ASM_FLAGS	"-mcpu=cortex-a57 -g -ggdb")
+set(CMAKE_ASM_NASM_FLAGS	"-g -F dwarf -O0")
 	
 set(LINKER_FLAGS	"${LINKER_FLAGS}"
 					
