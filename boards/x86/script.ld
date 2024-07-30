@@ -1,10 +1,12 @@
 ENTRY(_reset_vector)
 
-PROVIDE(__TEXT_BEGIN__ = 0xFFFFFC00);
-PROVIDE(__TEXT_END__ = __TEXT_BEGIN__ + 0x380);
-PROVIDE(__DATA_BEGIN__ = __TEXT_BEGIN__ + 0x380);
-PROVIDE(__DATA_END__ = __TEXT_BEGIN__ + 0x400 - 0x10);
-__TEXT_RESET_BEGIN__ = __DATA_END__;
+PROVIDE(__TEXT_BEGIN__ = 0xFFFFF000);
+PROVIDE(__TEXT_END__ = __TEXT_BEGIN__ + 0xE00 - 1);
+
+PROVIDE(__DATA_BEGIN__ = __TEXT_BEGIN__ + 0xE00);
+PROVIDE(__DATA_END__ = __TEXT_BEGIN__ + 0x1000 - 0x10 - 1);
+
+__TEXT_RESET_BEGIN__ = __DATA_END__ + 1;
 
 SECTIONS
 {
@@ -15,6 +17,7 @@ SECTIONS
 
 	. = __DATA_BEGIN__;
 	.data : {*(.data)}
+	.rodata : {*(.rodata)}
 	. = __DATA_END__;
 
 	. = __TEXT_RESET_BEGIN__;

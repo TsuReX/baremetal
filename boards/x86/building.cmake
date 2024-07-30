@@ -38,6 +38,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				"${BOARD_SRC_PATH}/source/func.c"
+				"${BOARD_SRC_PATH}/source/uart8250io.c"
 			)
 
 #######################################################################
