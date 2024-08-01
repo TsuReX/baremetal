@@ -55,7 +55,7 @@ static unsigned char uart8250_rx_byte(unsigned int base_port)
 		return 0x0;
 }
 
-static void uart8250_init(unsigned int base_port, unsigned int divisor)
+static void uart_init(unsigned int base_port, unsigned int divisor)
 {
 	/* Disable interrupts */
 	outb(0x0, base_port + UART8250_IER);
@@ -85,20 +85,20 @@ uintptr_t uart_platform_base(unsigned int idx)
 	return 0;
 }
 
-void uart_init(unsigned int idx)
+void uart8250_init(unsigned int idx)
 {
 /*	if (!CONFIG(DRIVERS_UART_8250IO_SKIP_INIT)) {
 		unsigned int div;
 		div = uart_baudrate_divisor(get_uart_baudrate(),
 			uart_platform_refclk(), uart_input_clock_divider());
-		uart8250_init(uart_platform_base(idx), div);
+		uart_init(uart_platform_base(idx), div);
 	}
 */
 	unsigned int baudrate = 115200;
 	unsigned int refclk = baudrate * 16;
 	unsigned int oversample = 16;
 	unsigned int divisor = ((1 + (2 * refclk) / (baudrate * oversample)) / 2); // divisor = 3/2 =1
-	uart8250_init(uart_platform_base(idx), divisor);
+	uart_init(uart_platform_base(idx), divisor);
 }
 
 void uart_tx_byte(unsigned int idx, unsigned char data)

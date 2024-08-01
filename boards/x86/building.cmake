@@ -37,14 +37,15 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 			)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
-				"${BOARD_SRC_PATH}/source/func.c"
-				"${BOARD_SRC_PATH}/source/uart8250io.c"
+				"${BOARD_SRC_PATH}/source/main.c"
+				"${BOARD_SRC_PATH}/source/uart8250.c"
+				"${BOARD_SRC_PATH}/source/sio_uart.c"
 			)
 
 #######################################################################
 ## Настройка параметров сбоки и компоновки
 
-set(CMAKE_C_FLAGS	" -march=i386 -g -ggdb")
+set(CMAKE_C_FLAGS	" -march=i386 -g -ggdb ")
 	
 set(CMAKE_ASM_NASM_FLAGS	"-g -F dwarf -O0")
 	

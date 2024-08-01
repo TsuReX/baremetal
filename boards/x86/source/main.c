@@ -3,7 +3,7 @@
 
 int c_entry(int var) {
 
-    uart_init(0);
+    uart8250_init(0);
 
     uart_tx_byte(0, '5');
 
