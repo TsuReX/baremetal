@@ -22,12 +22,12 @@ IA32_MTRR_PHYS_MASK_0	equ 0x00000201
 IA32_MTRR_PHYS_MASK_1	equ 0x00000203
 IA32_MTRR_PHYS_MASK_VALID	equ (0x1 << 11)
 
-DATA_STACK_BASE_ADDRESS		equ 0xFFFE0000
-DATA_STACK_SIZE			equ 0x0001000
-DATA_STACK_SIZE_MASK		equ (~ (DATA_STACK_SIZE - 1))
-CODE_REGION_BASE_ADDRESS	equ 0xFFFF0000
-CODE_REGION_SIZE		equ 0x0001000
-CODE_REGION_SIZE_MASK		equ (~ (CODE_REGION_SIZE - 1))
+DATA_STACK_BASE_ADDRESS		equ 0xFFFFE000
+DATA_STACK_SIZE			equ 0x00001000
+DATA_STACK_SIZE_MASK		equ ( ~(DATA_STACK_SIZE - 1))
+CODE_REGION_BASE_ADDRESS	equ 0xFFFFF000
+CODE_REGION_SIZE		equ 0x00001000
+CODE_REGION_SIZE_MASK		equ ( ~(CODE_REGION_SIZE - 1))
 
 IA32_MTRR_FIX_64K_00000		equ 0x250
 IA32_MTRR_FIX_16K_80000		equ 0x258
@@ -82,16 +82,16 @@ cache_as_ram:
 
 ;1
 ;Send INIT IPI to all excluding ourself.
-    mov eax, 0x000C4500
-    mov esi, 0xFEE00300
-    mov [esi], eax
+;    mov eax, 0x000C4500
+;    mov esi, 0xFEE00300
+;    mov [esi], eax
 
 ;1.1
 ;All CPUs need to be in Wait for SIPI state
-wait_for_sipi:
-    mov eax,[esi]
-    bt eax, 12
-    jc wait_for_sipi
+;wait_for_sipi:
+;    mov eax,[esi]
+;    bt eax, 12
+;    jc wait_for_sipi
 
 ;5
 ;Clean-up IA32_MTRR_DEF_TYPE
@@ -151,13 +151,17 @@ clear_var_mtrrs:
 
 ;7,8
 ;Configure the DataStack region as write-back (WB) cacheable memory type using the variable range MTRRs.
+;For more details see 64-ia-32-architectures-software-developer-vol-3a-part-1-manual, chapter 11.11 MEMORY TYPE RANGE REGISTERS (MTRRS)
 
-    mov eax, (DATA_STACK_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WB)	; Load the write-back cache value
-    xor edx, edx						; clear upper dword
+    mov eax, (((DATA_STACK_BASE_ADDRESS & (~0xFFF)) & ((1 << 32) - 1))| IA32_MTRR_DEF_TYPE_MEMTYPE_WB)	; Load lower part([31..12] bits
+											; base is 4kB page aligned!!!) of base and region type
+    mov edx, (DATA_STACK_BASE_ADDRESS >> 32)						; Load upper part(12bits) of base
+    and edx, esi
+;    xor edx, edx						; clear upper dword
     mov ecx, IA32_MTRR_PHYS_BASE_0				; Load the MTRR index
     wrmsr							; the value in MTRR_PHYS_BASE_0
 
-    mov eax, (DATA_STACK_SIZE_MASK | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
+    mov eax, (((DATA_STACK_SIZE_MASK & (~0xFFF)) & ((1 << 32) - 1)) | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
     mov edx, esi						; edx <- MTRR_PHYS_MASK_HIGH
     mov ecx, IA32_MTRR_PHYS_MASK_0				; Load the MTRR index
     wrmsr 							; the value in MTRR_PHYS_BASE_0
@@ -165,12 +169,14 @@ clear_var_mtrrs:
 ;9,10
 ;Configure the CodeRegion region as write-protected (WP) cacheable memory type using the variable range MTRRs.
 
-    mov eax, (CODE_REGION_BASE_ADDRESS | IA32_MTRR_DEF_TYPE_MEMTYPE_WP)	; Load the write-protected cache value
-    xor edx, edx						; clear upper dword
+    mov eax, (((CODE_REGION_BASE_ADDRESS & (~0xFFF)) & ((1 << 32) - 1)) | IA32_MTRR_DEF_TYPE_MEMTYPE_WP)	; Load the write-protected cache value
+;    xor edx, edx						; clear upper dword
+    mov edx, (CODE_REGION_BASE_ADDRESS >> 32)
+    and edx,  esi
     mov ecx, IA32_MTRR_PHYS_BASE_1				; Load the MTRR index
     wrmsr							; the value in MTRR_PHYS_BASE_1
 
-    mov eax, (CODE_REGION_SIZE_MASK | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
+    mov eax, (((CODE_REGION_SIZE_MASK & (~0xFFF)) & ((1 << 32) - 1)) | IA32_MTRR_PHYS_MASK_VALID)	; turn on the Valid flag
     mov edx, esi						; edx <- MTRR_PHYS_MASK_HIGH
     mov ecx, IA32_MTRR_PHYS_MASK_1				; Load the MTRR index
     wrmsr
