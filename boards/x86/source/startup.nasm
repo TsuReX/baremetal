@@ -51,6 +51,7 @@ setup_car_return:
     mov esp, eax; Region base address
     add esp, ebx; Add region size
 
+    push ebx
     push eax
     call c_entry
 

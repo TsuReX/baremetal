@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <uart.h>
 
-int c_entry(int var) {
+int c_entry(int base, int size) {
 
     uart8250_init(0);
 
@@ -11,5 +11,5 @@ int c_entry(int var) {
 
     unsigned char chr = uart_rx_byte(0);
 
-    return var+1;
+    return base + size;
 }
