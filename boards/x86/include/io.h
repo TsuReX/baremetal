@@ -5,6 +5,29 @@
 
 #include <stdint.h>
 
+typedef enum {
+    FilterWidth8,
+    FilterWidth16,
+    FilterWidth32,
+    FilterWidth64
+} FILTER_IO_WIDTH;
+
+
+unsigned int FilterBeforeMmIoRead(FILTER_IO_WIDTH  Width, unsigned int Address, void *Buffer);
+
+void FilterAfterMmIoRead(FILTER_IO_WIDTH  Width, unsigned int Address, void *Buffer);
+
+unsigned int FilterBeforeMmIoWrite(FILTER_IO_WIDTH  Width, unsigned int Address, void   *Buffer);
+
+void FilterAfterMmIoWrite(FILTER_IO_WIDTH  Width, unsigned int  Address, void   *Buffer);
+
+void MemoryFence (void);
+
+unsigned short MmioWrite16 (unsigned int Address, unsigned short  Value);
+
+unsigned int MmioRead32 (unsigned int Address);
+
+
 /*
  * This file contains the definitions for the x86 IO instructions
  * inb/inw/inl/outb/outw/outl and the "string versions" of the same

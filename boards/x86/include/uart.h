@@ -5,7 +5,8 @@
 
 #include <stdint.h>
 
-void uart8250_init(unsigned int idx);
+void uart_sio_init(unsigned int idx);
+void uart_8250_init(unsigned int idx);
 void uart_tx_byte(unsigned int idx, unsigned char data);
 void uart_tx_flush(unsigned int idx);
 unsigned char uart_rx_byte(unsigned int idx);

@@ -38,8 +38,9 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				"${BOARD_SRC_PATH}/source/main.c"
-				"${BOARD_SRC_PATH}/source/uart8250.c"
-				"${BOARD_SRC_PATH}/source/sio_uart.c"
+				"${BOARD_SRC_PATH}/source/io.c"
+				"${BOARD_SRC_PATH}/source/uart.c"
+#				"${BOARD_SRC_PATH}/source/uart_sio.c"
 			)
 
 #######################################################################
