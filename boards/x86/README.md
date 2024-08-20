@@ -21,7 +21,10 @@ export PATH=$PATH:"~/soft/i386-unknown-elf/bin/
 cd x86-build
 clear
 rm -rf ../x86-build/*
-cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc
+cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART_SIO=1
+#or
+rm -rf ../x86-build/*
+cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART=0
 ```
 
 4. Выполнение сборки  

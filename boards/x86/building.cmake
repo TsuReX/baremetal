@@ -66,3 +66,8 @@ set(LINKER_LIBS 	"${LINKER_LIBS}"
 					
 add_definitions("-DX86")
 add_definitions("-DDBG_OUT")
+if (DEFINED UART_SIO)
+    add_compile_definitions("UART_SIO")
+elseif (DEFINED UART)
+    add_compile_definitions("UART")
+endif()
