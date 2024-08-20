@@ -17,6 +17,8 @@ _reset_vector:
 
 section .text.secphase
 _sec_entry:
+    mov al, 0x80
+    out 0x55, al
 ;    mov ax, 0x0
 ;    cpuid
 
@@ -44,9 +46,14 @@ _sec_entry:
     jmp setup_protected_mode
 bits 32
 setup_protected_mode_return:
+    mov al, 0x80
+    out 0x56, al
 
     jmp setup_car
 setup_car_return:
+    mov al, 0x80
+    out 0x57, al
+
 
     mov esp, eax; Region base address
     add esp, ebx; Add region size
