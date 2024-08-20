@@ -87,4 +87,6 @@
 #define UART8250_SCR 0x07
 #define UART8250_SPR 0x07
 
+#define CONFIG_TTYS0_LCS 3
+
 #endif /* UART8250REG_H */
