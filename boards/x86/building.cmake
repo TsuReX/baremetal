@@ -40,7 +40,8 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				"${BOARD_SRC_PATH}/source/main.c"
 				"${BOARD_SRC_PATH}/source/io.c"
 				"${BOARD_SRC_PATH}/source/uart.c"
-#				"${BOARD_SRC_PATH}/source/uart_sio.c"
+				"${BOARD_SRC_PATH}/source/ite8613.c"
+				"${BOARD_SRC_PATH}/source/ast2500.c"
 			)
 
 #######################################################################
@@ -66,8 +67,23 @@ set(LINKER_LIBS 	"${LINKER_LIBS}"
 					
 add_definitions("-DX86")
 add_definitions("-DDBG_OUT")
-if (DEFINED UART_SIO)
-    add_compile_definitions("UART_SIO=${UART_SIO}")
-elseif (DEFINED UART)
-    add_compile_definitions("UART=${UART}")
+
+if (DEFINED UART_TYPE)
+    message("-- UART_TYPE=${UART_TYPE}")
+    add_compile_definitions("UART_TYPE=${UART_TYPE}")
+else()
+    message(SEND_ERROR " UART_TYPE isn't defined. The value can be: LOCAL, ITE8613, AST2500")
 endif()
+
+if (DEFINED UART_NUM)
+    message("-- UART_NUM=${UART_NUM}")
+    add_compile_definitions(UART_NUM=${UART_NUM})
+else()
+    message(SEND_ERROR "UART_NUM isn't defined. The value can be: 0-(0x3F8), 1-(0x2F8), 2-(0x3E8), 3-(0x2E8)")
+endif()
+
+#if (DEFINED UART_SIO)
+#    add_compile_definitions("UART_SIO=${UART_SIO}")
+#elseif (DEFINED UART)
+#    add_compile_definitions("UART=${UART}")
+#endif()
