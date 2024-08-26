@@ -20,6 +20,7 @@ export PATH=$PATH:"~/soft/i386-unknown-elf/bin/
 ```shell  
 cd x86-build
 clear
+objcopy -I binary -O elf32-i386 ../boards/x86/microcode_update.bin microcode_update.out
 rm -rf ../x86-build/*
 cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART_SIO=1
 #or

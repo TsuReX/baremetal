@@ -45,7 +45,6 @@ IA32_MISC_ENABLE		equ 0x000001A0
 IA32_MISC_ENABLE_FAST_STRINGS	equ (0x1 << 0)
 
 global setup_car
-extern setup_car_return
 
 section .text.secphase
 
@@ -222,7 +221,7 @@ clear_loop:
 
     mov eax, DATA_STACK_BASE_ADDRESS
     mov ebx, DATA_STACK_SIZE
-    jmp setup_car_return
+    jmp ebp
 
 section .data
 fixed_mtrr_list:

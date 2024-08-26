@@ -34,6 +34,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 			"${BOARD_SRC_PATH}/source/startup.nasm"
 			"${BOARD_SRC_PATH}/source/protected_mode.nasm"
 			"${BOARD_SRC_PATH}/source/car.nasm"
+			"${BOARD_SRC_PATH}/source/microcode_update.nasm"
 			)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
@@ -56,6 +57,8 @@ set(LINKER_FLAGS	"${LINKER_FLAGS}"
 					"-T ${BOARD_SRC_PATH}/script.ld"
 					"-march=i386"
 					"-nostdlib"
+					"-L ${BOARD_SRC_PATH}"
+					"-L ${CMAKE_BINARY_DIR}"
 				)
 
 set(LINKER_LIBS 	"${LINKER_LIBS}"
@@ -81,9 +84,3 @@ if (DEFINED UART_NUM)
 else()
     message(SEND_ERROR "UART_NUM isn't defined. The value can be: 0-(0x3F8), 1-(0x2F8), 2-(0x3E8), 3-(0x2E8)")
 endif()
-
-#if (DEFINED UART_SIO)
-#    add_compile_definitions("UART_SIO=${UART_SIO}")
-#elseif (DEFINED UART)
-#    add_compile_definitions("UART=${UART}")
-#endif()
