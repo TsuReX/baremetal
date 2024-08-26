@@ -12,6 +12,9 @@ extern c_entry
 
 section .text.resetvector
 _reset_vector:
+    mov al, 0x80
+    out 0xAA, al
+
     jmp _sec_entry
     TIMES(0x10 - ($ - $$)) nop
 
@@ -51,12 +54,29 @@ setup_protected_mode_return:
 
     jmp setup_car
 setup_car_return:
+    mov edx, eax
     mov al, 0x80
     out 0x57, al
-
+    mov eax, edx
 
     mov esp, eax; Region base address
     add esp, ebx; Add region size
+
+; Filling stack for debugging purpose
+; It's needed to check ability to access memory
+    mov ebp, esp
+    mov ecx, 0x400
+fill_stack:
+    push esp
+    loop fill_stack
+    mov esp, ebp
+
+    mov ecx, ((1 << 32) - 1)
+    mov al, 0x80
+delay:
+    mov dx, cx
+    out dx, al
+    loop delay
 
     push ebx
     push eax
