@@ -1,9 +1,9 @@
 #include <ite8613.h>
 
-#define UART_DEV		PNP_DEV(0x2e, IT8613E_SP1)
-#define IT8613E_SP1		0x01
 #define PNP_DEV(PORT, FUNC)	(((PORT) << 8) | (FUNC))
 #define PNP_IDX_IO0		0x60
+#define IT8613E_SP1		0x01
+#define UART_DEV		PNP_DEV(0x2e, IT8613E_SP1)
 
 /* For details see
  * https://doc.coreboot.org/superio/common/pnp.html
@@ -43,7 +43,7 @@ void sio_ite8613_init(unsigned int base) {
 
     //	enable
     outb(0x30, port);
-    outb(0x00, port + 1);
+    outb(0x01, port + 1);
 
     //	exit conf state
     outb(0x02, port);
