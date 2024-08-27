@@ -25,7 +25,7 @@ rm -rf ../x86-build/*
 cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART_SIO=1
 #or
 rm -rf ../build_x86/* ;
-cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART_TYPE=AST2500 -DUART_NUM=0
+cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DMICROCODE_UPDATE=../../microcodes/baytrail_10.01.2018.mcb -DUART_TYPE=LOCAL -DUART_NUM=0;
 ```
 `UART_TYPE` can be: `LOCAL`, `ITE8613`, `AST2500`  
 `UART_NUM` can be form `0` to `3`  
