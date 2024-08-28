@@ -16,8 +16,8 @@ setup_idt:
     push ds
 
     mov esi, IDT
-    mov [esi], dword IDT_BASE
-    mov [esi + 4], word IDT_LIMIT
+    mov [esi], word IDT_LIMIT
+    mov [esi + 4], dword IDT_BASE
 
     mov ax, 0x10
     mov ds, ax
