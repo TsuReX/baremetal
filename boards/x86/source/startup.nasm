@@ -5,6 +5,7 @@ global _reset_vector
 extern setup_car
 extern setup_protected_mode
 extern microcode_update
+extern setup_idt
 global setup_protected_mode_return
 
 
@@ -59,6 +60,8 @@ delay:
     mov dx, cx
     out dx, al
     loop delay
+
+    call setup_idt
 
     push ebx
     push eax

@@ -1,4 +1,7 @@
 bits 32
+IDT		equ 0x00001000
+IDT_BASE	equ 0x00001008
+IDT_LIMIT	equ ((8 * 256) - 1)
 
 global setup_idt
 
@@ -12,11 +15,36 @@ setup_idt:
     push eax
     push ds
 
-    mov eax, 0x10
-    mov esi, idt
+    mov esi, IDT
+    mov [esi], dword IDT_BASE
+    mov [esi + 4], word IDT_LIMIT
+
+    mov ax, 0x10
+    mov ds, ax
+
+    ;0th
+    push isr0_handler	; handler_addr
+
+    ;1st
+    mov eax, IDT_BASE	; base of descriptor table
+    add eax, 0		; offset of the first descriptor
+    push eax		; descriptor_addr
+
+    ;2nd
+    push ds		; segment_idx
+
+    ;3rd
+    push (0x80 | 0x00 | 0x00 | 0x0E)	; p_dpl_zer0_gate_value
+
+
+    call setup_isr_n
+    add esp, 0x10
+
     lidt [ds:esi]
 
     pop ds
+    pop eax
+    pop esi
 
     leave
     ret
@@ -30,10 +58,11 @@ setup_isr_n:
     push ebx
 
     ;(ebp + 0x00) = esp
-    ;(ebp + 0x04) = n-1 argument (P, DPL, Zero, Gate type) p_dpl_zer0_gate_value
-    ;(ebp + 0x08) = n-2 argument (code segment of handler) segment_idx
-    ;(ebp + 0x0C) = n-3 argument (descriptor address to be filled) descriptor_addr
-    ;(ebp + 0x10) = n-4 argument (handler address) handler_addr
+    ;(ebp + 0x04) = return address
+    ;(ebp + 0x08) = n-1 argument (P, DPL, Zero, Gate type) p_dpl_zer0_gate_value
+    ;(ebp + 0x0C) = n-2 argument (code segment of handler) segment_idx
+    ;(ebp + 0x10) = n-3 argument (descriptor address to be filled) descriptor_addr
+    ;(ebp + 0x14) = n-4 argument (handler address) handler_addr
 
     ; Interrupt descriptor structure
     ; (0)dw Handler offset0
@@ -42,27 +71,27 @@ setup_isr_n:
     ; (5)db Present(1), DPL(2), Zero(1), Gate(4)
     ; (6)dw Handler offset1
 
-    mov eax, [ebp + 0x0C]
+    mov eax, [ebp + 0x10]
     ; *(descriptor_addr + 0) = handler_addr & 0xFFFF
-    mov ebx, [ebp + 0x10]
-    mov [eax], ebx
+    mov ebx, [ebp + 0x14]
+    mov [eax + 0x0], ebx
 
     ; *(descriptor_addr + 2) = segment_idx
-    mov bx, word [ebp + 0x08]
-    mov [eax], word bx
+    mov bx, word [ebp + 0x0C]
+    mov [eax + 0x2], word bx
 
     ; *(descriptor_addr + 4) = 0x0
     xor ebx, ebx
-    mov [eax], byte bl
+    mov [eax + 0x4], byte bl
 
     ; *(descriptor_addr + 5) = p_dpl_zer0_gate_value
-    mov bl, byte [ebp + 0x04]
-    mov [eax], byte bl
+    mov bl, byte [ebp + 0x08]
+    mov [eax + 0x5], byte bl
 
     ; *(descriptor_addr + 6) = (handler_addr >> 16) & 0xFFFF
-    mov ebx, [ebp + 0x10]
+    mov ebx, [ebp + 0x14]
     shr ebx, 0x10
-    mov [eax], word bx
+    mov [eax + 0x6], word bx
 
     leave			; esp = ebp, pop ebp
     ret
@@ -114,11 +143,3 @@ handler:
     ret
 
 section .data
-
-idt:
-    dw idt_limit - 1	;
-    dd idt_base		;
-
-idt_base:
-    times 8*32 db 0x0 ; reserve memory for the first 32 interrupt descriptors
-idt_limit equ $
