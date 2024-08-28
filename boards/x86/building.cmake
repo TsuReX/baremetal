@@ -35,6 +35,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 			"${BOARD_SRC_PATH}/source/protected_mode.nasm"
 			"${BOARD_SRC_PATH}/source/car.nasm"
 			"${BOARD_SRC_PATH}/source/microcode_update.nasm"
+			"${BOARD_SRC_PATH}/source/idt.nasm"
 			)
 
 set(MAIN_SOURCES		"${MAIN_SOURCES}"
