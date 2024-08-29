@@ -26,24 +26,27 @@
 #define B_LPC_CFG_IOE_KE                        (1 << 10)
 #define B_LPC_CFG_IOE_CBE                       (1 << 1)
 #define B_LPC_CFG_IOE_CAE                       (1 << 0)
+
 #define R_PCH_IOPORT_PCI_INDEX          0xCF8
 #define R_PCH_IOPORT_PCI_DATA           0xCFC
+
 #define DEFAULT_PCI_BUS_NUMBER_PCH  0x0
 #define PCI_DEVICE_NUMBER_PCH_LPC       0x1F
 #define PCI_FUNCTION_NUMBER_PCH_LPC     0x0
+
 #define PCI_CF8_ADDR(Bus, Dev, Func, Off) \
           (((Off) & 0xFF) | (((Func) & 0x07) << 8) | (((Dev) & 0x1F) << 11) | (((Bus) & 0xFF) << 16) | (1 << 31))
+
 #define PCH_LPC_CF8_ADDR(Offset)    PCI_CF8_ADDR(DEFAULT_PCI_BUS_NUMBER_PCH, PCI_DEVICE_NUMBER_PCH_LPC, PCI_FUNCTION_NUMBER_PCH_LPC, Offset)
-#define R_LPC_CFG_IOD                           0x0
-#define PID_DMI                                         0xEF
-#define R_PCH_DMI_PCR_LPCIOD            0x2770
-#define R_PCH_DMI_PCR_LPCIOE            0x2774
-#define PILOTIV_EXIST                           (1 << 0)
-#define PC8374_EXIST                            (1 << 1)
-#define W83527_EXIST                            (1 << 2)
-#define NCT5104D_EXIST                          (1 << 3)
-#define ASPEED_EXIST                            (1 << 4)
-#define  DEFAULT_SIO                    PILOTIV_EXIST
+
+#define R_LPC_CFG_IOD		0x80
+#define R_LPC_CFG_IOE		0x82
+
+#define PID_DMI			0x88
+
+#define R_PCH_DMI_PCR_LPCIOD	0x2770
+#define R_PCH_DMI_PCR_LPCIOE	0x2774
+
 #define ASPEED2500_SIO_INDEX_PORT       0x2E
 #define ASPEED2500_SIO_UNLOCK           0xA5
 #define ASPEED2500_SIO_DATA_PORT        0x2F
