@@ -7,9 +7,8 @@ void sio_ast2500_init (unsigned int base) {
     unsigned short  lpcioe;
 
     // Enable LPC decode
-    // Set COMA/COMB base
     lpciod =  (V_LPC_CFG_IOD_COMA_3F8 << N_LPC_CFG_IOD_COMA) | (V_LPC_CFG_IOD_COMB_2F8 << N_LPC_CFG_IOD_COMB);
-    lpcioe =  (B_LPC_CFG_IOE_CBE | B_LPC_CFG_IOE_CAE);
+    lpcioe =  (B_LPC_CFG_IOE_SE | B_LPC_CFG_IOE_CBE | B_LPC_CFG_IOE_CAE);
 
     outl((PCH_LPC_CF8_ADDR (R_LPC_CFG_IOD)), R_PCH_IOPORT_PCI_INDEX);
     outw(lpciod, R_PCH_IOPORT_PCI_DATA);
