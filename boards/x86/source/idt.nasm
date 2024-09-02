@@ -47,8 +47,8 @@ setup_idt:
     mov [esi], word IDT_LIMIT
     mov [esi + 4], dword IDT_BASE
 
-    mov ax, 0x10
-    mov ds, ax
+    ;mov ax, 0x10
+    ;mov ds, ax
 
     ;0th
     push isr0_handler	; handler_addr
@@ -59,7 +59,8 @@ setup_idt:
     push eax		; descriptor_addr
 
     ;2nd
-    push ds		; segment_idx
+    mov eax, 0x8	; code segment index
+    push eax		; segment_idx
 
     ;3rd
     push (0x80 | 0x00 | 0x00 | 0x0E)	; p_dpl_zer0_gate_value
