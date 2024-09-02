@@ -41,7 +41,22 @@ setup_idt:
 
     push esi
     push eax
-    push ds
+    push ecx
+    push edx
+
+    cli
+
+    mov eax, 0x1
+    cpuid
+    and edx, (1 << 9)
+    jne w_apic
+
+; CPU doesn't have LAPIC
+wo_apic:
+    jmp $
+
+; CPU has LAPIC
+w_apic:
 
     mov esi, IDT
     mov [esi], word IDT_LIMIT
@@ -70,10 +85,23 @@ setup_idt:
     add esp, 0x10
 
     lidt [ds:esi]
-    mov eax, 0x00
-    sidt [eax]
+    ;mov eax, 0x00
+    ;sidt [eax] ; store idtr in memory back to check correctness
 
-    pop ds
+IA32_APIC_BASE_MSR equ 0x1B
+
+;Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts
+    mov ecx, IA32_APIC_BASE_MSR
+    rdmsr	; LAPIC base address is stored into edx:eax
+
+    mov edx, [eax + 0xF0]
+    or edx, (1 << 8) ; Enable spurious interrupt
+    mov [eax + 0xF0], edx
+
+    sti
+
+    pop edx
+    pop ecx
     pop eax
     pop esi
 
