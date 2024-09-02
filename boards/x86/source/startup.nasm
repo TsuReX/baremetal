@@ -6,6 +6,7 @@ extern setup_car
 extern setup_protected_mode
 extern microcode_update
 extern setup_idt
+extern isrn_test
 global setup_protected_mode_return
 
 
@@ -62,6 +63,8 @@ delay:
     loop delay
 
     call setup_idt
+; It requires to enable interrupt handling before calling interrupt
+;    call isrn_test
 
     push ebx
     push eax

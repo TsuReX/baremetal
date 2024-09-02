@@ -4,8 +4,36 @@ IDT_BASE	equ 0x00001008
 IDT_LIMIT	equ ((8 * 256) - 1)
 
 global setup_idt
+global isrn_test
 
 section .text.secphase
+
+; arg0 - being tested isr number
+isrn_test:
+    push ebp
+    mov ebp, esp
+    push eax
+    push edx
+    ;mov eax, [ebp + 0x8]
+
+    mov al, 0x80
+    out 0xA5, al
+
+    mov edx, 0x0
+    mov [edx], dword 0xAA
+
+    int 0
+
+    mov edx, 0x0
+    mov edx, dword [edx]
+
+    mov al, 0x80
+    out dx, al
+
+    jmp $
+
+    leave
+    ret
 
 setup_idt:
     push ebp		; *esp = ebp, ++esp
@@ -41,6 +69,8 @@ setup_idt:
     add esp, 0x10
 
     lidt [ds:esi]
+    mov eax, 0x00
+    sidt [eax]
 
     pop ds
     pop eax
@@ -57,7 +87,7 @@ setup_isr_n:
     push eax
     push ebx
 
-    ;(ebp + 0x00) = esp
+    ;(ebp + 0x00) = ebp
     ;(ebp + 0x04) = return address
     ;(ebp + 0x08) = n-1 argument (P, DPL, Zero, Gate type) p_dpl_zer0_gate_value
     ;(ebp + 0x0C) = n-2 argument (code segment of handler) segment_idx
@@ -138,8 +168,11 @@ handler:
     mov ebp, esp	; ebp = esp
 
     nop
+    mov edx, 0x0
+    inc dword [edx]
 
-    leave			; esp = ebp, pop EBP
+
+    leave			; esp = ebp, pop ebp
     ret
 
 section .data
