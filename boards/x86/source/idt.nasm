@@ -22,7 +22,7 @@ isrn_test:
     mov edx, 0x0
     mov [edx], dword 0xAA
 
-    int 0
+    int 3
 
     mov edx, 0x0
     mov edx, dword [edx]
@@ -55,7 +55,7 @@ setup_idt:
 
     ;1st
     mov eax, IDT_BASE	; base of descriptor table
-    add eax, 0		; offset of the first descriptor
+    add eax, 0x18	; offset of the first descriptor
     push eax		; descriptor_addr
 
     ;2nd
@@ -162,6 +162,7 @@ isr0_handler:
     ;epilog
     add esp, 0x8	; 'pop' two values: isr number and error code
 
+    sti
     iret
 
 handler:
