@@ -64,7 +64,7 @@ delay:
 
     call setup_idt
 ; It requires to enable interrupt handling before calling interrupt
-;    call isrn_test
+    call isrn_test
 
     push ebx
     push eax

@@ -3,6 +3,8 @@ IDT		equ 0x00001000
 IDT_BASE	equ 0x00001008
 IDT_LIMIT	equ ((8 * 256) - 1)
 
+MAGIC		equ 0xAA
+
 global setup_idt
 global isrn_test
 
@@ -20,7 +22,7 @@ isrn_test:
     out 0xA5, al
 
     mov edx, 0x0
-    mov [edx], dword 0xAA
+    mov [edx], dword MAGIC
 
     int 3
 
@@ -30,7 +32,13 @@ isrn_test:
     mov al, 0x80
     out dx, al
 
-    jmp $
+    mov edx, 0x0
+    mov edx, dword [edx]
+    cmp edx, (MAGIC + 1)
+    jne $
+
+    pop edx
+    pop eax
 
     leave
     ret
@@ -59,8 +67,8 @@ wo_apic:
 w_apic:
 
     mov esi, IDT
-    mov [esi], word IDT_LIMIT
-    mov [esi + 4], dword IDT_BASE
+    mov [esi], dword IDT_LIMIT
+    mov [esi + 2], dword IDT_BASE
 
     ;mov ax, 0x10
     ;mov ds, ax
