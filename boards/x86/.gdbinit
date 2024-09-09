@@ -8,3 +8,4 @@ info reg eip
 layout asm
 layout regs
 focus cmd
+set disassembly-flavor intel
