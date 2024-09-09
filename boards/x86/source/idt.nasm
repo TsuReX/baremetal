@@ -8,6 +8,31 @@ MAGIC		equ 0xAA
 global setup_idt
 global isrn_test
 
+;1st handler_addr
+;2nd descriptor_idx
+;3rd idt_base
+;4th code_segment_idx
+;5th p_dpl_zer0_gate_value
+%macro isr_handler_setup 5
+    ;0th
+    push %1	; handler_addr
+
+    ;1st
+    mov eax, %3	; base of descriptor table
+    add eax, %2	; offset of the descriptor
+    push eax		; descriptor_addr
+
+    ;2nd
+    mov eax, %4	; code segment index
+    push eax		; segment_idx
+
+    ;3rd
+    push %5	; p_dpl_zer0_gate_value
+
+    call setup_isr_n
+    add esp, 0x10	; 'pop' 4 dword
+%endmacro
+
 section .text.secphase
 
 ; arg0 - being tested isr number
@@ -51,50 +76,55 @@ setup_idt:
     push eax
     push ecx
     push edx
+    push ebx
 
     cli
 
-    mov eax, 0x1
-    cpuid
-    and edx, (1 << 9)
-    jne w_apic
-
-; CPU doesn't have LAPIC
-wo_apic:
-    jmp $
-
-; CPU has LAPIC
-w_apic:
+    ;1st handler_addr
+    ;2nd descriptor_idx
+    ;3rd idt_base
+    ;4th code_segment_idx
+    ;5th p_dpl_zer0_gate_value
+    
+    isr_handler_setup isr_0_handler, 0x00, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_1_handler, 0x08, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_2_handler, 0x10, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_3_handler, 0x18, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_4_handler, 0x20, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_5_handler, 0x28, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_6_handler, 0x30, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_7_handler, 0x38, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_8_handler, 0x40, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_9_handler, 0x48, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_10_handler, 0x50, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_11_handler, 0x58, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_12_handler, 0x60, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_13_handler, 0x68, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_14_handler, 0x70, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    ;15 0x78!!!
+    isr_handler_setup isr_16_handler, 0x80, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_17_handler, 0x88, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_18_handler, 0x90, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_19_handler, 0x98, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
+    isr_handler_setup isr_20_handler, 0xA0, IDT_BASE, cs, (0x80 | 0x00 | 0x00 | 0x0E)
 
     mov esi, IDT
     mov [esi], dword IDT_LIMIT
     mov [esi + 2], dword IDT_BASE
-
-    ;mov ax, 0x10
-    ;mov ds, ax
-
-    ;0th
-    push isr0_handler	; handler_addr
-
-    ;1st
-    mov eax, IDT_BASE	; base of descriptor table
-    add eax, 0x18	; offset of the first descriptor
-    push eax		; descriptor_addr
-
-    ;2nd
-    mov eax, 0x8	; code segment index
-    push eax		; segment_idx
-
-    ;3rd
-    push (0x80 | 0x00 | 0x00 | 0x0E)	; p_dpl_zer0_gate_value
-
-
-    call setup_isr_n
-    add esp, 0x10
-
     lidt [ds:esi]
-    ;mov eax, 0x00
-    ;sidt [eax] ; store idtr in memory back to check correctness
+    
+; LAPIC presence check
+;    mov eax, 0x1
+;    cpuid
+;    and edx, (1 << 9)
+;    jne w_apic
+;
+; CPU doesn't have LAPIC
+;wo_apic:
+;    jmp $
+;
+; CPU has LAPIC
+;w_apic:
 
 IA32_APIC_BASE_MSR equ 0x1B
 
@@ -107,7 +137,8 @@ IA32_APIC_BASE_MSR equ 0x1B
     mov [eax + 0xF0], edx
 
     sti
-
+    
+    pop ebx
     pop edx
     pop ecx
     pop eax
@@ -163,12 +194,133 @@ setup_isr_n:
     leave			; esp = ebp, pop ebp
     ret
 
-isr0_handler:
+isr_0_handler:
     cli				;? interrupt gate and trap gate have differet behaviour in relation to disabling interrup request
-    ; prologue
-    push byte 0x0	; error code
-    push byte 0x0	; isr number
+    push byte 0xFF	; error code
+    push byte 0x00	; isr number
+    jmp isr_handler_body
 
+isr_1_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x01	; isr number
+    jmp isr_handler_body
+
+isr_2_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x02	; isr number
+    jmp isr_handler_body
+
+isr_3_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x03	; isr number
+    jmp isr_handler_body
+
+isr_4_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x04	; isr number
+    jmp isr_handler_body
+
+isr_5_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x05	; isr number
+    jmp isr_handler_body
+
+isr_6_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x06	; isr number
+    jmp isr_handler_body
+
+isr_7_handler:
+    cli				;
+    push byte 0xFF	; error code
+    push byte 0x07	; isr number
+    jmp isr_handler_body
+
+isr_8_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x08	; isr number
+    jmp isr_handler_body
+
+isr_9_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x09	; isr number
+    jmp isr_handler_body
+
+isr_10_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x0A	; isr number
+    jmp isr_handler_body
+
+isr_11_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x0B	; isr number
+    jmp isr_handler_body
+
+isr_12_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x0C	; isr number
+    jmp isr_handler_body
+
+isr_13_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x0D	; isr number
+    jmp isr_handler_body
+
+isr_14_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x0E	; isr number
+    jmp isr_handler_body
+
+;isr_15_handler:	; reserved, isn't used
+
+isr_16_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x10	; isr number
+    jmp isr_handler_body
+
+isr_17_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x11	; isr number
+    jmp isr_handler_body
+
+isr_18_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x12	; isr number
+    jmp isr_handler_body
+
+isr_19_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x13	; isr number
+    jmp isr_handler_body
+    
+isr_20_handler:
+    cli				;
+    ;push byte 0xFF	; error code is pushed automatically
+    push byte 0x14	; isr number
+    jmp isr_handler_body
+
+;isr_21_handler_: reserved, isn't used
+;	...
+;isr_31_handler_: reserved, isn't used
+
+isr_handler_body:
     pusha			; ?
     push ds
     push es
