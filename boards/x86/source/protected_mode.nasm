@@ -1,7 +1,7 @@
 bits 16
 
 global setup_protected_mode
-extern setup_protected_mode_return
+;extern setup_protected_mode_return
 
 section .text.secphase
 
@@ -9,7 +9,7 @@ setup_protected_mode:
     finit
     cli
 
-    mov esi, gdt
+    mov si, gdt
     DB 0x66
     lgdt [cs:si]
 
@@ -24,14 +24,19 @@ setup_protected_mode:
     mov     gs, ax
     mov     ss, ax
 
-    mov esi, protected_mode
+    mov esi, protected_mode_addr
     jmp dword far [cs:si]
 
-section .data
-align 0x10
+bits 32
 protected_mode:
-    DD setup_protected_mode_return
-    DW 0x00000008
+    jmp ebp
+
+section .data
+
+align 0x10
+protected_mode_addr:
+    DD protected_mode
+    DW gdt_entry_code - gdt_entry_zero
 
 gdt:
     DW gdt_len - 1

@@ -1,6 +1,7 @@
 bits 16
 
 global _reset_vector
+;global setup_protected_mode_return
 
 extern setup_car
 extern setup_protected_mode
@@ -8,12 +9,10 @@ extern microcode_update
 extern setup_idt
 extern isr_0_test
 extern isr_11_test
-global setup_protected_mode_return
-
-
 extern c_entry
 
 section .text.resetvector
+
 _reset_vector:
     mov al, 0x80
     out 0xAA, al
@@ -22,12 +21,16 @@ _reset_vector:
     TIMES(0x10 - ($ - $$)) nop
 
 section .text.secphase
+
 _sec_entry:
     mov al, 0x80
     out 0x55, al
 
+    mov ebp, setup_protected_mode_return
     jmp setup_protected_mode
+
 bits 32
+
 setup_protected_mode_return:
     mov al, 0x80
     out 0x56, al
@@ -39,32 +42,26 @@ microcode_update_return:
     mov ebp, setup_car_return
     jmp setup_car
 setup_car_return:
+
+    mov esp, eax; Region base address
+    add esp, ebx; Add region size
+
     mov edx, eax
     mov al, 0x80
     out 0x57, al
     mov eax, edx
 
-    mov esp, eax; Region base address
-    add esp, ebx; Add region size
-
 ; Filling stack for debugging purpose
 ; It's needed to check ability to access memory
     mov ebp, esp
-    mov ecx, 0x400
+    mov ecx, ebx
+    shr ecx, 2
 fill_stack:
     push esp
     loop fill_stack
     mov esp, ebp
 
-    mov ecx, ((1 << 2) - 1)
-    mov al, 0x80
-delay:
-    mov dx, cx
-    out dx, al
-    loop delay
-
     call setup_idt
-; It requires to enable interrupt handling before calling interrupt
 ;    call isr_0_test
 ;    call isr_11_test
 

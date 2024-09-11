@@ -38,7 +38,7 @@ FSP_T_ADDR_COMPLEMENT=$(( ((1 << 32) - 1) & (~FSP_T_ADDR) ))
 printf "0x%08X\n" $FSP_T_ADDR_COMPLEMENT
 
 # This value contains path and name of being loaded FSP-T file
-FSP_T_FILE=fspt.bin
+FSP_T_FILE=$1
 # This value contains address of FSP-T address
 FSP_T_ADDR_STORAGE=0x00080000
 # This value contains path and name of being loaded BIOS file
