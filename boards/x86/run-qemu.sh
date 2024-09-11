@@ -1,12 +1,6 @@
 #!/bin/sh
 
-#qemu-system-i386 -m 256M -machine q35 -nographic -serial mon:stdio -pflash x86.bin -s -S
-
-#qemu-system-i386 -m 256M -cpu Icelake-Server-v1 -nographic -serial mon:stdio -device loader,file=fspt.bin,addr=0x08000000 -device loader,file=x86.bin,addr=0xFFF00000 -s -S
-
-#qemu-system-i386 -m 256M -cpu Icelake-Server-v1 -nographic -serial mon:stdio -device loader,file=x86.bin,addr=0xFFF00000 -s -S
-
-#qemu-system-i386 -m 256M -machine q35 -nographic -serial mon:stdio -device loader,file=x86.bin,addr=0xFFFFFE00 -s -S
+# TODO: Check presence of $1 argument and file existance and execute qemu with appropriate parameters
 
 #Memory map (BE SURE that regions desribed in script.ld match the memory map placed here).
 #0x0000.0000 256MB (0x1000.0000)

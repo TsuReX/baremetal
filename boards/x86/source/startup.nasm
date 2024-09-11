@@ -35,6 +35,53 @@ setup_protected_mode_return:
     mov al, 0x80
     out 0x56, al
 
+; BE SURE this value match the same value from run-qemu.sh file
+; For Qemu
+FSP_T_ADDR_STORAGE equ 0x00080000
+; For real hardware
+;FSP_T_ADDR_STORAGE equ 0x????.????
+
+    mov edi, FSP_T_ADDR_STORAGE
+    mov ebx, [edi]	; Read address of FSP-T
+    mov ecx, [edi + 4]	; Read complement to address of FSP-T
+    and ecx, ebx
+    jnz without_fsp_t
+
+    mov edi, ebx
+OFFSET 			equ 0x78
+OFFSET_1		equ 0xB0
+OFFSET_2		equ 0xC4
+
+FSP_HEADER_GUID_DWORD1	equ 0x912740BE
+FSP_HEADER_GUID_DWORD2	equ 0x47342284
+FSP_HEADER_GUID_DWORD3	equ 0xB08471B9
+FSP_HEADER_GUID_DWORD4	equ 0x0C3F3527
+
+fsp_check_ffs_header:
+    ; Check the ffs guid
+    mov  eax, dword [edi + OFFSET]
+    cmp  eax, FSP_HEADER_GUID_DWORD1
+    jnz  without_fsp_t
+
+    mov  eax, dword [edi + OFFSET + 4]
+    cmp  eax, FSP_HEADER_GUID_DWORD2
+    jnz  without_fsp_t
+
+    mov  eax, dword [edi + OFFSET + 8]
+    cmp  eax, FSP_HEADER_GUID_DWORD3
+    jnz  without_fsp_t
+
+    mov  eax, dword [edi + OFFSET + 0Ch]
+    cmp  eax, FSP_HEADER_GUID_DWORD4
+    jnz  without_fsp_t
+
+    mov eax, dword [edi + OFFSET_1]
+    add eax, dword [edi + OFFSET_2]
+
+    jmp eax
+
+without_fsp_t:
+
     mov ebp, microcode_update_return
     jmp microcode_update
 microcode_update_return:
