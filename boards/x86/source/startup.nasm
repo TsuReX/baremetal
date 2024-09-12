@@ -135,7 +135,24 @@ section .data
 align 10h
 temp_ram_init_stack:
     DD  temp_ram_init_done	; return address
-    DD  0x00000000		; fsp-t parameters
+    DD  fspt_upd		; fsp-t parameters
+
+fspt_upd:
+    DD fsp_upd_header
+    DD fspt_arch_upd
+
+fsp_upd_header:
+    DQ "XXXXXX_T"		; Signature
+    DB 0x00			; Revision
+    TIMES(23)	DB 0xFF		; Reserved[23]
+    TIMES(104)	DB 0x00		; Platform Specific Parameters[FSP_INFO_HEADER.CfgRegionSize – 1]
+
+fspt_arch_upd:
+    DB	0x01			; Revision
+    DB	0xFF, 0xFF, 0xFF	; Reserver[3]
+    DD	0x00000020		; Length of fspt_arch_upd2
+    DD	0x00000000		; Debug handler
+    TIMES(20) DB 0xFF		; Reserved[20]
 
 section .data.bin.table
 bin_table:
