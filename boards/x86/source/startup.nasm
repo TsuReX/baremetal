@@ -91,30 +91,32 @@ setup_car_return:
 
 temp_ram_init_done:
 
-    mov esp, eax; Region base address
-    add esp, ebx; Add region size
+    mov esp, edx; Region end address
+    add esp, 1; Add region size
 
-    mov edx, eax
     mov al, 0x80
     out 0x57, al
-    mov eax, edx
 
 ; Filling stack for debugging purpose
 ; It's needed to check ability to access memory
     mov ebp, esp
-    mov ecx, ebx
+    mov ebx, ecx
+    mov ecx, esp
     shr ecx, 2
 fill_stack:
     push esp
     loop fill_stack
     mov esp, ebp
+    mov ecx, ebx
 
     call setup_idt
 ;    call isr_0_test
 ;    call isr_11_test
 
-    push ebx
-    push eax
+    sub edx, ecx
+    add edx, 1
+    push edx
+    push ecx
     call c_entry
 
     jmp $

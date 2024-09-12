@@ -220,8 +220,10 @@ clear_loop:
     or eax, NEM_RUN	;Set RUN bit
     wrmsr
 
-    mov eax, DATA_STACK_BASE_ADDRESS
-    mov ebx, DATA_STACK_SIZE
+    mov ecx, DATA_STACK_BASE_ADDRESS
+    mov edx, ecx
+    add edx, DATA_STACK_SIZE - 1
+
     jmp ebp
 
 section .data
