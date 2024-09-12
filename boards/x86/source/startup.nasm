@@ -87,12 +87,22 @@ microcode_update_return:
 
     mov ebp, setup_car_return
     jmp setup_car
-setup_car_return:
 
 temp_ram_init_done:
+    cmp eax, 0x0
+    jz setup_car_return
 
-    mov esp, edx; Region end address
-    add esp, 1; Add region size
+    mov ebx, eax
+    mov al, 0x80
+    mov dx, bx
+    out 0xEE, al
+    out dx, al
+    jmp $
+
+setup_car_return:
+
+    mov esp, edx	; Region end address
+    add esp, 1		; Add region size
 
     mov al, 0x80
     out 0x57, al
