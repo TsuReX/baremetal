@@ -5,6 +5,7 @@ global setup_protected_mode
 
 section .text.secphase
 
+; ebp - Return address
 setup_protected_mode:
     finit
     cli

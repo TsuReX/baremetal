@@ -244,12 +244,12 @@ add_custom_command(
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf >
                 ${CMAKE_CURRENT_BINARY_DIR}/${PROJ_NAME}.elf.objdump)
 
-if(${BOARD_TYPE_LOWER_CASE} STREQUAL "x86")
-
-    add_custom_command(
-	TARGET ${PROJ_NAME} PRE_BUILD
-	COMMAND "${CMAKE_C_COMPILER_PREFIX}objcopy" -I binary -O elf32-i386
-	    ${MICROCODE_UPDATE}
-	    ${CMAKE_CURRENT_BINARY_DIR}/microcode_update.out
-    )
-endif()
+#if(${BOARD_TYPE_LOWER_CASE} STREQUAL "x86")
+#
+#    add_custom_command(
+#	TARGET ${PROJ_NAME} PRE_BUILD
+#	COMMAND "${CMAKE_C_COMPILER_PREFIX}objcopy" -I binary -O elf32-i386
+#	    ${MICROCODE_UPDATE}
+#	    ${CMAKE_CURRENT_BINARY_DIR}/microcode_update.out
+#    )
+#endif()

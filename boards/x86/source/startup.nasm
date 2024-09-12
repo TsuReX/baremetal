@@ -35,15 +35,9 @@ setup_protected_mode_return:
     mov al, 0x80
     out 0x56, al
 
-; BE SURE this value match the same value from run-qemu.sh file
-; For Qemu
-FSP_T_ADDR_STORAGE equ 0x00080000
-; For real hardware
-;FSP_T_ADDR_STORAGE equ 0x????.????
-
-    mov edi, FSP_T_ADDR_STORAGE
-    mov ebx, [edi]	; Read address of FSP-T
-    mov ecx, [edi + 4]	; Read complement to address of FSP-T
+    mov edi, bin_table
+    mov ebx, [edi + 0x0]	; Read address of FSP-T
+    mov ecx, [edi + 0x4]	; Read complement to address of FSP-T
     and ecx, ebx
     jnz without_fsp_t
 
@@ -78,10 +72,15 @@ fsp_check_ffs_header:
     mov eax, dword [edi + OFFSET_1]
     add eax, dword [edi + OFFSET_2]
 
+    mov esp, temp_ram_init_stack
     jmp eax
 
 without_fsp_t:
-
+    mov edi, bin_table
+    mov eax, [edi + 0x8]	; MICRO_UPD_ADDR
+    mov ebx, [edi + 0xC]	; MICRO_UPD_ADDR_COMPLEMENT
+    and ebx, eax
+    jnz microcode_update_return
     mov ebp, microcode_update_return
     jmp microcode_update
 microcode_update_return:
@@ -89,6 +88,8 @@ microcode_update_return:
     mov ebp, setup_car_return
     jmp setup_car
 setup_car_return:
+
+temp_ram_init_done:
 
     mov esp, eax; Region base address
     add esp, ebx; Add region size
@@ -117,3 +118,20 @@ fill_stack:
     call c_entry
 
     jmp $
+
+section .data
+align 10h
+temp_ram_init_stack:
+    DD  temp_ram_init_done	; return address
+    DD  0x00000000		; fsp-t parameters
+
+section .data.bin.table
+bin_table:
+    DD 0xA5A5A5A5	; FSP_T_ADDR
+    DD 0xBABADEDA	; FSP_T_ADDR_COMPLEMENT
+
+    DD 0xA5A5A5A5	; MICRO_UPD_ADDR
+    DD 0xBABADEDA	; MICRO_UPD_ADDR_COMPLEMENT
+
+    DD 0xA5A5A5A5	; RESERVED
+    DD 0xBABADEDA	; RESERVED

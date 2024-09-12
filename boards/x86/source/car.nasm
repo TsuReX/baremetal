@@ -50,6 +50,7 @@ section .text.secphase
 
 ;594768_3rd Gen Intel Xeon Scalable Processors_BWG_Rev1p4
 ;5.3.1 Enabling Cache for Stack and Code Use Prior to Memory Initialization
+; ebp - Return address
 setup_car:
 
 ;Use the MTRR default type MSR as a proxy for detecting INIT#.
