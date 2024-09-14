@@ -138,11 +138,8 @@ temp_ram_init_stack:
     DD  fspt_upd		; fsp-t parameters
 
 fspt_upd:
-    DD fsp_upd_header
-    DD fspt_arch_upd
-
 fsp_upd_header:
-    DQ "XXXXXX_T"		; Signature
+    DQ "SOCUPD_T"		; Signature
     DB 0x00			; Revision
     TIMES(23)	DB 0xFF		; Reserved[23]
     TIMES(104)	DB 0x00		; Platform Specific Parameters[FSP_INFO_HEADER.CfgRegionSize – 1]
