@@ -142,14 +142,23 @@ fsp_upd_header:
     DQ "SOCUPD_T"		; Signature
     DB 0x00			; Revision
     TIMES(23)	DB 0xFF		; Reserved[23]
-    TIMES(104)	DB 0x00		; Platform Specific Parameters[FSP_INFO_HEADER.CfgRegionSize – 1]
-
-fspt_arch_upd:
-    DB	0x01			; Revision
-    DB	0xFF, 0xFF, 0xFF	; Reserver[3]
-    DD	0x00000020		; Length of fspt_arch_upd2
-    DD	0x00000000		; Debug handler
-    TIMES(20) DB 0xFF		; Reserved[20]
+fspt_core_upd:
+    DD	0x00000000		; Microcode update base
+    DD	0x00000000		; Microcode update length
+    DD	0x08000000		; CAR base
+    DD	0x08000000		; CAR size
+    TIMES(16)	DB	0x00	; Reserved[16]
+fspt_config:
+    DB	0x00			; FsptPort80RouteDisable
+    TIMES(31)	DB	0x00	; Reserved[31]
+;fspt_arch_upd:
+;    DB	0x01			; Revision
+;    DB	0xFF, 0xFF, 0xFF	; Reserver[3]
+;    DD	0x00000020		; Length of fspt_arch_upd2
+;    DD	0x00000000		; Debug handler
+;    TIMES(20) DB 0xFF		; Reserved[20]
+    TIMES(6) DB	0x00	; Unused space[6]
+    DW	0xAA55
 
 section .data.bin.table
 bin_table:
