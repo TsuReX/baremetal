@@ -40,25 +40,29 @@ void c_entry(int stack_base, int size) {
 #if (UART_TYPE == LOCAL)
 
 #elif (UART_TYPE == ITE8613)
-    sio_ite8613_init(base);
+    sio_ite8613_init(0x03F8);
+    sio_ite8613_init(0x02F8);
 
 #elif (UART_TYPE == AST2500)
-    sio_ast2500_init(base);
+    sio_ast2500_init(0x03F8);
+    sio_ast2500_init(0x02F8);
 
 #else
     #error "Incorrect UART_TYPE"
 
 #endif
-    uart_init(base);
-//    uart_8250_init(base);
-//    uart_16550_init(base);
+    uart_init(0x03F8);
+    uart_init(0x02F8);
 
     outb(0x8A, 0x80);
 
     outb(0x8B, 0x80);
-    unsigned char str[] = "EagleStream";
-    for (unsigned int i = 0; i < strlen(str); ++i)
-        uart_tx_byte(base, str[i]);
+    unsigned char str3f8[] = "EagleStream_3f8";
+    unsigned char str2f8[] = "EagleStream_2f8";
+    for (unsigned int i = 0; i < strlen(str3f8); ++i) {
+	uart_tx_byte(0x03F8, str3f8[i]);
+	uart_tx_byte(0x02F8, str2f8[i]);
+    }
 
     outb(0x8C, 0x80);
     while(1) {
