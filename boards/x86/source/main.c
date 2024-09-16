@@ -49,8 +49,8 @@ void c_entry(int stack_base, int size) {
     #error "Incorrect UART_TYPE"
 
 #endif
-
-    uart_8250_init(base);
+    uart_init(base);
+//    uart_8250_init(base);
 //    uart_16550_init(base);
 
     outb(0x8A, 0x80);
