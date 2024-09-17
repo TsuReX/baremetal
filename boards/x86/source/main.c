@@ -17,25 +17,15 @@ static unsigned int uart_platform_base(unsigned int idx) {
     return 0;
 }
 
-static void read_flash() {
-    volatile unsigned int var = 0;
-    unsigned int *ptr = (unsigned int *)0xFFFFFFFC;
-    for (; ptr > (unsigned int *)0xFFFF0000; ptr--)
-	var = *ptr;
-}
-
 void c_entry(int stack_base, int size) {
 
     unsigned int base = uart_platform_base(UART_NUM);
 
     outb(0x88, 0x80);
-    read_flash();
 
     outb(0x78, 0x80);
-    read_flash();
 
     outb(0x68, 0x80);
-    read_flash();
 
 #if (UART_TYPE == LOCAL)
 

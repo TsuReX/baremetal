@@ -109,15 +109,26 @@ setup_car_return:
 
 ; Filling stack for debugging purpose
 ; It's needed to check ability to access memory
-    mov ebp, esp
-    mov ebx, ecx
-    mov ecx, esp
-    shr ecx, 2
-fill_stack:
+check_stack:
+    mov ebp, esp ; ebp stores previous esp value
+    mov ebx, ecx ; ebx stores stack base
+
+    mov edx, esp ;
+    sub edx, ecx ; get size of stack in bytes
+    mov ecx, edx ;
+    shr ecx, 0x2 ; get size of stack in double words
+    mov edx, ecx
+.1:
     push esp
-    loop fill_stack
-    mov esp, ebp
-    mov ecx, ebx
+    loop .1
+
+    mov ecx, edx
+.2:
+    pop eax
+    cmp eax, esp
+    jne invalid_stack
+    loop .2
+    mov ecx, ebx ; restore stack base
 
     call setup_idt
 ;    call isr_0_test
@@ -130,6 +141,12 @@ fill_stack:
     call c_entry
 
     jmp $
+
+invalid_stack:
+    mov al, 0x80
+    out 0xFF, al
+    out 0xE1, al
+    jmp invalid_stack
 
 section .data
 align 10h
