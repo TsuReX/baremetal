@@ -1,3 +1,4 @@
+#include <pch.h>
 #include <ast2500.h>
 #include <io.h>
 /*
@@ -16,32 +17,15 @@ static unsigned int pci_io_encode_addr(unsigned int dev, unsigned short reg) {
 */
 static void p2sb_init(void) {
 
-#define	PCH_DEV_SLOT_LPC			0x1f
-#define	PCI_DEV(_bus, _dev, _fn)	(0x80000000 | (unsigned int)(_bus << 16) | (unsigned int)(_dev << 11) | (unsigned int)(_fn << 8))
-#define	_PCH_DEV(slot, func)		PCI_DEV(0, PCH_DEV_SLOT_ ## slot, func)
-#define	PCH_DEV_P2SB				_PCH_DEV(LPC, 1)
+    // Set up P2SB BAR. This is needed for PCR to work 
+    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
+    unsigned char p2sb_cmd = inb(PCI_IOPORT_DATA);
 
-#define	PCI_COMMAND				0x04	/* 16 bits */
-#define	PCI_COMMAND_MEMORY		0x02	/* Enable response in Memory space */
-#define	PCI_BASE_ADDRESS_0		0x10	/* 32 bits */
-#define CONFIG_PCR_BASE_ADDRESS	0xFD000000
+    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
+    outb(p2sb_cmd | B_P2SB_CFG_CMD_MSE, PCI_IOPORT_DATA);
 
-//PCI_DEV(0, 0x1f, 1) == PCH_DEV_P2SB
-
-    /* Set up P2SB BAR. This is needed for PCR to work */
-//	PCI_CF8_ADDR(Bus, Dev, Func, Off)
-//	PCI_CF8_ADDR(0, 0x1F, 1, Off)
-    //unsigned char p2sb_cmd = pci_s_read_config8(PCH_DEV_P2SB, PCI_COMMAND);
-    outl(PCH_DEV_P2SB, R_PCH_IOPORT_PCI_INDEX);
-    unsigned char p2sb_cmd = inb(R_PCH_IOPORT_PCI_DATA);
-    
-    //pci_s_write_config8(PCH_DEV_P2SB, PCI_COMMAND, p2sb_cmd | PCI_COMMAND_MEMORY);
-    outl(PCI_CF8_ADDR(0, 0x1F, 1, PCI_COMMAND), R_PCH_IOPORT_PCI_INDEX);
-    outb(p2sb_cmd | PCI_COMMAND_MEMORY, R_PCH_IOPORT_PCI_DATA);
-    
-    //pci_s_write_config32(PCH_DEV_P2SB, PCI_BASE_ADDRESS_0, CONFIG_PCR_BASE_ADDRESS);
-    outl(PCI_CF8_ADDR(0, 0x1F, 1, PCI_BASE_ADDRESS_0), R_PCH_IOPORT_PCI_INDEX);
-    outl(CONFIG_PCR_BASE_ADDRESS, R_PCH_IOPORT_PCI_DATA);
+    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_BAR0), PCI_IOPORT_INDEX);
+    outl(PCH_PCR_BASE_ADDRESS, PCI_IOPORT_DATA);
 }
 
 void sio_ast2500_init (unsigned int base) {
@@ -56,11 +40,11 @@ void sio_ast2500_init (unsigned int base) {
     lpciod =  (V_LPC_CFG_IOD_COMA_3F8 << N_LPC_CFG_IOD_COMA) | (V_LPC_CFG_IOD_COMB_2F8 << N_LPC_CFG_IOD_COMB);
     lpcioe =  (B_LPC_CFG_IOE_SE | B_LPC_CFG_IOE_CBE | B_LPC_CFG_IOE_CAE);
 
-    outl((PCH_LPC_CF8_ADDR (R_LPC_CFG_IOD)), R_PCH_IOPORT_PCI_INDEX);
-    outw(lpciod, R_PCH_IOPORT_PCI_DATA);
+    outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOD)), PCI_IOPORT_INDEX);
+    outw(lpciod, PCI_IOPORT_DATA);
 
-    outl((PCH_LPC_CF8_ADDR (R_LPC_CFG_IOE)), R_PCH_IOPORT_PCI_INDEX);
-    outw(lpcioe, R_PCH_IOPORT_PCI_DATA);
+    outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOE)), PCI_IOPORT_INDEX);
+    outw(lpcioe, PCI_IOPORT_DATA);
 
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOD), (unsigned short)lpciod);
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOE), (unsigned short)lpcioe);
