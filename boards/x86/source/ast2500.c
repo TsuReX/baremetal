@@ -1,20 +1,7 @@
 #include <pch.h>
 #include <ast2500.h>
 #include <io.h>
-/*
-static unsigned int pci_io_encode_addr(unsigned int dev, unsigned short reg) {
-    
-    unsigned int addr = 1U << 31;
 
-    addr |= dev >> 4;
-    addr |= reg & 0xfc;
-
-    if (CONFIG(PCI_IO_CFG_EXT))
-	addr |= (reg & 0xf00) << 16;
-
-    return addr;
-}
-*/
 static void p2sb_init(void) {
 
     // Set up P2SB BAR. This is needed for PCR to work 
@@ -40,15 +27,22 @@ void sio_ast2500_init (unsigned int base) {
     lpciod =  (V_LPC_CFG_IOD_COMA_3F8 << N_LPC_CFG_IOD_COMA) | (V_LPC_CFG_IOD_COMB_2F8 << N_LPC_CFG_IOD_COMB);
     lpcioe =  (B_LPC_CFG_IOE_SE | B_LPC_CFG_IOE_CBE | B_LPC_CFG_IOE_CAE);
 
+    // To allow the I/O cycles and memory mapped cycles to go to the LPC interface, the PCH
+    // includes several decoders. During configuration, the PCH must be programmed with the
+    // same decode ranges as the peripheral. The decoders are programmed using the D
+    // 31:F0 configuration space.
     outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOD)), PCI_IOPORT_INDEX);
     outw(lpciod, PCI_IOPORT_DATA);
 
     outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOE)), PCI_IOPORT_INDEX);
     outw(lpcioe, PCI_IOPORT_DATA);
 
+    // Setting up PCH PCR register to allow I/O translations via LPC
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOD), (unsigned short)lpciod);
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOE), (unsigned short)lpcioe);
 
+
+    // Setting up SIO via LPC interface
     // Unlock SIO
     outb (ASPEED2500_SIO_UNLOCK, ASPEED2500_SIO_INDEX_PORT);
     outb (ASPEED2500_SIO_UNLOCK, ASPEED2500_SIO_INDEX_PORT);

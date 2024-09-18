@@ -10,11 +10,20 @@
 #define PCH_PCR_ADDRESS(Pid, Offset)	(PCH_PCR_BASE_ADDRESS | ((unsigned char) (Pid) << 16) | (unsigned short) (Offset))
 
 // Intel C740 Emitsburg PCH
+// For details read the following documentation
+// Emmitsburg Platform Controller Hub EDS
+// 8.1 P2SB Bridge
+// 8.1.2 P2SB Configuration Registers Summary
+// 10.8 DMI Configuration Registers Summary
 // Private Configuration Space Register Target Port IDs
 //#define PID_DMI			0x88
 //#define PID_ESPISPI		0x72
 
 // Intel C620 Lewisburg PCH
+// For details read the following documentation
+// Intel® C620 Series Chipset Platform Controller Hub EDS
+// 36.2 DMI Configuration Registers Summary
+// 36.9.2 P2SB Configuration Registers Summary
 // Private Configuration Space Register Target Port IDs
 #define PID_DMI			0xEF
 #define PID_ESPISPI		0xEE
