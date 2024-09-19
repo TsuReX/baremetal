@@ -72,6 +72,7 @@ fsp_check_ffs_header:
     add eax, dword [edi + OFFSET_2]
 
     mov esp, fspt_stack
+call_fspt:
     jmp eax
 
 without_fsp_t:
