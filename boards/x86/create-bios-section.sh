@@ -44,9 +44,9 @@ create_image() {
     MICRO_UPD_SIZE=`stat --format="%s" $MICRO_UPD_FILE`
     BIOS_SIZE=`stat --format="%s" $BIOS_FILE`
 
-    dd if=/dev/zero of=15MB_PAD bs=1M count=15
-    dd if=/dev/zero of=FSP_T_FILE_PAD bs=1M count=1
-    dd if=/dev/zero of=MICRO_UPD_FILE_PAD bs=1M count=1
+    dd if=/dev/zero of=15MB_PAD bs=1M count=15 2>/dev/null
+    dd if=/dev/zero of=FSP_T_FILE_PAD bs=1M count=1 2>/dev/null
+    dd if=/dev/zero of=MICRO_UPD_FILE_PAD bs=1M count=1 2>/dev/null
 
     truncate -s $((64 * 1024 - $FSP_T_SIZE)) FSP_T_FILE_PAD
     truncate -s $(((1024 - 64) * 1024 - $MICRO_UPD_SIZE - $BIOS_SIZE)) MICRO_UPD_FILE_PAD
@@ -54,6 +54,11 @@ create_image() {
     cat 15MB_PAD $FSP_T_FILE FSP_T_FILE_PAD $MICRO_UPD_FILE MICRO_UPD_FILE_PAD $BIOS_FILE > $IMAGE_FILE
 
     rm -f 15MB_PAD FSP_T_FILE_PAD MICRO_UPD_FILE_PAD FSP_T_FILE_ZERO MICRO_UPD_FILE_ZERO
+
+    echo
+
+    xxd -c4 -g4 -l 0x18 -s -0x40 $IMAGE_FILE
+
 }
 
 if [ ${#} == 0 ]; then

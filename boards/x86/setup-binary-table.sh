@@ -89,16 +89,12 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-md5sum $BIOS_FILE
-
 echo
 
 region_prepare
 
-md5sum $BIOS_FILE
-
 echo
 
-xxd -g 4  -c 4 -s -0x40 -l 0x18 $BIOS_FILE
+xxd -g4  -c4 -s -0x40 -l 0x18 $BIOS_FILE
 
 #../boards/x86/bios-region-prepare.sh --bios ./x86.bin --fspt-addr 0x00010000 --mcupd-addr 0x00020000
