@@ -12,6 +12,7 @@ typedef enum {
     FilterWidth64
 } FILTER_IO_WIDTH;
 
+void d_print(unsigned int data);
 
 unsigned int FilterBeforeMmIoRead(FILTER_IO_WIDTH  Width, unsigned int Address, void *Buffer);
 
