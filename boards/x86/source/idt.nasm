@@ -350,11 +350,15 @@ handler:
     ; ebp, esp point to the last element - ebp 
 
     mov edx, [ebp + (15 * 0x04)]; isr_num
-    mov al, 0x80
 
 inf_loop:
-    out 0xFF, al
-    out dx, al
+
+    mov al, 0xFF
+    out 0x80, al
+
+    mov al, dl
+    out 0x80, al
+
     jmp inf_loop
 
     leave			; esp = ebp, pop ebp
