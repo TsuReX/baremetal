@@ -4,6 +4,7 @@
 #include <io.h>
 #include <ite8613.h>
 #include <ast2500.h>
+#include <dbg.h>
 
 #define LOCAL		1
 #define ITE8613		2
@@ -20,12 +21,6 @@ static unsigned int uart_platform_base(unsigned int idx) {
 void c_entry(int stack_base, int size) {
 
     unsigned int base = uart_platform_base(UART_NUM);
-
-    outb(0x88, 0x80);
-
-    outb(0x78, 0x80);
-
-    outb(0x68, 0x80);
 
 #if (UART_TYPE == LOCAL)
 
@@ -56,8 +51,9 @@ void c_entry(int stack_base, int size) {
 
     outb(0x8C, 0x80);
     while(1) {
-	outb(0x8D, 0x80);
-	outb(0x8E, 0x80);
+//	outb(0x8D, 0x80);
+//	outb(0x8E, 0x80);
+	d_print(0x12345678);
     }
     // This is used for compile time checking
     unsigned char chr = uart_rx_byte(base);

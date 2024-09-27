@@ -44,6 +44,7 @@ set(MAIN_SOURCES		"${MAIN_SOURCES}"
 				"${BOARD_SRC_PATH}/source/uart.c"
 				"${BOARD_SRC_PATH}/source/ite8613.c"
 				"${BOARD_SRC_PATH}/source/ast2500.c"
+				"${BOARD_SRC_PATH}/source/dbg.c"
 			)
 
 #######################################################################

@@ -1,6 +1,7 @@
 #include <pch.h>
 #include <ast2500.h>
 #include <io.h>
+#include <dbg.h>
 
 static void p2sb_init(void) {
 
@@ -11,14 +12,25 @@ static void p2sb_init(void) {
     outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
     outb(p2sb_cmd | B_P2SB_CFG_CMD_MSE, PCI_IOPORT_DATA);
 
+    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
+    unsigned int ret_val = inb(PCI_IOPORT_DATA);
+    compare_and_stop((p2sb_cmd | B_P2SB_CFG_CMD_MSE), ret_val, 0xE2);
+
     outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_BAR0), PCI_IOPORT_INDEX);
     outl(PCH_PCR_BASE_ADDRESS, PCI_IOPORT_DATA);
+
+    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_BAR0), PCI_IOPORT_INDEX);
+    ret_val = inl(PCI_IOPORT_DATA);
+    compare_and_stop(PCH_PCR_BASE_ADDRESS, ret_val, 0xE3);
+
 }
 
 void sio_ast2500_init (unsigned int base) {
 
-    unsigned short  lpciod;
-    unsigned short  lpcioe;
+    unsigned short	lpciod;
+    unsigned short	lpcioe;
+    unsigned short	base1 = 0x03F8;
+    unsigned short	base2 = 0x02F8;
 
     p2sb_init();
 
@@ -56,11 +68,11 @@ void sio_ast2500_init (unsigned int base) {
 
 #define SUART_BASEADDR_HIGH 0x60
     outb(SUART_BASEADDR_HIGH, ASPEED2500_SIO_INDEX_PORT);
-    outb((base >> 8) & 0xff, ASPEED2500_SIO_DATA_PORT);
+    outb((base1 >> 8) & 0xff, ASPEED2500_SIO_DATA_PORT);
 
 #define SUART_BASEADDR_LOW 0x61
     outb(SUART_BASEADDR_LOW, ASPEED2500_SIO_INDEX_PORT);
-    outb(base & 0xff, ASPEED2500_SIO_DATA_PORT);
+    outb(base1 & 0xff, ASPEED2500_SIO_DATA_PORT);
 
 //	outb (PRIMARY_INTERRUPT_SELECT, ASPEED2500_SIO_INDEX_PORT);
 //	outb (0x04, ASPEED2500_SIO_DATA_PORT);
@@ -79,10 +91,10 @@ void sio_ast2500_init (unsigned int base) {
     outb (0x00, ASPEED2500_SIO_DATA_PORT);
 
     outb(SUART_BASEADDR_HIGH, ASPEED2500_SIO_INDEX_PORT);
-    outb((base >> 8) & 0xff, ASPEED2500_SIO_DATA_PORT);
+    outb((base2 >> 8) & 0xff, ASPEED2500_SIO_DATA_PORT);
 
     outb(SUART_BASEADDR_LOW, ASPEED2500_SIO_INDEX_PORT);
-    outb(base & 0xff, ASPEED2500_SIO_DATA_PORT);
+    outb(base2 & 0xff, ASPEED2500_SIO_DATA_PORT);
 
 //	outb (PRIMARY_INTERRUPT_SELECT, ASPEED2500_SIO_INDEX_PORT);
 //	outb (0x03, ASPEED2500_SIO_DATA_PORT);
