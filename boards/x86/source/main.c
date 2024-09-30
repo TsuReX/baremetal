@@ -14,13 +14,14 @@ static const unsigned int bases[] = { 0x3F8, 0x2F8, 0x3E8, 0x2E8 };
 
 static unsigned int uart_platform_base(unsigned int idx) {
     if (idx < (sizeof(bases) /sizeof(bases[0])) )
-    return bases[idx];
-    return 0;
+	return bases[idx];
+    return 0x03F8;
 }
 
 void c_entry(int stack_base, int size) {
 
     outb(0x10, 0x80);
+
     unsigned int base = uart_platform_base(UART_NUM);
 
 #if (UART_TYPE == LOCAL)
@@ -33,8 +34,8 @@ void c_entry(int stack_base, int size) {
 
 #else
     #error "Incorrect UART_TYPE"
-
 #endif
+
     outb(0x11, 0x80);
 
     uart_init(base);

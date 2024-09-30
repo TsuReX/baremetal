@@ -278,7 +278,7 @@ fspt24_upd:
 section .data.bin.table
 
 bin_table:
-    DD 0xFFF00001	; FSP_T_ADDR
+    DD 0xFFF00000	; FSP_T_ADDR
     DD 0x000FFFFF	; FSP_T_ADDR_COMPLEMENT
 
     DD 0xFFF10000	; MICRO_UPD_ADDR
