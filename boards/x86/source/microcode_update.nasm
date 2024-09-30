@@ -9,7 +9,7 @@ section .text.secphase
 microcode_update:
 
     mov ecx, IA32_BIOS_UPDT_TRIG	; MSR to write in ECX
-    add eax, 0x00			; Offset of the Update Data within the Update
+    add eax, 0x30			; Offset of the Update Data within the Update
     xor edx, edx			; Zero in EDX
     wrmsr				; microcode update trigger
 
