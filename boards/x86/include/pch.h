@@ -5,7 +5,7 @@
 #include <io.h>
 
 // Definition for PCR base address (defined in PchReservedResources.h)
-#define PCH_PCR_BASE_ADDRESS		0xF0000000
+#define PCH_PCR_BASE_ADDRESS		0xFD000000
 #define PCH_PCR_MMIO_SIZE		0x01000000
 #define PCH_PCR_ADDRESS(Pid, Offset)	(PCH_PCR_BASE_ADDRESS | ((unsigned char) (Pid) << 16) | (unsigned short) (Offset))
 
