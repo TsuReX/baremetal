@@ -3,7 +3,7 @@
 #include <io.h>
 #include <dbg.h>
 
-static void p2sb_init(void) {
+void p2sb_init(void) {
 
     // Set up P2SB BAR. This is needed for PCR to work 
     outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
@@ -12,16 +12,8 @@ static void p2sb_init(void) {
     outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
     outb(p2sb_cmd | B_P2SB_CFG_CMD_MSE, PCI_IOPORT_DATA);
 
-    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_CMD), PCI_IOPORT_INDEX);
-    unsigned int ret_val = inb(PCI_IOPORT_DATA);
-    compare_and_stop((p2sb_cmd | B_P2SB_CFG_CMD_MSE), ret_val, 0xE2);
-
     outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_BAR0), PCI_IOPORT_INDEX);
     outl(PCH_PCR_BASE_ADDRESS, PCI_IOPORT_DATA);
-
-    outl(P2SB_PCI_CF8_ADDR(R_P2SB_CFG_BAR0), PCI_IOPORT_INDEX);
-    ret_val = inl(PCI_IOPORT_DATA);
-    compare_and_stop(PCH_PCR_BASE_ADDRESS, ret_val, 0xE3);
 
 }
 
@@ -32,7 +24,7 @@ void sio_ast2500_init (unsigned int base) {
     unsigned short	base1 = 0x03F8;
     unsigned short	base2 = 0x02F8;
 
-    p2sb_init();
+//    p2sb_init();
 
     // Enable LPC decode
     // Set COMA/COMB base
@@ -43,16 +35,13 @@ void sio_ast2500_init (unsigned int base) {
     // includes several decoders. During configuration, the PCH must be programmed with the
     // same decode ranges as the peripheral. The decoders are programmed using the D
     // 31:F0 configuration space.
-    outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOD)), PCI_IOPORT_INDEX);
-    outw(lpciod, PCI_IOPORT_DATA);
 
-    outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOE)), PCI_IOPORT_INDEX);
-    outw(lpcioe, PCI_IOPORT_DATA);
+    outl((LPC_PCI_CF8_ADDR (R_LPC_CFG_IOD)), PCI_IOPORT_INDEX);
+    outl((lpcioe << 16) | lpciod, PCI_IOPORT_DATA);
 
     // Setting up PCH PCR register to allow I/O translations via LPC
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOD), (unsigned short)lpciod);
     MmioWrite16 (PCH_PCR_ADDRESS(PID_DMI, R_PCH_DMI_PCR_LPCIOE), (unsigned short)lpcioe);
-
 
     // Setting up SIO via LPC interface
     // Unlock SIO

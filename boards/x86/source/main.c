@@ -20,40 +20,36 @@ static unsigned int uart_platform_base(unsigned int idx) {
 
 void c_entry(int stack_base, int size) {
 
+    outb(0x10, 0x80);
     unsigned int base = uart_platform_base(UART_NUM);
 
 #if (UART_TYPE == LOCAL)
 
 #elif (UART_TYPE == ITE8613)
-    sio_ite8613_init(0x03F8);
-    sio_ite8613_init(0x02F8);
+    sio_ite8613_init(base);
 
 #elif (UART_TYPE == AST2500)
-    sio_ast2500_init(0x03F8);
-    sio_ast2500_init(0x02F8);
+    sio_ast2500_init(base);
 
 #else
     #error "Incorrect UART_TYPE"
 
 #endif
-    uart_init(0x03F8);
-    uart_init(0x02F8);
+    outb(0x11, 0x80);
 
-    outb(0x8A, 0x80);
+    uart_init(base);
 
-    outb(0x8B, 0x80);
+    outb(0x12, 0x80);
+
     unsigned char str3f8[] = "EagleStream_3f8";
-    unsigned char str2f8[] = "EagleStream_2f8";
     for (unsigned int i = 0; i < strlen(str3f8); ++i) {
-	uart_tx_byte(0x03F8, str3f8[i]);
-	uart_tx_byte(0x02F8, str2f8[i]);
+	uart_tx_byte(base, str3f8[i]);
     }
 
-    outb(0x8C, 0x80);
+    outb(0x13, 0x80);
     while(1) {
-//	outb(0x8D, 0x80);
-//	outb(0x8E, 0x80);
-	d_print(0x12345678);
+	outb(0xFE, 0x80);
+	outb(0xFF, 0x80);
     }
     // This is used for compile time checking
     unsigned char chr = uart_rx_byte(base);
