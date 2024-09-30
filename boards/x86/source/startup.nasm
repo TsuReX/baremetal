@@ -13,7 +13,7 @@ extern c_entry
 section .text.resetvector
 
 _reset_vector:
-    mov al, 0xAA
+    mov al, 0x00
     out 0x80, al
 
     jmp _sec_entry
@@ -22,7 +22,7 @@ _reset_vector:
 section .text.secphase
 
 _sec_entry:
-    mov al, 0x55
+    mov al, 0x01
     out 0x80, al
 
     mov ebp, setup_protected_mode_return
@@ -31,7 +31,7 @@ _sec_entry:
 bits 32
 
 setup_protected_mode_return:
-    mov al, 0x56
+    mov al, 0x02
     out 0x80, al
 
     mov edi, bin_table
@@ -68,6 +68,11 @@ fsp_check_ffs_header:
     cmp  eax, FSP_HEADER_GUID_DWORD4
     jnz  without_fsp_t
 
+    mov al, 0x03
+    out 0x80, al
+    mov al, 0xFF
+    out 0x80, al
+
     mov eax, dword [edi + OFFSET_1]
     add eax, dword [edi + OFFSET_2]
 
@@ -76,42 +81,71 @@ call_fspt:
     jmp eax
 
 without_fsp_t:
+
+    mov al, 0x04
+    out 0x80, al
+
     mov edi, bin_table
     mov eax, [edi + 0x8]	; MICRO_UPD_ADDR
     mov ebx, [edi + 0xC]	; MICRO_UPD_ADDR_COMPLEMENT
     and ebx, eax
-    jnz microcode_update_return
+    jnz without_microcode_update
+
+    mov ebx, eax
+    mov al, 0x05
+    out 0x80, al
+    mov eax, ebx
+
     mov ebp, microcode_update_return
     jmp microcode_update
 microcode_update_return:
 
+    mov ebx, eax
+    mov al, 0x06
+    out 0x80, al
+    mov eax, ebx
+    ; TODO Check eax
+
+without_microcode_update:
     mov ebp, setup_car_return
     jmp setup_car
 
 fspt_return:
-
     mov ebx, eax
-    mov al, 0xEE
+    mov al, 0x07
     out 0x80, al
-    mov al, dl
-    out 0x80, al
+    ; Checking ebx
 
     cmp ebx, 0x8000000E
     jz setup_car_return
 
+    mov al, 0x08
+    out 0x80, al
+
     cmp ebx, 0x0
     jz setup_car_return
+
+    mov al, 0xEE
+    out 0x80, al
+    mov al, bl
+    out 0x80, al
 
     jmp $
 
 setup_car_return:
+    mov ebx, eax
+    mov al, 0x09
+    out 0x80, al
+    mov eax, ebx
+    ; TODO Check eax
+
     ; ecx - base address
     ; edx - end address
     mov esp, edx	; Region end address
     add esp, 0x3
     and esp, 0x0FFFFFFFC		; Add region size
 
-    mov al, 0x57
+    mov al, 0x0A
     out 0x80, al
 
 ; Filling stack for debugging purpose
@@ -137,10 +171,15 @@ check_stack:
     loop .2
     mov ecx, ebx ; restore stack base
 
-over_pass:
+    mov al, 0x0B
+    out 0x80, al
+
     call setup_idt
 ;    call isr_0_test
 ;    call isr_11_test
+
+    mov al, 0x0C
+    out 0x80, al
 
     add edx, 0x3
     and edx, 0x0FFFFFFFC
@@ -152,9 +191,9 @@ over_pass:
     jmp $
 
 check_stack_error:
-    mov al, 0xFF
+    mov al, 0xEE
     out 0x80, al
-    mov al, 0xE1
+    mov al, 0x01
     out 0x80, al
     jmp check_stack_error
 
@@ -239,7 +278,7 @@ fspt24_upd:
 section .data.bin.table
 
 bin_table:
-    DD 0xFFF00000	; FSP_T_ADDR
+    DD 0xFFF00001	; FSP_T_ADDR
     DD 0x000FFFFF	; FSP_T_ADDR_COMPLEMENT
 
     DD 0xFFF10000	; MICRO_UPD_ADDR
