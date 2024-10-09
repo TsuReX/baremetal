@@ -25,7 +25,7 @@
 #		POWER UP CODE
 #0x1.0000.0000 END OF 4GB MEMORY SPACE
 
-QEMU_ARGS="-m 256M -cpu Icelake-Server-v1 -nographic -serial mon:stdio -s -S"
+QEMU_ARGS="-m 256M -cpu Icelake-Server-v1 -nographic -serial mon:stdio -debugcon file:debugcon.txt -s -S"
 
 run_qemu() {
 
