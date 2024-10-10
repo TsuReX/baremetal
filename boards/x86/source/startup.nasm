@@ -13,7 +13,7 @@ extern c_entry
 section .text.resetvector
 
 _reset_vector:
-    mov al, 0x00
+    mov al, 0x10
     out 0x80, al
 
     jmp _sec_entry
@@ -22,7 +22,7 @@ _reset_vector:
 section .text.secphase
 
 _sec_entry:
-    mov al, 0x01
+    mov al, 0x11
     out 0x80, al
 
     mov ebp, setup_protected_mode_return
@@ -31,7 +31,7 @@ _sec_entry:
 bits 32
 
 setup_protected_mode_return:
-    mov al, 0x02
+    mov al, 0x12
     out 0x80, al
 
     mov edi, bin_table
@@ -54,21 +54,21 @@ fsp_check_ffs_header:
     ; Check the ffs guid
     mov  eax, dword [edi + OFFSET]
     cmp  eax, FSP_HEADER_GUID_DWORD1
-    jnz  without_fsp_t
+    jnz  fsp_t_error
 
     mov  eax, dword [edi + OFFSET + 4]
     cmp  eax, FSP_HEADER_GUID_DWORD2
-    jnz  without_fsp_t
+    jnz  fsp_t_error
 
     mov  eax, dword [edi + OFFSET + 8]
     cmp  eax, FSP_HEADER_GUID_DWORD3
-    jnz  without_fsp_t
+    jnz  fsp_t_error
 
     mov  eax, dword [edi + OFFSET + 0Ch]
     cmp  eax, FSP_HEADER_GUID_DWORD4
-    jnz  without_fsp_t
+    jnz  fsp_t_error
 
-    mov al, 0x03
+    mov al, 0x13
     out 0x80, al
     mov al, 0xFF
     out 0x80, al
@@ -80,9 +80,14 @@ fsp_check_ffs_header:
 call_fspt:
     jmp eax
 
+fsp_t_error:
+    mov al, 0x14
+    out 0x80, al
+    jmp $
+
 without_fsp_t:
 
-    mov al, 0x04
+    mov al, 0x15
     out 0x80, al
 
     mov edi, bin_table
@@ -92,7 +97,7 @@ without_fsp_t:
     jnz without_microcode_update
 
     mov ebx, eax
-    mov al, 0x05
+    mov al, 0x16
     out 0x80, al
     mov eax, ebx
 
@@ -101,7 +106,7 @@ without_fsp_t:
 microcode_update_return:
 
     mov ebx, eax
-    mov al, 0x06
+    mov al, 0x17
     out 0x80, al
     mov eax, ebx
     ; TODO Check eax
@@ -112,14 +117,14 @@ without_microcode_update:
 
 fspt_return:
     mov ebx, eax
-    mov al, 0x07
+    mov al, 0x18
     out 0x80, al
     ; Checking ebx
 
     cmp ebx, 0x8000000E
     jz setup_car_return
 
-    mov al, 0x08
+    mov al, 0x19
     out 0x80, al
 
     cmp ebx, 0x0
@@ -134,7 +139,7 @@ fspt_return:
 
 setup_car_return:
     mov ebx, eax
-    mov al, 0x09
+    mov al, 0x1A
     out 0x80, al
     mov eax, ebx
     ; TODO Check eax
@@ -145,7 +150,7 @@ setup_car_return:
     add esp, 0x3
     and esp, 0x0FFFFFFFC		; Add region size
 
-    mov al, 0x0A
+    mov al, 0x1B
     out 0x80, al
 
 ; Filling stack for debugging purpose
@@ -171,14 +176,14 @@ check_stack:
     loop .2
     mov ecx, ebx ; restore stack base
 
-    mov al, 0x0B
+    mov al, 0x1C
     out 0x80, al
 
     call setup_idt
 ;    call isr_0_test
 ;    call isr_11_test
 
-    mov al, 0x0C
+    mov al, 0x1D
     out 0x80, al
 
     add edx, 0x3
