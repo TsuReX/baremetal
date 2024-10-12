@@ -56,3 +56,5 @@ out 0x80, al
 pop eax
 
 jmp return_addr
+
+times(0x100 - ($-$$)) nop
