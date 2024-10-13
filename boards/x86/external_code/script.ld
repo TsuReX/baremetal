@@ -12,7 +12,7 @@ SECTIONS
     func_7 = __TEXT_BEGIN__ + 0x20C8 - __OFFSET__;
     func_8 = __TEXT_BEGIN__ + 0x2228 - __OFFSET__;
     func_9 = __TEXT_BEGIN__ + 0x17D4 - __OFFSET__;
-    return_addr = __TEXT_BEGIN__ + 0x07CC - __OFFSET__;
+    return_addr = __TEXT_BEGIN__ + 0x07D1 - __OFFSET__;
 
     . = __TEXT_BEGIN__;
     .text.external : {*(.text.external)}
