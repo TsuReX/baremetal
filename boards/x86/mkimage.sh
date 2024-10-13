@@ -82,6 +82,10 @@ if [ $? -ne 0 ]; then
     exit 4
 fi
 
+../boards/x86/make_external_code.sh
+
+../boards/x86/substitute.sh fsp_eaglestream_rebased_T.fd ../boards/x86/substitution.map fsp_eaglestream_rebased_T_substituted.fd
+
 ../boards/x86/setup-binary-table.sh --bios ./x86.bin --fspt-addr ${FSPT_ADDR} --mcupd-addr ${MCUPD_ADDR}
 
 if [ $? -ne 0 ]; then
@@ -89,7 +93,7 @@ if [ $? -ne 0 ]; then
     exit 5
 fi
 
-../boards/x86/create-bios-section.sh --bios ./x86.bin --fspt fsp_${PLATFORM}_rebased_T.fd  --mcupd ${MCUPD} --image bios-section.bin
+../boards/x86/create-bios-section.sh --bios ./x86.bin --fspt fsp_${PLATFORM}_rebased_T_substituted.fd  --mcupd ${MCUPD} --image bios-section.bin
 
 if [ $? -ne 0 ]; then
     echo Creating bios section error
