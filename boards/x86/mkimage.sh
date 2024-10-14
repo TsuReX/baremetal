@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo $#
-
 if [ $# -lt 1 ]; then
     echo "Invalid argument count"
     exit 1
@@ -57,47 +55,60 @@ fi
 rm -rf ../build_x86/* ;cmake .. -DBOARD_TYPE=x86 -DCMAKE_C_COMPILER=i386-unknown-elf-gcc -DUART_TYPE=LOCAL -DUART_NUM=0; cmake --build .
 
 if [ $? -ne 0 ]; then
-    echo Compilation error
+    echo "Compilation error"
     exit 1
 fi
 
 python ../boards/x86/SplitFspBin.py rebase -f ${FSP} -c s m t -b ${FSPS_ADDR} ${FSPM_ADDR} ${FSPT_ADDR} -o . -n ${FSP_NAME}
 
 if [ $? -ne 0 ]; then
-    echo FSP rebasing error
+    echo "FSP rebasing error"
     exit 2
 fi
 
 python ../boards/x86/SplitFspBin.py info -f ${FSP_NAME}
 
 if [ $? -ne 0 ]; then
-    echo Information printing error
+    echo "Information printing error"
     exit 3
 fi
 
 python ../boards/x86/SplitFspBin.py split -f ${FSP_NAME} -o . -n ${FSP_NAME}
 
 if [ $? -ne 0 ]; then
-    echo FSP splitting error
+    echo "FSP splitting error"
     exit 4
 fi
 
+echo ""
 ../boards/x86/make_external_code.sh
 
+if [ $? -ne 0 ]; then
+    echo "Making external_code error"
+    exit 5
+fi
+
+echo ""
 ../boards/x86/substitute.sh fsp_eaglestream_rebased_T.fd ../boards/x86/substitution.map fsp_eaglestream_rebased_T_substituted.fd
 
+if [ $? -ne 0 ]; then
+    echo "Inserting external_code error"
+    exit 6
+fi
+
+echo ""
 ../boards/x86/setup-binary-table.sh --bios ./x86.bin --fspt-addr ${FSPT_ADDR} --mcupd-addr ${MCUPD_ADDR}
 
 if [ $? -ne 0 ]; then
-    echo Setting up binary table error
-    exit 5
+    echo "Setting up binary table error"
+    exit 7
 fi
 
 ../boards/x86/create-bios-section.sh --bios ./x86.bin --fspt fsp_${PLATFORM}_rebased_T_substituted.fd  --mcupd ${MCUPD} --image bios-section.bin
 
 if [ $? -ne 0 ]; then
-    echo Creating bios section error
-    exit 6
+    echo "Creating bios section error"
+    exit 8
 fi
 
 if [ $IMAGE_TYPE = "QEMU" ]; then
@@ -112,5 +123,7 @@ elif [ $IMAGE_TYPE = "HW" ]; then
     echo ""
     echo "HW:"
     echo "../boards/x86/replace_bios_region.sh ../../intel_gen4_ifwi.bin bios-section.bin oy_gen4_ifwi.bin"
+    echo ""
+    echo "/em100 --stop --set MX25L51245G -d oy_gen4_ifwi.bin -v --start"
     echo ""
 fi
